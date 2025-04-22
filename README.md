@@ -1,0 +1,69 @@
+![](https://github.com/akaFinn/flixel-modding/blob/main/assets/images/logo.png?raw=true)
+### Design by [l0go](https://github.com/l0go)
+
+## About
+**flixel-modding** is a robust and easy-to-use modding system built specifically for **HaxeFlixel**. It is designed to help developers add straightforward mod support to their games. Whether you're looking to allow asset replacement or loading entirely new assets from mods, flixel-modding has you covered.
+
+## Features
+- Simple API for integrating mod support
+- Support for replacing existing game assets
+- Ability to load new assets from user-created mods
+- Lightweight and easily extendable
+
+## Requirements
+- HaxeFlixel 6.0.0+
+- Haxe 4.0.0+
+
+## Limitations
+- You can only use flixel-modding for HaxeFlixel version **6.0.0 or above**.
+- You cannot use flixel-modding for JavaScript or HTML5 targets.
+- You cannot use OpenFL's `Assets.hx` class for things like `getText` or `getBitmapData`. Any and all methods of getting Asset Data must be done through either Flixel's `AssetFrontEnd.hx`, which can be found in `FlxG.assets`. Or, by using `FlxModding.system.getAsset`
+
+## Intended Usage
+flixel-modding is intended for developers of HaxeFlixel games who want to:
+- Allow users to replace default game assets with their own
+- Enable community content through custom mods
+- Simplify the process of managing mod files and directories
+
+## Getting Started
+Install flixel-modding using haxelib:
+
+```sh
+haxelib install flixel-modding
+```
+
+Add the path and the library to your `project.xml`:
+
+```xml
+<assets path="mods" />
+```
+```xml
+<haxelib name="flixel-modding" />
+```
+
+Before creating your `FlxGame` instance, initialize the modding system using the following code:
+
+```haxe
+FlxModding.init();
+```
+
+This sets up the modding environment and ensures all mod assets are ready before the game starts.
+
+## Example
+```haxe
+class Main extends Sprite
+{
+    public function new()
+    {
+        FlxModding.init();
+        addChild(new FlxGame(0, 0, PlayState));
+    }
+}
+```
+
+```haxe
+// keep in mind loading graphics in any of these methods work.
+sprite.loadGraphic("images/haxeflixel.png");
+sprite.loadGraphic("assets/images/haxeflixel.png");
+sprite.loadGraphic("mods/your_mod/images/haxeflixel.png");
+```

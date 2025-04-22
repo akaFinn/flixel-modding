@@ -1,0 +1,13 @@
+{
+	"name": "flixel-modding",
+	"url" : "https://github.com/akaFinn/flixel-modding",
+	"license": "MIT",
+	"tags": ["flixel", "modding", "flash"],
+	"description": "A robust modding system for HaxeFlixel 6.0.0.",
+	"version": "1.0.0",
+	"releasenote": "First Version of flixel-modding",
+	"contributors": ["akaFinn"],
+	"dependencies": {
+		"flixel": ""
+	}
+}
