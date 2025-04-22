@@ -1,4 +1,4 @@
-![](https://github.com/akaFinn/flixel-modding/blob/main/assets/images/logo.png?raw=true)
+![](https://github.com/akaFinn/flixel-modding/blob/master/assets/images/logo.png?raw=true)
 ### Design by [l0go](https://github.com/l0go)
 
 ## About
