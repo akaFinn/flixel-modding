@@ -19,16 +19,6 @@ class FlxModpack
         this.priority = FlxModding.mods.length + 1;
     }
 
-    public function kill():Void
-    {
-        active = false;    
-    }
-
-    public function revive():Void
-    {
-        active = true;    
-    }
-
     public function formDirectory():String
     {
         @:privateAccess

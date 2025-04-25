@@ -1,4 +1,4 @@
-![](https://github.com/akaFinn/flixel-modding/blob/master/assets/images/logo.png?raw=true)
+![](assets/images/logo.png?raw=true)
 ### Design by [l0go](https://github.com/l0go)
 
 ## About
@@ -11,11 +11,11 @@
 - Lightweight and easily extendable
 
 ## Requirements
-- HaxeFlixel 6.0.0+
+- HaxeFlixel 5.9.0+
 - Haxe 4.0.0+
 
 ## Limitations
-- You can only use flixel-modding for HaxeFlixel version **6.0.0 or above**.
+- You can only use flixel-modding for HaxeFlixel version **5.9.0 or above**.
 - You cannot use flixel-modding for JavaScript or HTML5 targets.
 - You cannot use OpenFL's `Assets.hx` class for things like `getText` or `getBitmapData`. Any and all methods of getting Asset Data must be done through either Flixel's `AssetFrontEnd.hx`, which can be found in `FlxG.assets`. Or, by using `FlxModding.system.getAsset`
 
@@ -49,7 +49,7 @@ FlxModding.init();
 
 This sets up the modding environment and ensures all mod assets are ready before the game starts.
 
-## Example
+## Examples
 ```haxe
 class Main extends Sprite
 {
@@ -62,8 +62,7 @@ class Main extends Sprite
 ```
 
 ```haxe
-// keep in mind loading graphics in any of these methods work.
+// Both of these methods for loading images work.
 sprite.loadGraphic("images/haxeflixel.png");
 sprite.loadGraphic("assets/images/haxeflixel.png");
-sprite.loadGraphic("mods/your_mod/images/haxeflixel.png");
 ```
