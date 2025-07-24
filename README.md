@@ -17,7 +17,7 @@
 ## Limitations
 - You can only use flixel-modding for HaxeFlixel version **5.9.0 or above**.
 - You cannot use flixel-modding for JavaScript or HTML5 targets.
-- You cannot use OpenFL's `Assets.hx` class for things like `getText` or `getBitmapData`. Any and all methods of getting Asset Data must be done through either Flixel's `AssetFrontEnd.hx`, which can be found in `FlxG.assets`. Or, by using `FlxModding.system.getAsset`
+- You cannot use OpenFL's `Assets.hx` class for things like `getText` or `getBitmapData`. Any and all methods of getting Asset Data must be done through either Flixel's `AssetFrontEnd.hx`, which can be found in `FlxG.assets.getAsset`. Or, by using `FlxModding.system.getAsset`
 
 ## Intended Usage
 flixel-modding is intended for developers of HaxeFlixel games who want to:
@@ -25,7 +25,7 @@ flixel-modding is intended for developers of HaxeFlixel games who want to:
 - Enable community content through custom mods
 - Simplify the process of managing mod files and directories
 
-## Getting Started
+## Tutorial
 Install flixel-modding using haxelib:
 
 ```sh
@@ -66,3 +66,23 @@ class Main extends Sprite
 sprite.loadGraphic("images/haxeflixel.png");
 sprite.loadGraphic("assets/images/haxeflixel.png");
 ```
+
+```haxe
+FlxModding.create("coolMod", new BitmapData(64, 64, true, 0xFFFFFF),
+{
+	name: "Cool Awesome Mod",
+	version: "1.2.3",
+	description: "Cool mod made for cooler people. B)",
+
+	credits: [
+		{
+			name: "akaFinn_",
+			title: "Creator",
+			socials: "https://x.com/akaFinn_"
+		}
+	],
+
+	priority: 1,
+	active: true,
+});
+``
