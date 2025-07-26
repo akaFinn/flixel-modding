@@ -3,6 +3,8 @@ package flixel.system;
 import flixel.FlxG;
 import flixel.group.FlxContainer.FlxTypedContainer;
 import flixel.system.debug.log.LogStyle;
+import flixel.system.frontEnds.AssetFrontEnd.FlxAssetType;
+import flixel.system.scripting.FlxHScript;
 import flixel.util.FlxSignal;
 import flixel.util.FlxSort;
 import haxe.Json;
@@ -24,25 +26,6 @@ import openfl.utils.Future;
 import sys.FileSystem;
 import sys.io.File;
 #end
-
-typedef CreditFormat = 
-{
-    var name:String;
-    var title:String;
-    var socials:String;
-}
-
-typedef MetadataFormat = 
-{
-    var name:String;
-    var version:String;
-    var description:String;
-
-    var credits:Array<CreditFormat>;
-
-    var priority:Int;
-    var active:Bool;
-}
 
 /**
  * Central utility class for handling mod-related operations in the Flixel-Modding framework.
@@ -68,7 +51,7 @@ class FlxModding
 	/**
 	 * The Base Flixel-Modding version, in semantic versioning syntax.
 	 */
-	public static var VERSION:FlxVersion = new FlxVersion(1, 2, 0);
+	public static var VERSION:FlxVersion = new FlxVersion(1, 3, 0);
 
 	/**
 	 * Use this to toggle Flixel-Modding between on and off.
@@ -77,17 +60,22 @@ class FlxModding
 	public static var enabled:Bool;
 
 	/**
-	 * Use this to enable or disable caching for assets.
-	 * When caching is enabled, assets will be stored in memory after loading,
-	 * which can improve performance when accessing the same assets multiple times.
+	 * The asset cache used by Flixel-Modding.
+	 * Stores loaded assets in memory so they can be reused without reloading.
+	 * Improves performance when accessing assets multiple times.
 	 */
-	public static var caching:Bool;
+	public static var cache:FlxCache;
 
 	/**
 	 * Used for grabbing, loading, or listing assets.
 	 * Acts as an alternative to `FlxG.assets`, with support for modded assets.
 	 */
 	public static var system:FlxModding;
+
+    /**
+	 * Use this to toggle Flixel-Modding's debug print on or off'
+	 */
+	public static var debug:Bool = #if debug true #else false #end;
 
 	/**
 	 * The container for every single mod available for Flixel-Modding.
@@ -138,7 +126,7 @@ class FlxModding
 	public static var onModRemoved:FlxTypedSignal<FlxModpack->Void> = new FlxTypedSignal<FlxModpack->Void>();
 
 	// ===============================
-	// Private Internals
+	// Private Internals ( ͡° ͜ʖ ͡°)
 	// ===============================
 
 	static var assetDirectory:String = "assets";
@@ -147,9 +135,6 @@ class FlxModding
 	static var metaDirectory:String = "metadata.json";
 	static var iconDirectory:String = "picture.png";
 
-	// NOTE: polymod rocks. These are remnants from when I started polymod support.
-	// Might expand this in a future update.
-    // Love u eric <3<3<3.
 	static var metaPolymodDirectory:String = "_polymod_meta.json";
 	static var iconPolymodDirectory:String = "_polymod_icon.png";
 
@@ -164,7 +149,7 @@ class FlxModding
      * This setup is only available on native targets (like Windows, Mac, or Linux). 
      * It will not function in JS/HTML5 builds due to file system access restrictions.
      * 
-     * @param   allowCaching  (Optional) A toggle for caching game assets
+     * @param   allowCaching    (Optional) A toggle for caching game assets
      * 
      * @param   assetDirectory  (Optional) A path that overrides the default directory for game assets. 
      *                          Use this if your mod uses a custom asset folder structure.
@@ -174,22 +159,21 @@ class FlxModding
      * 
      * @return                  The initialized FlxModding system so it can be assigned or used directly.
      */
-    public static function init(?allowCaching:Bool = true, ?assetDirectory:String, ?modsDirectory:String):FlxModding
+    public static function init(allowCaching:Bool = true, ?assetDirectory:String, ?modsDirectory:String):FlxModding
     {   
         #if (!js || !html5)
-        FlxG.log.add("Attempting to Initialize FlxModding...");
+        print("Attempting to Initialize FlxModding...");
         if (assetDirectory != null) flixel.system.FlxModding.assetDirectory = assetDirectory;
         if (modsDirectory != null) flixel.system.FlxModding.modsDirectory = modsDirectory;
 
         if (FileSystem.exists(FlxModding.modsDirectory + "/"))
         {
-            if (!FileSystem.exists(FlxModding.modsDirectory + "/" + FlxModding.modsDirectory + "-go-here.txt"))
-            {
-                File.saveContent(FlxModding.modsDirectory + "/" + FlxModding.modsDirectory + "-go-here.txt", "");
-            }
+            #if hscript
+            FlxHScript.init();
+            #end
             
             enabled = true;
-            caching = allowCaching;
+            cache = new FlxCache(allowCaching);
             system = new FlxModding();
             mods = new FlxTypedContainer<FlxModpack>();
         
@@ -200,7 +184,7 @@ class FlxModding
             });
             #end
 
-            FlxG.log.add("FlxModding Initialized!");
+            print("FlxModding Initialized!");
             return system;
         }
         else
@@ -212,9 +196,8 @@ class FlxModding
         }
 
         #else
-        FlxG.log.error("Critical Error! Cannot access required filesystem functionality when targeting JavaScript or HTML5. Native targets are required for modding support.");
-        FlxG.stage.window.alert("Cannot access required filesystem functionality when targeting JavaScript or HTML5. Native targets are required for modding support.", "Critical Error!");
-        FlxG.stage.window.close();
+        FlxG.log.error("Critical Error! Failed to Initialize FlxModding. Flixel-Modding cannot run properly while targeting JavaScript or HTML5, native targets are required for modding support.");
+        //FlxG.log.error("Critical Error! Cannot access required filesystem functionality when targeting JavaScript or HTML5. Native targets are required for modding support.");
         return null;
         #end
     }
@@ -231,7 +214,7 @@ class FlxModding
     {
         #if (!js || !html5)
         preModsReload.dispatch();
-        FlxG.log.add("Attempting to Reload modpacks...");
+        print("Attempting to Reload modpacks...");
 
         if (updateMetadata == true && mods.length != 0)
         {
@@ -249,9 +232,10 @@ class FlxModding
             {
                 var modpack = new FlxModpack(modFile);
 
-                if (system.exists(FlxModding.modsDirectory + "/" + modpack.file + "/" + metaDirectory))
+                if (system.exists(modpack.directory() + "/" + metaDirectory))
                 {
-                    var metadata:MetadataFormat = Json.parse(system.getAsset(FlxModding.modsDirectory + "/" + modFile + "/" + FlxModding.metaDirectory, TEXT, false));
+                    modpack.type = FLIXEL;
+                    var metadata:MetadataFormat = Json.parse(system.getText(FlxModding.modsDirectory + "/" + modFile + "/" + FlxModding.metaDirectory));
 
                     modpack.name = metadata.name;
                     modpack.version = metadata.version;
@@ -262,8 +246,34 @@ class FlxModding
                     modpack.active = metadata.active;
                     modpack.priority = metadata.priority;
                 }
+                else if (system.exists(modpack.directory() + "/" + metaPolymodDirectory))
+                {
+                    modpack.type = POLYMOD;
+                    var metadata:PolymodMetadataFormat = Json.parse(system.getText(FlxModding.modsDirectory + "/" + modFile + "/" + FlxModding.metaPolymodDirectory));
+                    var credits:Array<CreditFormat> = [];
+
+                    for (contributor in metadata.contributors)
+                    {
+                        credits.push(
+                            {
+                                name: contributor.name,
+                                title: contributor.role,
+                                socials: contributor.url
+                            });
+                    }
+
+                    modpack.name = metadata.title;
+                    modpack.version = metadata.mod_version;
+                    modpack.description = metadata.description;
+
+                    modpack.credits = credits;
+
+                    modpack.active = true;
+                    modpack.priority = 1;
+                }
                 else
                 {
+                    modpack.type = FLIXEL;
                     FlxG.log.warn("Failed to locate Metadata, file does not exist. Using fallback/default values instead.");
 
                     modpack.name = modFile;
@@ -277,16 +287,14 @@ class FlxModding
                 }
 
                 add(modpack);
+                print('Added mod: "' + modpack.name + '"');
             }
         }
 
-        FlxG.log.add("Modpacks Reloaded!");
+        FlxModding.sort();
+        print("Modpacks Reloaded!");
         postModsReload.dispatch();
 
-        mods.sort((order, mod1, mod2) ->
-        {
-            return FlxSort.byValues(order, mod1.priority, mod2.priority);
-        });
         #else
         FlxG.log.error("Critical Error! Cannot reload mods while targeting JavaScript or HTML5");
         FlxG.stage.window.alert("Cannot reload mods while targeting JavaScript or HTML5", "Critical Error!");
@@ -322,24 +330,37 @@ class FlxModding
         postModsUpdate.dispatch();
     }
 
-    /**
-     * Creates a new modpack using the provided metadata and options.
-     * Automatically places the generated modpack inside the active mods directory.
-     * 
-     * @param   metadata           Contains modpack information such as the name and structure. 
-     *                             If you're using a custom-named assets folder, this helps define it.
-     * 
-     * @param   makeAssetFolders   If true, automatically generates empty asset subfolders within the modpack.
-     *                             Useful when you want to scaffold common asset paths.
-     */
+	/**
+	 * Sorts all currently loaded modpacks by their priority values.
+	 * This is used to determine load or update order, ensuring mods with higher precedence are processed first.
+	 */
+	public static function sort():Void
+	{
+		mods.sort((order, mod1, mod2) ->
+		{
+			return FlxSort.byValues(order, mod1.priority, mod2.priority);
+		});    
+	}
+
+	/**
+	 * Creates a new modpack using the provided metadata and options.
+	 * Automatically places the generated modpack inside the active mods directory.
+	 * 
+	 * @param	fileName			The name of the file/folder to create for the modpack.
+	 * @param	iconBitmap			The icon image used to visually represent the modpack.
+	 * @param	metadata			Contains modpack information such as the name and structure.
+	 *								If you're using a custom-named assets folder, this helps define it.
+	 * @param	makeAssetFolders	(Optional) If true, automatically generates empty asset subfolders within the modpack.
+	 *								Useful when you want to scaffold common asset paths.
+	 */
     public static function create(fileName:String, iconBitmap:BitmapData, metadata:MetadataFormat, ?makeAssetFolders:Bool = true):Void
     {
         #if (!js || !html5)
-        FlxG.log.add("Attempting to Create a modpack...");
+        print("Attempting to Create a modpack...");
         if (!FileSystem.exists(FlxModding.modsDirectory + "/" + fileName))
         {
             FileSystem.createDirectory(FlxModding.modsDirectory + "/" + fileName);
-            File.saveContent(FlxModding.modsDirectory + "/" + fileName + "/" + FlxModding.metaDirectory, convertToString(metadata));
+            File.saveContent(FlxModding.modsDirectory + "/" + fileName + "/" + FlxModding.metaDirectory, FlxModpack.toJsonString(metadata));
 
             var encodedBytes = iconBitmap.encode(iconBitmap.rect, new PNGEncoderOptions());
             var iconData = Bytes.alloc(encodedBytes.length);
@@ -357,13 +378,22 @@ class FlxModding
                 }
             }
 
-            FlxG.log.add("Modpack Created!");
+            add(new FlxModpack(fileName).loadFromMetadata(metadata));
+            print("Modpack Created!");
         }
         else
         {
             FlxG.log.warn("The mod: " + fileName + " has already been created. You cannot create a mod with the same name.");
         }
         #end
+    }
+
+    /**
+     * Clears all mods
+     */
+    public static function clear():Void
+    {
+        mods.clear();
     }
 
     /**
@@ -430,18 +460,12 @@ class FlxModding
         #end
     }
 
-    public function getAsset(id:String, type:flixel.system.frontEnds.AssetFrontEnd.FlxAssetType, useCache:Bool = true):Null<Any>
+    public function getAsset(id:String, type:FlxAssetType, useCache:Bool = true):Null<Any>
     {
         #if (!js || !html5)
-        /*trace("Attempting to grab Asset");
-        trace(id, "is flixel asset: " + StringTools.startsWith(id, "flixel/"));*/
-
         if (StringTools.startsWith(id, "flixel/"))
             return getOpenFLAsset(id, type, useCache);
 
-        //trace("-----");
-
-        var allowCache = useCache && caching;
         var asset:Any = switch type
 		{
             case TEXT:
@@ -449,42 +473,42 @@ class FlxModding
 			case BINARY:
 				File.getBytes(redirect(id));
 			
-			case IMAGE if ((OpenFLAssets.cache.enabled && allowCache) && OpenFLAssets.cache.hasBitmapData(redirect(id))):
-				OpenFLAssets.cache.getBitmapData(redirect(id));
-			case SOUND if ((OpenFLAssets.cache.enabled && allowCache) && OpenFLAssets.cache.hasSound(redirect(id))):
-				OpenFLAssets.cache.getSound(redirect(id));
-			case FONT if ((OpenFLAssets.cache.enabled && allowCache) && OpenFLAssets.cache.hasFont(redirect(id))):
-				OpenFLAssets.cache.getFont(redirect(id));
+			case IMAGE if ((useCache && FlxModding.cache.enabled) && FlxModding.cache.hasBitmapData(redirect(id))):
+				FlxModding.cache.getBitmapData(redirect(id));
+			case SOUND if ((useCache && FlxModding.cache.enabled) && FlxModding.cache.hasSound(redirect(id))):
+				FlxModding.cache.getSound(redirect(id));
+			case FONT if ((useCache && FlxModding.cache.enabled) && FlxModding.cache.hasFont(redirect(id))):
+				FlxModding.cache.getFont(redirect(id));
 			
 			case IMAGE:
 				var bitmap = BitmapData.fromFile(redirect(id));
-				if (OpenFLAssets.cache.enabled && allowCache)
-					OpenFLAssets.cache.setBitmapData(redirect(id), bitmap);
+				if (useCache && FlxModding.cache.enabled)
+					FlxModding.cache.setBitmapData(redirect(id), bitmap);
 				bitmap;
 			case SOUND:
 				var sound = Sound.fromFile(redirect(id));
-				if (OpenFLAssets.cache.enabled && allowCache) 
-					OpenFLAssets.cache.setSound(redirect(id), sound);
+				if (useCache && FlxModding.cache.enabled) 
+					FlxModding.cache.setSound(redirect(id), sound);
 				sound;
 			case FONT:
 				var font = Font.fromFile(redirect(id));
-				if (OpenFLAssets.cache.enabled && allowCache)
-					OpenFLAssets.cache.setFont(redirect(id), font);
+				if (useCache && FlxModding.cache.enabled)
+					FlxModding.cache.setFont(redirect(id), font);
 				font;
 		}
 		
 		return asset;
-        #else
-        return getOpenFLAsset(id, type, useCache);
         #end
+
+        return null;
     }
 
-    public function loadAsset(id:String, type:flixel.system.frontEnds.AssetFrontEnd.FlxAssetType, useCache:Bool = true):Future<Any>
+    public function loadAsset(id:String, type:FlxAssetType, useCache:Bool = true):Future<Any>
     {
         return Future.withValue(getAsset(id, type, useCache));
     }
 
-    public function exists(id:String, ?type:flixel.system.frontEnds.AssetFrontEnd.FlxAssetType):Bool
+    public function exists(id:String, ?type:FlxAssetType):Bool
     {
         #if (!js || !html5)
         if (StringTools.startsWith(id, "flixel/"))
@@ -492,9 +516,11 @@ class FlxModding
 
         return FileSystem.exists(redirect(id));
         #end
+
+        return false;
     }
 
-    public function list(?type:flixel.system.frontEnds.AssetFrontEnd.FlxAssetType):Array<String>
+    public function list(?type:FlxAssetType):Array<String>
     {
         #if (!js || !html5)
         var list = [];
@@ -513,17 +539,15 @@ class FlxModding
         addFiles(FlxModding.modsDirectory, Path.withoutDirectory(FlxModding.modsDirectory) + "/");
 
 		return list;
-        #else
-        return OpenFLAssets.list(type.toOpenFlType());
         #end
+
+        return null;
     }
 
-    public function isLocal(id:String, ?type:flixel.system.frontEnds.AssetFrontEnd.FlxAssetType, useCache:Bool = true)
+    public function isLocal(id:String, ?type:FlxAssetType, useCache:Bool = true):Bool
     {
-        var allowCache = useCache && caching;
-
         if (StringTools.startsWith(id, "flixel/"))
-			OpenFLAssets.isLocal(id, type.toOpenFlType(), allowCache);
+			OpenFLAssets.isLocal(id, type.toOpenFlType(), OpenFLAssets.cache.enabled && useCache);
 
         return true;
     }
@@ -553,7 +577,7 @@ class FlxModding
         return getAsset(id, FONT, useCache);
     }
 
-    function getOpenFLAsset(id:String, type:flixel.system.frontEnds.AssetFrontEnd.FlxAssetType, useCache:Bool = true):Null<Any>
+    function getOpenFLAsset(id:String, type:FlxAssetType, useCache:Bool = true):Null<Any>
 	{
 		return switch(type)
 		{
@@ -570,10 +594,7 @@ class FlxModding
      */
     function redirect(id:String):String
     {
-        mods.sort((order, mod1, mod2) ->
-        {
-            return FlxSort.byValues(order, mod1.priority, mod2.priority);
-        });
+        FlxModding.sort();
 
         if (StringTools.startsWith(id, "flixel/") || StringTools.startsWith(id, FlxModding.modsDirectory + "/"))
         {
@@ -599,9 +620,9 @@ class FlxModding
 
         for (modpack in mods)
         {
-            if ((modpack.active && modpack.alive && modpack.exists) && enabled && FileSystem.exists(FlxModding.modsDirectory + "/" + modpack.file + "/" + id))
+            if ((modpack.active && modpack.alive && modpack.exists) && enabled && FileSystem.exists(modpack.directory() + "/" + id))
             {
-                directory = FlxModding.modsDirectory + "/" + modpack.file;
+                directory = modpack.directory();
             }
         }
 
@@ -611,38 +632,43 @@ class FlxModding
         return null;
     }
 
-    // This right here is the worst fucking code I've ever made, nearly killed myself figuring out how to write this.
-    // And omfg the old version was so much worse
-    static function convertToString(metadata:MetadataFormat):String
+    static function print(data:Dynamic):Void
     {
-        var buf = new StringBuf();
-
-        buf.add('{\n'); 
-        buf.add('\t"name": "' + metadata.name + '",\n');
-        buf.add('\t"version": "' + metadata.version + '",\n');
-        buf.add('\t"description": "' + metadata.description + '",\n');
-        buf.add('\n\t"credits": [\n');
-
-        for (index in 0...metadata.credits.length) 
-        {
-            var credit = metadata.credits[index];
-            buf.add('\t\t{\n');
-            buf.add('\t\t\t"name": "' + credit.name + '",\n');
-            buf.add('\t\t\t"title": "' + credit.title + '",\n');
-            buf.add('\t\t\t"socials": "' + credit.socials + '"\n');
-            buf.add('\t\t}');
-
-            if (index < metadata.credits.length - 1)
-            {
-                buf.add(',\n\n');
-            }
-        }
-
-        buf.add('\n\t],\n');
-        buf.add('\n\t"priority": ' + metadata.priority + ',\n');
-        buf.add('\t"active": ' + metadata.active + '\n');
-        buf.add('}');
-
-        return buf.toString();
+        if (debug)
+            FlxG.log.add(data);
     }
+}
+
+typedef CreditFormat = 
+{
+    var name:String;
+    var title:String;
+    var socials:String;
+}
+
+typedef MetadataFormat = 
+{
+    var name:String;
+    var version:String;
+    var description:String;
+
+    var credits:Array<CreditFormat>;
+
+    var priority:Int;
+    var active:Bool;
+}
+
+typedef PolymodCreditFormat = 
+{
+    var name:String;
+    var role:String;
+    var url:String;
+}
+
+typedef PolymodMetadataFormat = 
+{
+    var title:String;
+    var mod_version:String;
+    var description:String;
+    var contributors:Array<PolymodCreditFormat>;
 }

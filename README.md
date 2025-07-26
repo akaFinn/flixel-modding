@@ -12,7 +12,7 @@
 
 ## Requirements
 - HaxeFlixel 5.9.0+
-- Haxe 4.0.0+
+- Haxe Duh....
 
 ## Limitations
 - You can only use flixel-modding for HaxeFlixel version **5.9.0 or above**.
