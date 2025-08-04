@@ -1,5 +1,7 @@
 package flixel.system;
 
+import flixel.system.frontEnds.AssetFrontEnd.FlxAssetType;
+import haxe.io.Bytes;
 import openfl.display.BitmapData;
 import openfl.media.Sound;
 import openfl.text.Font;
@@ -14,6 +16,9 @@ enum FlxCacheType
 /**
  * A custom Asset Cache system designed to replace OpenFL's/Lime's Asset Cache system.
  */
+@:access(lime.utils.Assets)
+@:access(openfl.utils.Assets)
+@:access(lime.utils.AssetLibrary)
 @:access(flixel.system.frontEnds.BitmapFrontEnd)
 class FlxCache
 {
@@ -22,6 +27,8 @@ class FlxCache
 	 * It's a global toggle for whether or not anything should be cached.
 	 */
 	public var enabled:Bool;
+
+	public var filter:String = "flixel";
 
 	var bitmapData:Map<String, BitmapData>;
 	var sound:Map<String, Sound>;
@@ -34,6 +41,9 @@ class FlxCache
 	public function new(?enabled:Bool = true)
 	{
 		this.enabled = enabled;
+
+		lime.utils.Assets.cache.enabled = false;
+        openfl.utils.Assets.cache.enabled = false;
 
 		bitmapData = new Map<String, BitmapData>();
 		sound = new Map<String, Sound>();
@@ -83,17 +93,18 @@ class FlxCache
 		switch (type)
 		{
 			case FLIXEL:
-				FlxG.log.add("Attempting to merge Flixel Graphics...");
+				if (FlxModding.debug) {FlxG.log.add("Attempting to merge Flixel Cache...");}
+
 				for (key in FlxG.bitmap._cache.keys())
 				{
 					FlxG.bitmap.removeByKey(key);
 					setBitmapData(key, FlxG.bitmap.get(key).bitmap);
 				}
 
-				FlxG.log.add("Merged Flixel Graphics!");
+				if (FlxModding.debug) {FlxG.log.add("Merged Flixel Cache!");}
 
 			case OPENFL:
-				FlxG.log.add("Attempting to merge OpenFL Assets...");
+				if (FlxModding.debug) {FlxG.log.add("Attempting to merge OpenFL Cache...");}
 				var cache:openfl.utils.AssetCache = Std.isOfType(openfl.utils.Assets.cache, openfl.utils.AssetCache) ? cast openfl.utils.Assets.cache : null;
 
 				for (key in cache.bitmapData.keys())
@@ -114,25 +125,48 @@ class FlxCache
 					cache.removeFont(key);
 				}
 
-				FlxG.log.add("Merged OpenFL Assets!");
+				if (FlxModding.debug) {FlxG.log.add("Merged OpenFL Cache!");}
 
 			case LIME:
-				FlxG.log.add("Attempting to merge Lime Assets...");
-				var cache:lime.utils.AssetCache = lime.utils.Assets.cache;
+				if (FlxModding.debug) {FlxG.log.add("Attempting to merge Lime Cache...");}
 
-				for (key in cache.image.keys())
+				for (library in lime.utils.Assets.libraries)
 				{
-					setBitmapData(key, BitmapData.fromImage(lime.utils.Assets.getImage(key)));
-					cache.image.remove(key);
+					for (key in library.types.keys())
+					{
+						var type = library.types.get(key);
+
+						switch (type)
+						{
+							/*case FONT: 
+								if (filter == null || StringTools.startsWith(key, filter) != false)
+								{
+									if (FlxModding.debug) {FlxG.log.add("Caching: " + key + ", Font");}
+									setBitmapData(key, library.getFont(key));
+								}*/
+
+							case IMAGE:
+								if (filter == null || StringTools.startsWith(key, filter) != false)
+								{
+									if (FlxModding.debug) {FlxG.log.add("Caching: " + key + ", Image");}
+									setBitmapData(key, BitmapData.fromImage(library.getImage(key)));
+								}
+
+							case MUSIC, SOUND:
+								if (filter == null || StringTools.startsWith(key, filter) != false)
+								{
+									if (FlxModding.debug) {FlxG.log.add("Caching: " + key + ", Sound");}
+									setSound(key, Sound.fromAudioBuffer(library.getAudioBuffer(key)));
+								}
+
+							default:
+						}
+
+						library.types.remove(key);
+					}
 				}
 
-				for (key in cache.audio.keys())
-				{
-					setSound(key, Sound.fromAudioBuffer(lime.utils.Assets.getAudioBuffer(key)));
-					cache.audio.remove(key);
-				}
-
-				FlxG.log.add("Merged Lime Assets!");
+				if (FlxModding.debug) {FlxG.log.add("Merged Lime Cache!");}
 		}
 
 		return this;
@@ -140,8 +174,21 @@ class FlxCache
 
 	// Access Asset Values
 
+	public function getAsset(id:String, type:FlxAssetType):Null<Any>
+	{
+		return switch (type)
+		{
+			case IMAGE: getBitmapData(id);
+			case SOUND: getSound(id);
+			case FONT: getFont(id);
+
+			default: null;
+		}
+	}
+
 	public function getBitmapData(key:String):BitmapData
 	{
+		//trace(key, hasBitmapData(key));
 		return bitmapData.get(key);
 	}
 
@@ -156,6 +203,18 @@ class FlxCache
 	}
 
 	// Store or Replace Asset Values
+
+	public function setAsset(id:String, value:Dynamic, type:FlxAssetType):Void
+	{
+		switch (type)
+		{
+			case IMAGE: setBitmapData(id, value);
+			case SOUND: setSound(id, value);
+			case FONT: setFont(id, value);
+
+			default:
+		}
+	}
 
 	public function setBitmapData(key:String, value:BitmapData):Void
 	{
@@ -173,6 +232,18 @@ class FlxCache
 	}
 
 	// Check If Asset Exists
+
+	public function hasAsset(key:String, type:FlxAssetType):Bool
+	{
+		return switch (type)
+		{
+			case IMAGE: hasBitmapData(key);
+			case SOUND: hasSound(key);
+			case FONT: hasFont(key);
+
+			default: false;
+		}
+	}
 
 	public function hasBitmapData(key:String):Bool
 	{

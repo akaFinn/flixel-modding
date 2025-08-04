@@ -3,24 +3,25 @@ package flixel.system;
 import flixel.FlxG;
 import flixel.group.FlxContainer.FlxTypedContainer;
 import flixel.system.debug.log.LogStyle;
-import flixel.system.frontEnds.AssetFrontEnd.FlxAssetType;
 import flixel.system.scripting.FlxHScript;
 import flixel.util.FlxSignal;
 import flixel.util.FlxSort;
+import flixel.util.FlxTimer;
 import haxe.Json;
 import haxe.io.Bytes;
 import haxe.io.Path;
 import lime.graphics.Image;
 import lime.media.AudioBuffer;
 import lime.utils.AssetLibrary;
-import lime.utils.Assets as LimeAssets;
 import openfl.display.BitmapData;
 import openfl.display.PNGEncoderOptions;
 import openfl.media.Sound;
 import openfl.text.Font;
-import openfl.utils.AssetType;
-import openfl.utils.Assets as OpenFLAssets;
 import openfl.utils.Future;
+
+#if (flixel >= "5.9.0")
+import flixel.system.frontEnds.AssetFrontEnd.FlxAssetType;
+#end
 
 #if (!js || !html5)
 import sys.FileSystem;
@@ -42,6 +43,7 @@ import sys.io.File;
  * Common uses include loading mod metadata, accessing registered modpacks, refreshing assets, 
  * and toggling caching behaviors for more efficient memory management.
  */
+@:access(flixel.FlxGame)
 class FlxModding
 {
 	// ===============================
@@ -51,7 +53,7 @@ class FlxModding
 	/**
 	 * The Base Flixel-Modding version, in semantic versioning syntax.
 	 */
-	public static var VERSION:FlxVersion = new FlxVersion(1, 3, 0);
+	public static var VERSION:FlxVersion = new FlxVersion(1, 4, 0);
 
 	/**
 	 * Use this to toggle Flixel-Modding between on and off.
@@ -134,9 +136,24 @@ class FlxModding
 
 	static var metaDirectory:String = "metadata.json";
 	static var iconDirectory:String = "picture.png";
-
 	static var metaPolymodDirectory:String = "_polymod_meta.json";
 	static var iconPolymodDirectory:String = "_polymod_icon.png";
+
+	// ===============================
+	// Custom Directory API
+	// ===============================
+
+    /**
+	 * Used to override the default metadata directory path.
+	 * If set, metadata files will be loaded from this custom path instead of the default `metaDirectory`.
+	 */
+	public static var metaCustomDirectory:String = metaDirectory;
+
+	/**
+	 * Used to override the default icon directory path.
+	 * If set, icon assets will be loaded from this custom path instead of the default `iconDirectory`.
+	 */
+	public static var iconCustomDirectory:String = iconDirectory;
 
     /**
      * Initializes Flixel-Modding to enable support for loading and reloading modded assets at runtime.
@@ -149,55 +166,60 @@ class FlxModding
      * This setup is only available on native targets (like Windows, Mac, or Linux). 
      * It will not function in JS/HTML5 builds due to file system access restrictions.
      * 
-     * @param   allowCaching    (Optional) A toggle for caching game assets
+     * @param   metadataDirectory     (Optional) A custom directory path used specifically for locating mod metadata files.
+     *                                This lets you override the default search path for metadata like `pack.json`, allowing for
+     *                                more flexible organization or support for multiple metadata formats.
      * 
-     * @param   assetDirectory  (Optional) A path that overrides the default directory for game assets. 
-     *                          Use this if your mod uses a custom asset folder structure.
+     * @param   iconDirectory         (Optional) A directory path for loading mod icon assets from a non-default location.
+     *                                Useful for keeping mod visuals (like logos or thumbnails) separate from core mod files, 
+     *                                especially if you're building a custom UI or launcher.
      * 
-     * @param   modsDirectory   (Optional) A path that overrides the default directory used to store mods.
-     *                          This folder is where all mods and associated data should reside.
+     * @param   assetDirectory        (Optional) A path that overrides the default directory for game assets. 
+     *                                Use this if your mod uses a custom asset folder structure.
      * 
-     * @return                  The initialized FlxModding system so it can be assigned or used directly.
+     * @param   modsDirectory         (Optional) A path that overrides the default directory used to store mods.
+     *                                This folder is where all mods and associated data should reside.
+     * 
+     * @return                        The initialized FlxModding system so it can be assigned or used directly.
      */
-    public static function init(allowCaching:Bool = true, ?assetDirectory:String, ?modsDirectory:String):FlxModding
+    public static function init(?metadataDirectory:String, ?iconDirectory:String, ?assetDirectory:String, ?modsDirectory:String):FlxModding
     {   
-        #if (!js || !html5)
         print("Attempting to Initialize FlxModding...");
-        if (assetDirectory != null) flixel.system.FlxModding.assetDirectory = assetDirectory;
-        if (modsDirectory != null) flixel.system.FlxModding.modsDirectory = modsDirectory;
+
+        #if (!js || !html5)
+        flixel.system.FlxModding.assetDirectory = assetDirectory != null ? assetDirectory : flixel.system.FlxModding.assetDirectory;
+        flixel.system.FlxModding.modsDirectory = modsDirectory != null ? modsDirectory : flixel.system.FlxModding.modsDirectory;
 
         if (FileSystem.exists(FlxModding.modsDirectory + "/"))
         {
             #if hscript
             FlxHScript.init();
             #end
+
+            flixel.system.FlxModding.metaCustomDirectory = metadataDirectory != null ? metadataDirectory : flixel.system.FlxModding.metaCustomDirectory;
+            flixel.system.FlxModding.iconCustomDirectory = iconDirectory != null ? iconDirectory : flixel.system.FlxModding.iconCustomDirectory;
             
             enabled = true;
-            cache = new FlxCache(allowCaching);
             system = new FlxModding();
+            cache = new FlxCache().merge(LIME);
             mods = new FlxTypedContainer<FlxModpack>();
         
-            #if (flixel >= "3.3.0")
-            FlxG.signals.preGameReset.add(function ()
+            FlxG.signals.preGameReset.add(() ->
             {
                 FlxModding.reload();
             });
-            #end
 
             print("FlxModding Initialized!");
             return system;
         }
         else
         {
-            FlxG.log.error("Critical Error! " + FlxModding.modsDirectory + " not found. Please ensure that the directory exists on your filesystem and that it has been properly declared in your 'Project.xml' file. Without this, Flixel-Modding will fail to operate as expected.");
-            FlxG.stage.window.alert(FlxModding.modsDirectory + " not found. Please ensure that the directory exists on your filesystem and that it has been properly declared in your 'Project.xml' file. Without this, Flixel-Modding will fail to operate as expected.", "Critical Error!");
+            FlxG.stage.window.alert("Mod Directory: '" + FlxModding.modsDirectory + "' not found. \nPlease ensure that the directory has a base file located inside of it. \nWithout this, Flixel-Modding will fail to operate as expected.", "Critical Error!");
             FlxG.stage.window.close();
             return null;
         }
-
         #else
-        FlxG.log.error("Critical Error! Failed to Initialize FlxModding. Flixel-Modding cannot run properly while targeting JavaScript or HTML5, native targets are required for modding support.");
-        //FlxG.log.error("Critical Error! Cannot access required filesystem functionality when targeting JavaScript or HTML5. Native targets are required for modding support.");
+        print("Initialization for FlxModding Failed. \nFlixel-Modding cannot run properly while targeting JavaScript or HTML5, \nnative targets are required for modding support.");
         return null;
         #end
     }
@@ -235,7 +257,7 @@ class FlxModding
                 if (system.exists(modpack.directory() + "/" + metaDirectory))
                 {
                     modpack.type = FLIXEL;
-                    var metadata:MetadataFormat = Json.parse(system.getText(FlxModding.modsDirectory + "/" + modFile + "/" + FlxModding.metaDirectory));
+                    var metadata:MetadataFormat = Json.parse(FlxG.assets.getText(modpack.metaDirectory()));
 
                     modpack.name = metadata.name;
                     modpack.version = metadata.version;
@@ -249,9 +271,9 @@ class FlxModding
                 else if (system.exists(modpack.directory() + "/" + metaPolymodDirectory))
                 {
                     modpack.type = POLYMOD;
-                    var metadata:PolymodMetadataFormat = Json.parse(system.getText(FlxModding.modsDirectory + "/" + modFile + "/" + FlxModding.metaPolymodDirectory));
-                    var credits:Array<CreditFormat> = [];
+                    var metadata:PolymodMetadataFormat = Json.parse(FlxG.assets.getText(modpack.metaDirectory()));
 
+                    var credits:Array<CreditFormat> = [];
                     for (contributor in metadata.contributors)
                     {
                         credits.push(
@@ -273,8 +295,13 @@ class FlxModding
                 }
                 else
                 {
-                    modpack.type = FLIXEL;
-                    FlxG.log.warn("Failed to locate Metadata, file does not exist. Using fallback/default values instead.");
+                    modpack.type = CUSTOM;
+
+                    if (!system.exists(modpack.directory() + "/" + metaCustomDirectory))
+                    {
+                        modpack.type = FLIXEL;
+                        FlxG.log.warn("Failed to locate Metadata, file does not exist. Using fallback/default values instead.");
+                    }
 
                     modpack.name = modFile;
                     modpack.version = "1.0.0";
@@ -282,23 +309,20 @@ class FlxModding
 
                     modpack.credits = [];
 
-                    modpack.active = true;
+                    modpack.active = false;
                     modpack.priority = -1;
                 }
 
                 add(modpack);
                 print('Added mod: "' + modpack.name + '"');
+
+                FlxModding.sort();
+                print("Modpacks Reloaded!");
+                postModsReload.dispatch();
             }
         }
-
-        FlxModding.sort();
-        print("Modpacks Reloaded!");
-        postModsReload.dispatch();
-
         #else
-        FlxG.log.error("Critical Error! Cannot reload mods while targeting JavaScript or HTML5");
-        FlxG.stage.window.alert("Cannot reload mods while targeting JavaScript or HTML5", "Critical Error!");
-        FlxG.stage.window.close();
+        print("Cannot reload mods while targeting JavaScript or HTML5. \nSorry but as of now Flixel-Modding does not have support for JavaScript/HTML5 targets.");
         #end
     }
 
@@ -385,6 +409,8 @@ class FlxModding
         {
             FlxG.log.warn("The mod: " + fileName + " has already been created. You cannot create a mod with the same name.");
         }
+        #else
+        print("Cannot create modpack while targeting JavaScript or HTML5. \nSorry but as of now Flixel-Modding does not have support for JavaScript/HTML5 targets.");
         #end
     }
 
@@ -404,8 +430,8 @@ class FlxModding
      */
     public static function add(modpack:FlxModpack):Void
     {
-        onModAdded.dispatch(modpack);
         mods.add(modpack);
+        onModAdded.dispatch(modpack);
     }
 
     /**
@@ -416,8 +442,8 @@ class FlxModding
      */
     public static function remove(modpack:FlxModpack):Void
     {
-        onModRemoved.dispatch(modpack);
         mods.remove(modpack);
+        onModRemoved.dispatch(modpack);
     }
 
     /**
@@ -453,8 +479,7 @@ class FlxModding
         FlxG.assets.list = this.list;
         FlxG.assets.isLocal = this.isLocal;
         #else
-        FlxG.log.error("Critical Error! Cannot run the FlxModding instance, HaxeFlixel is OUT OF DATE. Please update to HaxeFlixel version 5.9.0 or higher");
-        FlxG.stage.window.alert("Cannot run the FlxModding instance, HaxeFlixel is OUT OF DATE. Please update to HaxeFlixel version 5.9.0 or higher", "Critical Error!");
+        FlxG.stage.window.alert("Cannot run the FlxModding instance, HaxeFlixel is OUT OF DATE. \nPlease update to HaxeFlixel version 5.9.0 or higher", "Critical Error!");
         FlxG.stage.window.close();
         #end
         #end
@@ -464,8 +489,8 @@ class FlxModding
     {
         #if (!js || !html5)
         if (StringTools.startsWith(id, "flixel/"))
-            return getOpenFLAsset(id, type, useCache);
-
+            return FlxModding.cache.getAsset(id, type);
+        
         var asset:Any = switch type
 		{
             case TEXT:
@@ -496,7 +521,7 @@ class FlxModding
 					FlxModding.cache.setFont(redirect(id), font);
 				font;
 		}
-		
+
 		return asset;
         #end
 
@@ -512,7 +537,7 @@ class FlxModding
     {
         #if (!js || !html5)
         if (StringTools.startsWith(id, "flixel/"))
-            return OpenFLAssets.exists(id);
+            return FlxModding.cache.hasAsset(id, type);
 
         return FileSystem.exists(redirect(id));
         #end
@@ -546,8 +571,8 @@ class FlxModding
 
     public function isLocal(id:String, ?type:FlxAssetType, useCache:Bool = true):Bool
     {
-        if (StringTools.startsWith(id, "flixel/"))
-			OpenFLAssets.isLocal(id, type.toOpenFlType(), OpenFLAssets.cache.enabled && useCache);
+        if (StringTools.startsWith(id, "flixel/") && useCache)
+			FlxModding.cache.hasAsset(id, type);
 
         return true;
     }
@@ -576,18 +601,6 @@ class FlxModding
     {
         return getAsset(id, FONT, useCache);
     }
-
-    function getOpenFLAsset(id:String, type:FlxAssetType, useCache:Bool = true):Null<Any>
-	{
-		return switch(type)
-		{
-			case TEXT: OpenFLAssets.getText(id);
-			case BINARY: OpenFLAssets.getBytes(id);
-			case IMAGE: OpenFLAssets.getBitmapData(id, useCache);
-			case SOUND: OpenFLAssets.getSound(id, useCache);
-			case FONT: OpenFLAssets.getFont(id, useCache);
-		}
-	}
 
     /**
      * Redirects an asset path to the appropriate mod or asset directory.
@@ -632,6 +645,10 @@ class FlxModding
         return null;
     }
 
+
+    /**
+     * Prints data only if the debug parameter is set to true.
+     */
     static function print(data:Dynamic):Void
     {
         if (debug)

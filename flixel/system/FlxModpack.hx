@@ -12,7 +12,8 @@ import sys.io.File;
 enum FlxModpackType
 {
     FLIXEL;
-    POLYMOD; 
+    POLYMOD;
+    CUSTOM;
 }
 
 /**
@@ -21,96 +22,154 @@ enum FlxModpackType
  */
 class FlxModpack extends FlxBasic
 {
-    public var name:String;
-    public var version:String;
-    public var description:String;
+	/**
+	 * The display name of the modpack.
+	 * Used for UI, metadata, and identification.
+	 */
+	public var name:String;
 
-    public var priority:Int;
-    public var file:String;
+	/**
+	 * The version string for the modpack.
+	 * Typically formatted like "1.0.0".
+	 */
+	public var version:String;
 
-    public var credits:Array<CreditFormat>;
+	/**
+	 * A short description of the modpack.
+	 * Useful for menus or listing info about the mod.
+	 */
+	public var description:String;
 
-    public var type:FlxModpackType;
+	/**
+	 * Priority value used for sorting modpacks.
+	 * Higher priority mods are loaded later.
+	 */
+	public var priority:Int;
 
-    public function new(file:String)
-    {
-        this.file = file;
-        this.ID = FlxModding.mods.length + 1;
-        this.priority = FlxModding.mods.length + 1;
+	/**
+	 * The folder name where the modpack is stored.
+	 * This name is used for path generation.
+	 */
+	public var file:String;
 
-        super();
-    }
+	/**
+	 * An array of credit entries tied to the modpack.
+	 * Each entry contains information about contributors.
+	 */
+	public var credits:Array<CreditFormat>;
 
-    public function updateMetadata():Void
-    {
-        if (type == FLIXEL)
-        {
-            #if (!js || !html5)
-            @:privateAccess
-            File.saveContent(FlxModding.modsDirectory + "/" + file + "/" + FlxModding.metaDirectory, FlxModpack.toJsonString(
-            {
-                name: name,
-                version: version,
-                description: description,
+	/**
+	 * The type of modpack—Flixel, Polymod, or Custom.
+	 * This affects how metadata and icons are handled.
+	 */
+	public var type:FlxModpackType;
 
-                credits: credits,
+	/**
+	 * Creates a new modpack instance using the specified folder name.
+	 * Automatically assigns ID and priority based on the current mod count.
+	 */
+	public function new(file:String)
+	{
+		this.file = file;
+		this.ID = FlxModding.mods.length + 1;
+		this.priority = FlxModding.mods.length + 1;
 
-                priority: priority,
-                active: active,
-            }));
-            #end
-        }
-    }
+		super();
+	}
 
-    public function loadFromMetadata(metadata:MetadataFormat):FlxModpack
-    {
-        name = metadata.name;
-        version = metadata.version;
-        description = metadata.description;
+	/**
+	 * Saves the modpack’s metadata back to disk.
+	 * Only works for FLIXEL-type modpacks and not on HTML5 targets.
+	 */
+	public function updateMetadata():Void
+	{
+		if (type == FLIXEL)
+		{
+			#if (!js || !html5)
+			File.saveContent(metaDirectory(), FlxModpack.toJsonString(
+			{
+				name: name,
+				version: version,
+				description: description,
 
-        credits = metadata.credits;
+				credits: credits,
 
-        priority = metadata.priority;
-        active = metadata.active;
+				priority: priority,
+				active: active,
+			}));
+			#end
+		}
+	}
 
+	/**
+	 * Loads this modpack's values from a parsed metadata object.
+	 * Populates the fields and sets the mod type to FLIXEL.
+	 */
+	public function loadFromMetadata(metadata:MetadataFormat):FlxModpack
+	{
         type = FLIXEL;
 
-        return this;
-    }
+		name = metadata.name;
+		version = metadata.version;
+		description = metadata.description;
 
-    public function directory():String
-    {
-        @:privateAccess
-        return FlxModding.modsDirectory + "/" + file;
-    }
+		credits = metadata.credits;
 
-    public function metaDirectory():String
-    {
-        @:privateAccess
-        {
-            switch (type)
-            {
-                case FLIXEL:
-                    return directory() + "/" + FlxModding.metaDirectory;
-                case POLYMOD:
-                    return directory() + "/" + FlxModding.metaPolymodDirectory;
-            }
-        }  
-    }
+		priority = metadata.priority;
+		active = metadata.active;
 
-    public function iconDirectory():String
-    {
-        @:privateAccess
-        {
-            switch (type)
-            {
-                case FLIXEL:
-                    return directory() + "/" + FlxModding.iconDirectory;
-                case POLYMOD:
-                    return directory() + "/" + FlxModding.iconPolymodDirectory;
-            }
-        }  
-    }
+		return this;
+	}
+
+	/**
+	 * Returns the full directory path of this modpack.
+	 * Combines the global mods directory with this mod’s folder name.
+	 */
+	public function directory():String
+	{
+		@:privateAccess
+		return FlxModding.modsDirectory + "/" + file;
+	}
+
+	/**
+	 * Returns the directory path where this modpack's metadata is stored.
+	 * The path differs depending on the modpack type (Flixel, Polymod, or Custom).
+	 */
+	public function metaDirectory():String
+	{
+		@:privateAccess
+		{
+			switch (type)
+			{
+				case FLIXEL:
+					return directory() + "/" + FlxModding.metaDirectory;
+				case POLYMOD:
+					return directory() + "/" + FlxModding.metaPolymodDirectory;
+				case CUSTOM:
+					return directory() + "/" + FlxModding.metaCustomDirectory;
+			}
+		}  
+	}
+
+	/**
+	 * Returns the directory path where the modpack's icon is located.
+	 * Different mod types use different icon subfolders.
+	 */
+	public function iconDirectory():String
+	{
+		@:privateAccess
+		{
+			switch (type)
+			{
+				case FLIXEL:
+					return directory() + "/" + FlxModding.iconDirectory;
+				case POLYMOD:
+					return directory() + "/" + FlxModding.iconPolymodDirectory;
+				case CUSTOM:
+					return directory() + "/" + FlxModding.iconCustomDirectory;
+			}
+		}  
+	}
 
     override public function destroy():Void
     {

@@ -1,6 +1,24 @@
+# 1.4.0 (July 27, 2025)
+
+=== UNDER CONSTRUCTION LOL ===
+Customizability, RuleScript Support, & saying a farewell to OpenFL/Lime's Asset System.
+
+## Added
+- Support for custom directorys 
+- Support for RuleScript via custom classes
+- Some more sizes for the logo so that it wouldn't look so compressed
+- Added a link on the `README.md` file that directs users to the Haxe discord server, specificly the Flixel-Modding channel
+
+## Changed
+- Changed a few things in the `README.md` file to make it *cleaner* if that makes sense
+
+## Removed
+- All instances of OpenFL's/Lime's Asset system seen in flixel modding, and replaced their respective caching systems with `FlxCache`
+- The `allowCaching` parameter for the `init` function in `flixel.system.FlxModding`
+
 # 1.3.0 (July 26, 2025)
 
-Yet another hotfix for flixel-modding
+Even more hotfixes, and Polymod support, and HScript support.
 
 ## Added
 - Created a new class `flixel.system.scripting.FlxHScript` it can run HScript code with the `Flixel` library and still be functional
@@ -21,7 +39,7 @@ Yet another hotfix for flixel-modding
 
 # 1.2.0 (July 24, 2025)
 
-First major update for flixel-modding
+First major update for flixel-modding.
 
 ## Added
 - Added support for creating modpack icons & metadata files
@@ -47,7 +65,7 @@ First major update for flixel-modding
 
 # 1.1.0 (April 23, 2025)
 
-First hotfix for flixel-modding
+First hotfix for flixel-modding.
 
 ## Added
 - Added `create` to `flixel.system.FlxModding` to make a new Modpack template for you to customize
@@ -59,7 +77,7 @@ First hotfix for flixel-modding
 
 # 1.0.0 (April 21, 2025)
 
-First ever version of flixel-modding
+First ever version of flixel-modding.
 
 ## Added
 - Added `init` and `reload` to `flixel.system.FlxModding` with the purpose of reloading mods and initilizing FlxModding
