@@ -1,6 +1,8 @@
-![](assets/images/logo_small.png?raw=true)
+![](assets/images/logo_normal.png?raw=true)
 ### Design by [l0go](https://github.com/l0go)
 [![Discord Support](https://img.shields.io/discord/162395145352904705.svg?logo=discord)](https://discord.com/channels/162395145352904705/1367138149259673712)
+![](assets/images/construction.gif)
+### Flixel-Modding is still unfinished, if you find issues or bugs you can find me in the Haxe discord server.
 
 ## About
 **flixel-modding** is a robust and easy-to-use modding system built specifically for **HaxeFlixel**. It is designed to help developers add straightforward mod support to their games. Whether you're looking to allow asset replacement or loading entirely new assets from mods, flixel-modding has you covered.

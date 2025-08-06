@@ -97,8 +97,8 @@ class FlxCache
 
 				for (key in FlxG.bitmap._cache.keys())
 				{
-					FlxG.bitmap.removeByKey(key);
 					setBitmapData(key, FlxG.bitmap.get(key).bitmap);
+					FlxG.bitmap.removeByKey(key);
 				}
 
 				if (FlxModding.debug) {FlxG.log.add("Merged Flixel Cache!");}
@@ -176,6 +176,10 @@ class FlxCache
 
 	public function getAsset(id:String, type:FlxAssetType):Null<Any>
 	{
+		/*@:privateAccess
+        for (key in FlxG.bitmap._cache.keys()) {trace(key);}*/
+		trace(FlxG.bitmap.get(id));
+
 		return switch (type)
 		{
 			case IMAGE: getBitmapData(id);
