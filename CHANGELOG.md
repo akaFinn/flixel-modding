@@ -1,18 +1,20 @@
-# 1.4.0 (July 27, 2025)
+## Changelog
 
-=== UNDER CONSTRUCTION LOL ===
-Customizability, RuleScript Support, & saying a farewell to OpenFL/Lime's Asset System.
+# 1.4.0 (Augest 6, 2025)
 
-## Added
+=== UNDER CONSTRUCTION ===
+Customizability, RuleScript Support, & support for OpenFL's asset system
+
+### Added
 - Support for custom directorys 
 - Support for RuleScript via custom classes
 - Some more sizes for the logo so that it wouldn't look so compressed
 - Added a link on the `README.md` file that directs users to the Haxe discord server, specificly the Flixel-Modding channel
 
-## Changed
+### Changed
 - Changed a few things in the `README.md` file to make it *cleaner* if that makes sense
 
-## Removed
+### Removed
 - All instances of OpenFL's/Lime's Asset system seen in flixel modding, and replaced their respective caching systems with `FlxCache`
 - The `allowCaching` parameter for the `init` function in `flixel.system.FlxModding`
 
@@ -20,7 +22,7 @@ Customizability, RuleScript Support, & saying a farewell to OpenFL/Lime's Asset 
 
 Even more hotfixes, and Polymod support, and HScript support.
 
-## Added
+### Added
 - Created a new class `flixel.system.scripting.FlxHScript` it can run HScript code with the `Flixel` library and still be functional
 - Support for Polymod modpack's including grabbing a Polymod metadata and icon
 - Added comments to `flixel.system.FlxModpack`
@@ -31,7 +33,7 @@ Even more hotfixes, and Polymod support, and HScript support.
 - Added `metaDirectory` in `flixel.system.FlxModpack` a function that acts like the `directory` function except it returns the pathway to the metadata depending on the type of modpack
 - Added `iconDirectory` in `flixel.system.FlxModpack` a function that acts like the `directory` function except it returns the pathway to the icon depending on the type of modpack
 
-## Changed
+### Changed
 - Fixed the comment for `flixel.system.FlxModding.create` (Forgot to put in the other parameters like an idiot WOOPS!)
 - Changed `caching` to `cache` in `flixel.system.FlxModding` and changed the class to the newly added `flixel.system.FlxCache`
 - Changed the initializing process to not crash your project when targeting JavaScript or HTML5
@@ -41,7 +43,7 @@ Even more hotfixes, and Polymod support, and HScript support.
 
 First major update for flixel-modding.
 
-## Added
+### Added
 - Added support for creating modpack icons & metadata files
 - Added comments in `flixel.system.FlxModding` for functions and variables
 - Added `updateMetadata` to `flixel.system.FlxModpack` that will take the data provided in the class and save it to the modpack's metadata file
@@ -53,24 +55,24 @@ First major update for flixel-modding.
   - `preModsUpdate` and `postModsUpdate` signals fire before and after mods update
   - `onModAdded` and `onModRemoved` signals fire when modpacks are added or removed, passing the relevant `FlxModpack` instance
 
-## Changed
+### Changed
 - Changed `flixel.system.FlxModpack` to extend `FlxBasic`
 - Changed `getAsset`, `loadAsset`, `exists`, and `isLocal` to properly support Flixel assets without crashing
 - Changed `reload` from `flixel.system.FlxModding` to take an optional parameter `updateMetadata` which, when true, updates all mod metadata files on reload
 - Changed `init` in `flixel.system.FlxModding` to have an optional `allowCaching` parameter to set the `caching` toggle
 - Changed `toString` from `flixel.system.FlxModpack` to properly output `FlxModpack` data
 
-## Removed
+### Removed
 - Removed any scraps from when I was trying to make `FlxModding` work with OpenFL, I'm sorry but some things just aren't meant to be
 
 # 1.1.0 (April 23, 2025)
 
 First hotfix for flixel-modding.
 
-## Added
+### Added
 - Added `create` to `flixel.system.FlxModding` to make a new Modpack template for you to customize
 
-## Changed
+### Changed
 - Mirgated flixel-modding from only being accessable for HaxeFlixel version 6.0.0 to version 5.9.0 (thx swordcube)
 - Changed getting Metadata has been reworked from a simple text file to an actual Json file instead
 - Changed some code that when `FlxG.resetGame` is called it also reloads mods
@@ -79,6 +81,6 @@ First hotfix for flixel-modding.
 
 First ever version of flixel-modding.
 
-## Added
+### Added
 - Added `init` and `reload` to `flixel.system.FlxModding` with the purpose of reloading mods and initilizing FlxModding
 - Added `name`, `author`, and `active` to `flixel.system.FlxModpack` to make Modpack's more discriptive
