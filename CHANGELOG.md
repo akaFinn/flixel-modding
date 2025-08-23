@@ -2,7 +2,7 @@
 
 # 1.4.0 (Augest 23, 2025)
 
-Custom Modpack & Metadata formatting, RuleScript Support, File & Asset System changeability, and Asset compatibility for OpenFL/Lime Assets
+Custom Modpack & Metadata formatting, File & Asset System changeability, and Asset compatibility for OpenFL/Lime Assets
 
 ### Added
 - Support for custom Modpack Classes
@@ -25,7 +25,7 @@ Custom Modpack & Metadata formatting, RuleScript Support, File & Asset System ch
   - `flixel.system.assetSystem.IAssetSystem` an interface used as a base for all asset system classes
   - `flixel.system.assetSystem.FlxAssetSystem` a class that acts as an alternative for `FlxG.assets`
 - Added a button in the debugger that links back to the haxelib page
-- Added a feature to the `init` function in `FlxModding` to where polymod scripted classes & rulescripted classes get parsed and loaded
+- Added a feature to the `init` function in `FlxModding` to where polymod scripted classes get parsed and loaded
 
 ### Changed
 - Changed a few things in the `README.md` file to make it *cleaner* if that makes sense

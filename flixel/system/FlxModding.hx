@@ -300,8 +300,6 @@ class FlxModding
             }
             #end
 
-            setupModdingSignals();
-            buildDebuggerButton();
             FlxModding.log("FlxModding Initialized!");
             return system;
         }
@@ -634,6 +632,11 @@ class FlxModding
             Assets.registerLibrary(libraryName, new ModAssetLibrary(Assets.getLibrary(libraryName)));
         }
 
+        #if debug
+        buildDebuggerButton();
+        #end
+
+        setupModdingSignals();
         this.initialized = true;
     }
 
@@ -683,7 +686,7 @@ class FlxModding
         return result;
     }
 
-    static function buildDebuggerButton():TextField
+    function buildDebuggerButton():TextField
     {
         var label = new TextField();
 		label.height = 20;
@@ -703,7 +706,7 @@ class FlxModding
         return label;
     }
 
-    static function setupModdingSignals():Void
+    function setupModdingSignals():Void
     {
         FlxG.signals.preGameReset.add(() ->
         {
@@ -712,7 +715,7 @@ class FlxModding
 
         FlxG.signals.preStateSwitch.add(() ->
         {
-            system.assetSystem.clear();
+            assetSystem.clear();
         });
     }
 
@@ -749,6 +752,8 @@ private class ModAssetLibrary extends AssetLibrary
 
         if (defaultLibrary != null) 
         {
+            this.defaultLibrary = defaultLibrary;
+
             for (key in defaultLibrary.classTypes.keys())
                 if (StringTools.startsWith(key, FlxModding.flixelDirectory) == filterFlixel)
                     this.classTypes.set(key, defaultLibrary.classTypes.get(key));
@@ -1109,7 +1114,7 @@ private class FlxModVersion extends FlxVersion
 
     override public function toString():String
     {
-        if (type != null || type != "")
+        if (type != null)
             return 'FlxModding $major.$minor.$patch-$type';
         else
             return 'FlxModding $major.$minor.$patch';
