@@ -4,8 +4,8 @@
 	"license": "MIT",
 	"tags": ["flixel", "modding"],
 	"description": "A robust modding system for HaxeFlixel.",
-	"version": "1.3.0",
-	"releasenote": "Even more hotfixes, and Polymod support, and HScript support.",
+	"version": "1.4.0",
+	"releasenote": "Custom Modpack & Metadata formatting, File & Asset System changeability, and Asset compatibility for OpenFL/Lime Assets",
 	"contributors": ["akaFinn"],
 	"dependencies": {
 		"flixel": ""

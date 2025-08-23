@@ -1,4 +1,4 @@
-![](assets/images/logo.png?raw=true)
+![](assets/images/logo_normal.png?raw=true)
 ### Design by [l0go](https://github.com/l0go)
 
 ## About
@@ -11,13 +11,11 @@
 - Lightweight and easily extendable
 
 ## Requirements
-- HaxeFlixel 5.9.0+
-- Haxe Duh....
+- HaxeFlixel
+- (Optional) HScript 2.6.0+
 
 ## Limitations
-- You can only use flixel-modding for HaxeFlixel version **5.9.0 or above**.
 - You cannot use flixel-modding for JavaScript or HTML5 targets.
-- You cannot use OpenFL's `Assets.hx` class for things like `getText` or `getBitmapData`. Any and all methods of getting Asset Data must be done through either Flixel's `AssetFrontEnd.hx`, which can be found in `FlxG.assets.getAsset`. Or, by using `FlxModding.system.getAsset`
 
 ## Intended Usage
 flixel-modding is intended for developers of HaxeFlixel games who want to:
@@ -50,6 +48,7 @@ FlxModding.init();
 This sets up the modding environment and ensures all mod assets are ready before the game starts.
 
 ## Examples
+### Initilizing FlxModding
 ```haxe
 class Main extends Sprite
 {
@@ -60,16 +59,9 @@ class Main extends Sprite
     }
 }
 ```
-
+### Creating mods using FlxModding
 ```haxe
-// Both of these methods for loading images work.
-sprite.loadGraphic("images/haxeflixel.png");
-sprite.loadGraphic("assets/images/haxeflixel.png");
-```
-
-```haxe
-FlxModding.create("coolMod", new BitmapData(64, 64, true, 0xFFFFFF),
-{
+FlxModding.create("coolestMod", new BitmapData(128, 128), new FlxMetadataFormat().fromDynamicData({
 	name: "Cool Awesome Mod",
 	version: "1.2.3",
 	description: "Cool mod made for cooler people. B)",
@@ -84,5 +76,15 @@ FlxModding.create("coolMod", new BitmapData(64, 64, true, 0xFFFFFF),
 
 	priority: 1,
 	active: true,
-});
-``
+}));
+```
+### Customizing FlxModding
+```haxe
+var customFileSystem:IFileSystem = new CoolFileSystem();
+var customAssetSystem:IAssetSystem = new CoolAssetSystem();
+
+var customAssetPath:String = "coolAssets";
+var customModPath:String = "coolMods";
+
+FlxModding.init(CoolModpack, CoolMetadataFormat, customFileSystem, customAssetSystem, customAssetPath, customModPath);
+```

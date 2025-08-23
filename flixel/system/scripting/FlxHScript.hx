@@ -24,10 +24,10 @@ import flixel.math.FlxMath;
 import flixel.math.FlxRandom;
 import flixel.math.FlxRect;
 import flixel.system.macros.FlxMacroUtil;
-import flixel.text.FlxInputText;
 import flixel.text.FlxText;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
+import flixel.ui.FlxButton;
 import flixel.util.FlxColor;
 import flixel.util.FlxSave;
 import flixel.util.FlxSort;
@@ -63,19 +63,17 @@ class FlxHScript extends FlxBasic
      */
     public function new(?path:String)
     {
+        super();
+
         #if hscript
         parser = new Parser();
         parser.allowJSON = true;
         parser.allowTypes = true;
         interp = new FlxInterp(path);
 
-        super();
-
         loadGlobals();
-        if (path != null) execute(FlxG.assets.getText(path)); 
+        if (path != null) execute(FlxModding.system.assetSystem.getText(path)); 
         #else
-        super();
-
         FlxG.log.warn("Failed to execute FlxHScript, the hscript package is not installed and is required to run FlxHScript.");
         #end
     }
@@ -150,22 +148,22 @@ class FlxHScript extends FlxBasic
 
         // Text
         setGlobalVariable("FlxText", FlxText);
-        setGlobalVariable("FlxInputText", FlxInputText);
+        //setGlobalVariable("FlxInputText", FlxInputText);
 
         // Input
         setGlobalVariable("FlxMouse", FlxMouse);
         setGlobalVariable("FlxKeyboard", FlxKeyboard);
         setGlobalVariable("FlxGamepad", FlxGamepad);
 
+        // UI
+        setGlobalVariable("FlxButton", FlxButton);
+
         // Utilities
         setGlobalVariable("FlxSave", FlxSave);
         setGlobalVariable("FlxTimer", FlxTimer);
         setGlobalVariable("FlxSort", FlxSort);
         setGlobalVariable("FlxColor", FlxScriptColor);
-
-        #if (!js || !html5)
         setGlobalVariable("FlxModding", FlxModding);
-        #end
 
         // Tweens
         setGlobalVariable("FlxTween", FlxTween);
