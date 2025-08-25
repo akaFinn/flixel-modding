@@ -7,25 +7,25 @@ package flixel.system;
  */
 class FlxBaseMetadataFormat
 {
-    /** 
+	/** 
 	 * Creates a new metadata format with paths and an optional format override.
-	*/
-    public function new() {}
+	 */
+	public function new() {}
 
-    /**
-     * Converts this metadata format into a JSON string.
-     * The base implementation simply returns an empty string — override to customize output.
-     */
+	/**
+	 * Converts this metadata format into a JSON string.
+	 * The base implementation simply returns an empty string — override to customize output.
+	 */
 	public function toJsonString():String
-    {
-        return "";
-    }
+	{
+		return "";
+	}
 
 	/** 
 	 * Parses Dynamic data into this metadata format. Currently returns itself without modification.
-	*/
-    public function fromDynamicData(data:Dynamic):FlxBaseMetadataFormat
-    {
-        return this;
-    }
+	 */
+	public function fromDynamicData(data:Dynamic):FlxBaseMetadataFormat
+	{
+		return this;
+	}
 }
