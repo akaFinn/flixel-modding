@@ -2,18 +2,16 @@ package flixel.system;
 
 import flixel.FlxG;
 import flixel.group.FlxContainer.FlxTypedContainer;
-import flixel.system.FlxBaseModpack.FlxBaseMetadataFormat;
 import flixel.system.FlxBaseModpack.FlxModpackType;
-import flixel.system.FlxModpack.FlxMetadataFormat;
 import flixel.system.assetSystem.FlxAssetSystem;
 import flixel.system.assetSystem.IAssetSystem;
 import flixel.system.fileSystem.IFileSystem;
 import flixel.system.fileSystem.RamFileSystem;
 import flixel.system.fileSystem.SysFileSystem;
 import flixel.system.fileSystem.WebFileSystem;
-import flixel.system.polymod.PolymodModpack.PolymodMetadataFormat;
+import flixel.system.polymod.PolymodMetadataFormat;
 import flixel.system.polymod.PolymodModpack;
-import flixel.system.scripting.FlxHScript;
+import flixel.util.FlxScriptUtil;
 import flixel.util.FlxSignal;
 import flixel.util.FlxSort;
 import haxe.Json;
@@ -27,15 +25,6 @@ import openfl.text.TextFieldAutoSize;
 import openfl.text.TextFormat;
 import openfl.utils.AssetLibrary;
 import openfl.utils.Future;
-
-#if rulescript
-import rulescript.scriptedClass.RuleScriptedClassUtil;
-import rulescript.types.ScriptedTypeUtil;
-#end
-
-#if polymod
-import polymod.hscript._internal.PolymodScriptClass;
-#end
 
 
 /**
@@ -64,7 +53,7 @@ class FlxModding
 	/**
 	 * The Base Flixel-Modding version, in semantic versioning syntax.
 	 */
-	public static var VERSION:FlxVersion = new FlxModVersion(1, 4, 0);
+	public static var VERSION:FlxVersion = new FlxModVersion(1, 5, 0, "beta", "FlxModding");
 
 	/**
 	 * Use this to toggle Flixel-Modding between on and off.
@@ -184,6 +173,11 @@ class FlxModding
     static inline var flixelDirectory:String = "flixel";
 
     /**
+     * File extension used for hscript.
+     */
+    static inline var hScriptExt:String = ".hxs";
+
+    /**
      * File extension used for Polymod script classes.
      */
     static inline var polymodScriptExt:String = ".hxc";
@@ -276,7 +270,7 @@ class FlxModding
         flixel.system.FlxModding.assetDirectory = assetDirectory != null ? assetDirectory : flixel.system.FlxModding.assetDirectory;
         flixel.system.FlxModding.modsDirectory = modsDirectory != null ? modsDirectory : flixel.system.FlxModding.modsDirectory;
 
-        #if (!js || !html5)
+        #if (!js || !flash)
         system = new FlxModding(fileSystem, assetSystem);
 
         if (system.fileSystem.exists(FlxModding.modsDirectory + "/"))
@@ -286,18 +280,25 @@ class FlxModding
             mods = new FlxTypedContainer<FlxBaseModpack<FlxBaseMetadataFormat>>();
 
             #if hscript
-            FlxHScript.init();
-
-            for (asset in system.assetSystem.list(TEXT))
+            FlxG.signals.postGameStart.add(() ->
             {
-                #if polymod
-                if (StringTools.endsWith(asset, polymodScriptExt))
+                #if hscript
+                for (asset in system.assetSystem.list(TEXT))
                 {
-                    @:privateAccess
-                    PolymodScriptClass.registerScriptClassByString(system.assetSystem.getText(asset));
+                    if (StringTools.endsWith(asset, hScriptExt))
+                        FlxScriptUtil.buildHScript(system.fileSystem.getFileContent(asset));
+                
+                    #if polymod
+                    if (StringTools.endsWith(asset, polymodScriptExt))
+                        FlxScriptUtil.buildPolymodScript(system.fileSystem.getFileContent(asset));
+                    #end
+
+                    #if rulescript
+                    if (StringTools.endsWith(asset, ruleScriptExt))
+                        FlxScriptUtil.buildRuleScript(system.fileSystem.getFileContent(asset));
+                    #end
                 }
-                #end
-            }
+            });
             #end
 
             FlxModding.log("FlxModding Initialized!");
@@ -324,12 +325,12 @@ class FlxModding
      */
     public static function reload(?updateMetadata:Bool = true):Void
     {
+        #if (!js || !flash)
         preModsReload.dispatch();
         FlxModding.log("Attempting to Reload modpacks...");
         system.lastReload = FlxG.elapsed;
         system.reloadCount++;
 
-        #if (!js || !html5)
         if (updateMetadata == true && mods.length != 0)
         {
             if (enabled)
@@ -373,7 +374,7 @@ class FlxModding
         FlxModding.log("Modpacks Reloaded!");
         postModsReload.dispatch();
         #else
-        FlxModding.warn("Failed to Reload modpacks.");
+        FlxModding.error("Failed to reload modpacks while running on a HTML5/JavaScript or Flash build target.");
         #end
     }
 
@@ -388,6 +389,7 @@ class FlxModding
      */
     public static function update(?modpack:FlxBaseModpack<FlxBaseMetadataFormat>):Void
     {
+        #if (!js || !flash)
         preModsUpdate.dispatch();
 
         if (modpack != null)
@@ -403,6 +405,9 @@ class FlxModding
         }
 
         postModsUpdate.dispatch();
+        #else
+        FlxModding.error("Failed to Update modpacks while running on a HTML5/JavaScript or Flash build target.");
+        #end
     }
 
 	/**
@@ -411,10 +416,14 @@ class FlxModding
 	 */
 	public static function sort():Void
 	{
+        #if (!js || !flash)
 		mods.sort((order, mod1, mod2) ->
 		{
 			return FlxSort.byValues(order, mod1.ID, mod2.ID);
-		});    
+		});
+        #else
+        FlxModding.error("Failed to sort modpacks while running on a HTML5/JavaScript or Flash build target.");
+        #end  
 	}
 
     /**
@@ -434,7 +443,7 @@ class FlxModding
      */
     public static function create(fileName:String, iconBitmap:BitmapData, metadata:FlxBaseMetadataFormat, ?type:FlxModpackType = FLIXEL, ?makeAssetFolders:Bool = true):FlxBaseModpack<FlxBaseMetadataFormat>
     {
-        #if (!js || !html5)
+        #if (!js || !flash)
         FlxModding.log("Attempting to Create a modpack...");
         if (!system.fileSystem.exists(FlxModding.modsDirectory + "/" + fileName))
         {
@@ -506,7 +515,7 @@ class FlxModding
             return null;
         }
         #else
-        FlxModding.log("Cannot create modpack while targeting JavaScript or HTML5. \nSorry but as of now Flixel-Modding does not have support for JavaScript/HTML5 targets.");
+        FlxModding.error("Failed to create modpack while running on a HTML5/JavaScript or Flash build target.");
         return null;
         #end
     }
@@ -519,6 +528,7 @@ class FlxModding
      */
     public static function get(fileName:String):FlxBaseModpack<FlxBaseMetadataFormat>
     {
+        #if (!js || !flash)
         for (modpack in mods.members)
         {
             if (modpack.file == fileName && FlxModding.exists(fileName))
@@ -529,6 +539,10 @@ class FlxModding
 
         FlxModding.warn("Failed to locate Modpack: " + fileName);
         return null;
+        #else
+        FlxModding.error("Failed to get modpack while running on a HTML5/JavaScript or Flash build target.");
+        return null;
+        #end
     }
 
     /**
@@ -539,6 +553,7 @@ class FlxModding
      */
     public static function exists(fileName:String):Bool
     {
+        #if (!js || !flash)
         for (modpack in mods.members)
         {
             if (modpack.file == fileName)
@@ -548,6 +563,10 @@ class FlxModding
         }
 
         return false;
+        #else
+        FlxModding.error("Failed to check if modpack existed while running on a HTML5/JavaScript or Flash build target.");
+        return false;
+        #end
     }
 
     /**
@@ -555,8 +574,12 @@ class FlxModding
      */
     public static function clear():Void
     {
+        #if (!js || !flash)
         mods.clear();
         onModsCleared.dispatch();
+        #else
+        FlxModding.error("Failed to clear modpacks while running on a HTML5/JavaScript or Flash build target.");
+        #end
     }
 
     /**
@@ -567,10 +590,14 @@ class FlxModding
      */
     public static function add(modpack:FlxBaseModpack<FlxBaseMetadataFormat>):Void
     {
+        #if (!js || !flash)
         FlxModding.log("Added Modpack: " + modpack.directory());
 
         mods.add(modpack);
         onModAdded.dispatch(modpack);
+        #else
+        FlxModding.error("Failed to add modpack while running on a HTML5/JavaScript or Flash build target.");
+        #end
     }
 
     /**
@@ -581,10 +608,14 @@ class FlxModding
      */
     public static function remove(modpack:FlxBaseModpack<FlxBaseMetadataFormat>):Void
     {
+        #if (!js || !flash)
         FlxModding.log("Removed Modpack: " + modpack.directory());
 
         mods.remove(modpack);
         onModRemoved.dispatch(modpack);
+        #else
+        FlxModding.error("Failed to remove modpack while running on a HTML5/JavaScript or Flash build target.");
+        #end
     }
     
     /**
@@ -632,10 +663,7 @@ class FlxModding
             Assets.registerLibrary(libraryName, new ModAssetLibrary(Assets.getLibrary(libraryName)));
         }
 
-        #if debug
-        buildDebuggerButton();
-        #end
-
+        buildDebuggerTools();
         setupModdingSignals();
         this.initialized = true;
     }
@@ -686,8 +714,9 @@ class FlxModding
         return result;
     }
 
-    function buildDebuggerButton():TextField
+    function buildDebuggerTools():Void
     {
+        #if FLX_DEBUG
         var label = new TextField();
 		label.height = 20;
 		label.selectable = false;
@@ -701,9 +730,16 @@ class FlxModding
         FlxG.signals.postGameStart.addOnce(() -> 
         {
             FlxG.debugger.addButton(LEFT, null, () -> FlxG.openURL("https://lib.haxe.org/p/flixel-modding/")).addChild(label);
-        });
 
-        return label;
+            FlxG.console.registerFunction("listMods", () -> 
+            {
+                for (modpack in mods)
+                {
+                    FlxG.log.add(modpack.directory() + ", active: " + modpack.active);
+                }
+            });
+        });
+        #end
     }
 
     function setupModdingSignals():Void
@@ -1104,19 +1140,32 @@ private class ModAssetLibrary extends AssetLibrary
 
 private class FlxModVersion extends FlxVersion
 {
-    public var type(default, null):String;
+	public var branch(default, null):String;
+	public var display(default, null):String;
 
-    public function new(Major:Int, Minor:Int, Patch:Int, ?Type:String)
+	public function new(Major:Int, Minor:Int, Patch:Int, ?Branch:String, ?Display:String)
 	{
-        type = Type;
-		super(Major, Minor, Patch);
+        super(Major, Minor, Patch);
+
+        branch = Branch;
+        display = "";
+
+        if (Display != null)
+            display = Display + " ";
 	}
 
-    override public function toString():String
-    {
-        if (type != null)
-            return 'FlxModding $major.$minor.$patch-$type';
+	override public function toString():String
+	{
+		var sha = FlxVersion.sha;
+
+		if (sha != "")
+		{
+			sha = "@" + sha.substring(0, 7);
+		}
+
+		if (branch != null)
+            return '$display$major.$minor.$patch-$branch$sha';
         else
-            return 'FlxModding $major.$minor.$patch';
-    }    
+            return '$display$major.$minor.$patch$sha';
+	}   
 }

@@ -1,6 +1,24 @@
 ## Changelog
 
-# 1.4.0 (Augest 23, 2025)
+# [1.5.0] **Beta** - (Augest 25, 2025)
+
+Better scripting, Macros, and more
+
+### Added
+- Created `flixel.util.FlxModUtil` to better store functions and macros designed for modding
+- Created `flixel.util.FlxScriptUtil` as a way to handle scripting for hscript, polymod, and rulescript
+- Added `buildModPaths` to `flixel.util.FlxModUtil` a function that when used on your custom metadata format will create the `metaPath` & `iconPath` variables on its own
+- Added support for RuleScript Classes **BETA**
+- Added a console command `listMods`
+
+### Changed
+- Moved `FlxBaseMetadataFormat`, `FlxMetadataFormat`, and `PolymodMetadataFormat` to their own files
+- Changed the `buildDebuggerTools` function to only run if the `FLX_DEBUG` flag is active to avoid crashing
+
+### Removed
+- Deleted the `metaPath` & `iconPath` variables from both `FlxMetadataFormat`, and `PolymodMetadataFormat`
+
+# [1.4.0] - (Augest 23, 2025)
 
 Custom Modpack & Metadata formatting, File & Asset System changeability, and Asset compatibility for OpenFL/Lime Assets
 
@@ -34,13 +52,15 @@ Custom Modpack & Metadata formatting, File & Asset System changeability, and Ass
 - Reworked the `get` function from `FlxModding` works so now its based off of the file name for the modpack and not the display name and it also checks if the modpack actually exists
 - Fully Reworked the `create` function for `FlxModding` to know allow you to create different types of modpacks `FLIXEL`, `POLYMOD`, & `CUSTOM`
 - Changed the `sort` function for `FlxModding` to be based of the `ID` parameter instead of a custom one
+- Renamed the `pathway` function from `FlxModding` to `redirect`
+- Renamed the `redirect` function from `FlxModding` to `sanitize`
 
 ### Removed
 - All instances of OpenFL's/Lime's Asset system seen in flixel modding, and replaced their respective caching systems with `FlxCache`
 - The `allowCaching` parameter for the `init` function in `flixel.system.FlxModding`
 - Removed `FlxCache` due to it being pointless and fucking dumb
 
-# 1.3.0 (July 26, 2025)
+# [1.3.0] - (July 26, 2025)
 
 Even more hotfixes, and Polymod support, and HScript support.
 
@@ -61,7 +81,7 @@ Even more hotfixes, and Polymod support, and HScript support.
 - Changed the initializing process to not crash your project when targeting JavaScript or HTML5
 - Changed the error system to where intead of it just flashing the error on screen and closing the window it brings up a whole popup explaining what happened
 
-# 1.2.0 (July 24, 2025)
+# [1.2.0] - (July 24, 2025)
 
 First major update for flixel-modding.
 
@@ -87,7 +107,7 @@ First major update for flixel-modding.
 ### Removed
 - Removed any scraps from when I was trying to make `FlxModding` work with OpenFL, I'm sorry but some things just aren't meant to be
 
-# 1.1.0 (April 23, 2025)
+# [1.1.0] - (April 23, 2025)
 
 First hotfix for flixel-modding.
 
@@ -99,7 +119,7 @@ First hotfix for flixel-modding.
 - Changed getting Metadata has been reworked from a simple text file to an actual Json file instead
 - Changed some code that when `FlxG.resetGame` is called it also reloads mods
 
-# 1.0.0 (April 21, 2025)
+# [1.0.0] - (April 21, 2025)
 
 First ever version of flixel-modding.
 
