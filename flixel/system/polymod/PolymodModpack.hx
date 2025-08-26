@@ -8,6 +8,7 @@ import flixel.util.FlxStringUtil;
  * It uses the PolymodMetadataFormat to handle metadata reading and parsing,
  * ensuring that modpacks follow the structure and requirements expected by Polymod.
  */
+@:buildModpack(PolymodMetadataFormat)
 class PolymodModpack extends FlxBaseModpack<PolymodMetadataFormat>
 {
 	/**
@@ -48,15 +49,9 @@ class PolymodModpack extends FlxBaseModpack<PolymodMetadataFormat>
 	 */
 	public var license:String;
 
-	public function new(file:String)
-	{
-		type = POLYMOD;
-		super(file, new PolymodMetadataFormat());
-	}
-
 	public function openHomepage():Void
 	{
-		FlxG.openURL(homepage);
+		FlxG.openURL(homepage);	
 	}
 
 	override public function updateMetadata(?saveToDisk:Bool = true):Void
@@ -76,19 +71,9 @@ class PolymodModpack extends FlxBaseModpack<PolymodMetadataFormat>
 		}
 	}
 
-	override public function metaDirectory():String
-	{
-		return directory() + "/" + PolymodMetadataFormat.metaPath;
-	}
-
-	override public function iconDirectory():String
-	{
-		return directory() + "/" + PolymodMetadataFormat.iconPath;
-	}
-
 	override public function fromMetadata(metadata:PolymodMetadataFormat):FlxBaseModpack<PolymodMetadataFormat>
 	{
-		this.type = POLYMOD;
+        this.type = POLYMOD;
 		this.metadata = metadata;
 
 		this.title = metadata.title;

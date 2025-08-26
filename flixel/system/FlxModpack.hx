@@ -1,6 +1,7 @@
 package flixel.system;
 
 import flixel.system.FlxMetadataFormat.CreditFormat;
+import flixel.system.FlxMetadataFormat;
 import flixel.util.FlxStringUtil;
 
 /**
@@ -8,6 +9,7 @@ import flixel.util.FlxStringUtil;
  * It uses the FlxMetadataFormat to handle metadata reading and parsing,
  * ensuring that modpacks follow the structure and requirements expected by FlxModding.
  */
+@:buildModpack(FlxMetadataFormat)
 class FlxModpack extends FlxBaseModpack<FlxMetadataFormat>
 {
 	/**
@@ -36,12 +38,6 @@ class FlxModpack extends FlxBaseModpack<FlxMetadataFormat>
 	 */
 	public var credits:Array<CreditFormat>;
 
-	public function new(file:String)
-	{
-		type = FLIXEL;
-		super(file, new FlxMetadataFormat());
-	}
-
 	override public function updateMetadata(?saveToDisk:Bool = true):Void
 	{
 		metadata.name = name;
@@ -53,24 +49,26 @@ class FlxModpack extends FlxBaseModpack<FlxMetadataFormat>
 		metadata.active = active;
 		metadata.priority = ID;
 
-		if (saveToDisk)
+		if (saveToDisk != false)
+		{
 			FlxModding.system.fileSystem.setFileContent(metaDirectory(), metadata.toJsonString());
+		}
 	}
 
-	override public function destroy():Void
-	{
+    override public function destroy():Void
+    {
 		name = null;
 		version = null;
 		description = null;
 
 		credits = null;
 
-		super.destroy();
-	}
+        super.destroy();
+    }
 
 	override public function fromMetadata(metadata:FlxMetadataFormat):FlxBaseModpack<FlxMetadataFormat>
 	{
-		this.type = FLIXEL;
+        this.type = FLIXEL;
 		this.metadata = metadata;
 
 		this.name = metadata.name;

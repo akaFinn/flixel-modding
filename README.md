@@ -78,13 +78,23 @@ FlxModding.create("coolestMod", new BitmapData(128, 128), new FlxMetadataFormat(
 	active: true,
 }));
 ```
+### Making compatible Classes
+```haxe
+@:buildModpack(CustomMetadataFormat)
+class CustomModpack extends flixel.system.FlxBaseModpack<CustomMetadataFormat> {}
+
+@:buildMetadata("metadata_file.json", "icon_file.png")
+class CustomMetadataFormat extends flixel.system.FlxBaseMetadataFormat {}
+
+// Yes, when using the @:buildModpack & buildMetadata metadata tag, a constructor is not needed. Thanks macros.
+```
 ### Customizing FlxModding
 ```haxe
-var customFileSystem:IFileSystem = new CoolFileSystem();
-var customAssetSystem:IAssetSystem = new CoolAssetSystem();
+var customFileSystem:IFileSystem = new CustomFileSystem();
+var customAssetSystem:IAssetSystem = new CustomAssetSystem();
 
-var customAssetPath:String = "coolAssets";
-var customModPath:String = "coolMods";
+var customAssetPath:String = "assets_folder";
+var customModPath:String = "mods_folder";
 
-FlxModding.init(CoolModpack, CoolMetadataFormat, customFileSystem, customAssetSystem, customAssetPath, customModPath);
+FlxModding.init(CustomModpack, CustomMetadataFormat, customFileSystem, customAssetSystem, customAssetPath, customModPath);
 ```

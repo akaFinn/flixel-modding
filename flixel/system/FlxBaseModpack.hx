@@ -1,13 +1,14 @@
 package flixel.system;
 
+import flixel.system.polymod.PolymodMetadataFormat;
 import flixel.util.FlxStringUtil;
 import haxe.Json;
 
 enum FlxModpackType
 {
-	FLIXEL;
-	POLYMOD;
-	CUSTOM;
+    FLIXEL;
+    POLYMOD;
+    CUSTOM;
 }
 
 /**
@@ -19,6 +20,7 @@ enum FlxModpackType
  * providing shared variables and basic setup behavior that specialized modpack
  * classes can build upon.
  */
+@:autoBuild(flixel.util.FlxModUtil.buildModpack())
 class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 {
 	/**
@@ -44,10 +46,17 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 	 * Also auto-assigns an internal ID and default priority based on how many modpacks exist at creation time.
 	 * The `file` parameter is expected to be the folder name (not a full path).
 	 */
-	public function new(file:String, metadata:MetaFormat)
+	public function new(file:String, metadata:Class<MetaFormat>)
 	{
 		this.file = file;
-		this.metadata = metadata;
+		this.metadata = Type.createInstance(metadata, []);
+
+		if (metadata is FlxMetadataFormat)
+			type = FLIXEL;
+		else if (metadata is PolymodMetadataFormat)
+			type = POLYMOD;
+		else
+			type = CUSTOM;
 
 		super();
 
@@ -66,20 +75,18 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 
 	/**
 	 * Returns the directory path where this modpack's metadata is stored.
-	 * Function is designed and made to be overridden.
 	 */
 	public function metaDirectory():String
 	{
-		return directory() + "/metadata.json";
+		return directory() + "/" + Reflect.field(Type.getClass(metadata), "metaPath");
 	}
 
 	/**
 	 * Returns the directory path where the modpack's icon is located.
-	 * Function is designed and made to be overridden.
 	 */
 	public function iconDirectory():String
 	{
-		return directory() + "/picture.png";
+		return directory() + "/" + Reflect.field(Type.getClass(metadata), "iconPath");
 	}
 
 	/**
@@ -100,30 +107,30 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 	}
 
 	/**
-	 * Converts this modpack runtime data into a JSON string.
-	 * The base implementation simply returns an empty string — override to customize output.
-	 */
+     * Converts this modpack runtime data into a JSON string.
+     * The base implementation simply returns an empty string — override to customize output.
+     */
 	public function toJsonString():String
-	{
-		return "";
-	}
+    {
+        return "";
+    }
 
 	override public function destroy():Void
-	{
+    {
 		metadata = null;
 
 		type = null;
 		file = null;
 
-		super.destroy();
-	}
+        super.destroy();   
+    }
 
-	override public function toString():String
-	{
-		return FlxStringUtil.getDebugString([
+    override public function toString():String
+    {
+        return FlxStringUtil.getDebugString([
 			LabelValuePair.weak("class", Type.getClassName(Type.getClass(this)).split(".").pop()),
 			LabelValuePair.weak("path", directory()),
 			LabelValuePair.weak("active", active)
 		]);
-	}
+    }
 }
