@@ -53,26 +53,24 @@ class FlxModpack extends FlxBaseModpack<FlxMetadataFormat>
 		metadata.active = active;
 		metadata.priority = ID;
 
-		if (saveToDisk != false)
-		{
+		if (saveToDisk)
 			FlxModding.system.fileSystem.setFileContent(metaDirectory(), metadata.toJsonString());
-		}
 	}
 
-    override public function destroy():Void
-    {
+	override public function destroy():Void
+	{
 		name = null;
 		version = null;
 		description = null;
 
 		credits = null;
 
-        super.destroy();
-    }
+		super.destroy();
+	}
 
 	override public function fromMetadata(metadata:FlxMetadataFormat):FlxBaseModpack<FlxMetadataFormat>
 	{
-        this.type = FLIXEL;
+		this.type = FLIXEL;
 		this.metadata = metadata;
 
 		this.name = metadata.name;
