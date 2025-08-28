@@ -23,6 +23,15 @@ flixel-modding is intended for developers of HaxeFlixel games who want to:
 - Enable community content through custom mods
 - Simplify the process of managing mod files and directories
 
+## Links
+### [Haxelib](https://lib.haxe.org/p/flixel-modding/)
+### [Github](https://github.com/akaFinn/flixel-modding/tree/master)
+
+## Documentation
+### [Setup](docs/doc_setup.md)
+### [Create](docs/doc_create.md)
+### [Customize](docs/doc_customize.md)
+
 ## Examples
 ### Initilizing FlxModding
 ```haxe
