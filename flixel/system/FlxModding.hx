@@ -445,22 +445,20 @@ class FlxModding
      * @param   iconBitmap          The icon image used to visually represent the modpack.
      * @param   metadata            Contains modpack information such as the name and structure.
      *                              If you're using a custom-named assets folder, this helps define it.
-     * @param   type                (Optional) Defines the type of modpack being created.
-     *                              Defaults to `FLIXEL`.
      * @param   makeAssetFolders    (Optional) If true, automatically generates empty asset subfolders within the modpack.
      *                              Useful when you want to scaffold common asset paths.
      *
      * @return                      A new FlxBaseModpack instance configured with the provided data.
      */
-    public static function create(fileName:String, iconBitmap:BitmapData, metadata:FlxBaseMetadataFormat, ?type:FlxModpackType = FLIXEL, ?makeAssetFolders:Bool = true):FlxBaseModpack<FlxBaseMetadataFormat>
+    public static function create(fileName:String, iconBitmap:BitmapData, metadata:FlxBaseMetadataFormat, ?makeAssetFolders:Bool = true):FlxBaseModpack<FlxBaseMetadataFormat>
     {
         #if (!js || !flash)
         FlxModding.log("Attempting to Create a modpack...");
         if (!system.fileSystem.exists(FlxModding.modsDirectory + "/" + fileName))
         {
-            switch type
+            switch Type.getClass(metadata)
             {
-                case FLIXEL:
+                case FlxMetadataFormat:
                     var modpack:FlxModpack = Type.createInstance(flixelModpack, [fileName]);
                     modpack.fromMetadata(cast metadata);
 
@@ -487,7 +485,7 @@ class FlxModding
                     FlxModding.log("Modpack Created!");
                     return cast modpack;
 
-                case POLYMOD:
+                case PolymodMetadataFormat:
                     var modpack:PolymodModpack = Type.createInstance(polymodModpack, [fileName]);
                     modpack.fromMetadata(cast metadata);
 
@@ -514,7 +512,7 @@ class FlxModding
                     FlxModding.log("Modpack Created!");
                     return cast modpack;
 
-                case CUSTOM:
+                default:
                     trace("This aint done chief");
             }
 

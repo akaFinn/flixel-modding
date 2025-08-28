@@ -1,4 +1,4 @@
-![](assets/images/documentation/setup.png?raw=true)
+![](images/setup.png?raw=true)
 # How to Setup flixel-modding
 
 ## 1. Installing flixel-modding
@@ -19,7 +19,7 @@ Add the library to your `project.xml`.
 Create a folder inside your project and name it, for this example we'll just be calling our folder `mods`, but you can name it whatever you want.
 
 **Disclaimer**
-You must create a single file inside your `mods` folder **before** building your project so that the file system can register and find it, I have no idea why it can't find it without the file but this is the best workaround that I found so whatever. So becaus of that, your mods folder should look like this:
+You must create a single file inside your `mods` folder **before** building your project so that the file system can register and find it, I have no idea why it can't find it without the file but this is the best workaround that I found so whatever. So because of that, your mods folder should look like this:
 
 ```
 mods/
@@ -56,5 +56,6 @@ class Main extends Sprite
 ```
 
 ## More documentation
-### [How to Create modpacks flixel-modding](docs/doc_create.md)
-### [How to Customize flixel-modding](docs/doc_customize.md)
+[How to Create modpacks flixel-modding](doc_create.md)
+
+[How to Customize flixel-modding](doc_customize.md)

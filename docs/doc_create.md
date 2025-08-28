@@ -1,4 +1,4 @@
-![](assets/images/documentation/create.png?raw=true)
+![](images/create.png?raw=true)
 # How to Create modpacks flixel-modding
 
 ## 1. Initilize flixel-modding
@@ -53,5 +53,6 @@ class Main extends Sprite
 After that, the create function should create the folder for the modpack, and from there you can edit it yourself by adding images, audio, data, you get the idea.
 
 ## More documentation
-### [How to Setup flixel-modding](docs/doc_setup.md)
-### [How to Customize flixel-modding](docs/doc_customize.md)
+[How to Setup flixel-modding](doc_setup.md)
+
+[How to Customize flixel-modding](doc_customize.md)

@@ -24,45 +24,20 @@ flixel-modding is intended for developers of HaxeFlixel games who want to:
 - Simplify the process of managing mod files and directories
 
 ## Links
-### [Haxelib](https://lib.haxe.org/p/flixel-modding/)
-### [Github](https://github.com/akaFinn/flixel-modding/tree/master)
+[Haxelib](https://lib.haxe.org/p/flixel-modding/)
 
+[Github](https://github.com/akaFinn/flixel-modding/tree/master)
+
+<!-- start-github-only -->
 ## Documentation
-### [How to Setup flixel-modding](docs/doc_setup.md)
-### [How to Create modpacks flixel-modding](docs/doc_create.md)
-### [How to Customize flixel-modding](docs/doc_customize.md)
+[How to Setup flixel-modding](docs/doc_setup.md)
+
+[How to Create modpacks flixel-modding](docs/doc_create.md)
+
+[How to Customize flixel-modding](docs/doc_customize.md)
+<!-- end-github-only -->
 
 ## Examples
-### Initilizing FlxModding
-```haxe
-class Main extends Sprite
-{
-    public function new()
-    {
-        FlxModding.init();
-        addChild(new FlxGame(0, 0, PlayState));
-    }
-}
-```
-### Creating mods using FlxModding
-```haxe
-FlxModding.create("coolestMod", new BitmapData(128, 128), new FlxMetadataFormat().fromDynamicData({
-	name: "Cool Awesome Mod",
-	version: "1.2.3",
-	description: "Cool mod made for cooler people. B)",
-
-	credits: [
-		{
-			name: "akaFinn_",
-			title: "Creator",
-			socials: "https://x.com/akaFinn_"
-		}
-	],
-
-	priority: 1,
-	active: true,
-}));
-```
 ### Making compatible Classes
 ```haxe
 @:buildModpack(CustomMetadataFormat)
@@ -71,7 +46,10 @@ class CustomModpack extends flixel.system.FlxBaseModpack<CustomMetadataFormat> {
 @:buildMetadata("metadata_file.json", "icon_file.png")
 class CustomMetadataFormat extends flixel.system.FlxBaseMetadataFormat {}
 
-// Yes, when using the @:buildModpack & buildMetadata metadata tag, a constructor is not needed. Thanks macros.
+// Yes, 
+// when using the @:buildModpack & buildMetadata metadata tag, 
+// a constructor is not needed. 
+// Thanks macros.
 ```
 ### Customizing FlxModding
 ```haxe

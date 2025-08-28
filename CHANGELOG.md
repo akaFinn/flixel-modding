@@ -2,7 +2,7 @@
 
 # [1.5.0] **Beta** - (Augest 29, 2025)
 
-Better scripting, Macros, and more
+Better scripting, Metadata Macros, and more
 
 ### Added
 - Created `flixel.util.FlxModUtil` to better store functions and macros designed for modding
@@ -11,11 +11,14 @@ Better scripting, Macros, and more
 - Added `buildModpack` to `flixel.util.FlxModUtil` a metadata tag made with macros
 - Added support for RuleScript Classes **BETA**
 - Added 2 console commands `listMods` & `listActiveMods`
+- Added better documentation for flixel-modding
+- Added support to create custom modpack's using `create`
 
 ### Changed
 - Moved `FlxBaseMetadataFormat`, `FlxMetadataFormat`, and `PolymodMetadataFormat` to their own files
 - Changed the `buildDebuggerTools` function to only run if the `FLX_DEBUG` flag is active to avoid crashing
 - Updated the `README.md` to include a example of how you can inject a custom Modpack & MetadataFormat Class
+- Changed the `create` function so that it detects what type it is based off the provided Metadataformat
 
 ### Removed
 - Deleted the `metaPath` & `iconPath` variables from both `FlxMetadataFormat`, and `PolymodMetadataFormat`
