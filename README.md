@@ -15,7 +15,7 @@
 - (Optional) HScript 2.6.0+
 
 ## Limitations
-- You cannot use flixel-modding for JavaScript or HTML5 targets.
+- You cannot use flixel-modding for JavaScript/HTML5 or Flash targets.
 
 ## Intended Usage
 flixel-modding is intended for developers of HaxeFlixel games who want to:
@@ -28,9 +28,9 @@ flixel-modding is intended for developers of HaxeFlixel games who want to:
 ### [Github](https://github.com/akaFinn/flixel-modding/tree/master)
 
 ## Documentation
-### [Setup](docs/doc_setup.md)
-### [Create](docs/doc_create.md)
-### [Customize](docs/doc_customize.md)
+### [How to Setup flixel-modding](docs/doc_setup.md)
+### [How to Create modpacks flixel-modding](docs/doc_create.md)
+### [How to Customize flixel-modding](docs/doc_customize.md)
 
 ## Examples
 ### Initilizing FlxModding

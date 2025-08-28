@@ -1,17 +1,38 @@
 ![](assets/images/documentation/setup.png?raw=true)
+# How to Setup flixel-modding
 
-Install **flixel-modding** using haxelib:
+## 1. Installing flixel-modding
+Install **flixel-modding** using haxelib.
 
 ```sh
 haxelib install flixel-modding
 ```
 
-Add the path and the library to your `project.xml`:
+Add the library to your `project.xml`.
+
+```xml
+<haxelib name="flixel-modding" />
+```
+
+## 2. Creating folders
+
+Create a folder inside your project and name it, for this example we'll just be calling our folder `mods`, but you can name it whatever you want.
+
+**Disclaimer**
+You must create a single file inside your `mods` folder **before** building your project so that the file system can register and find it, I have no idea why it can't find it without the file but this is the best workaround that I found so whatever. So becaus of that, your mods folder should look like this:
+
+```
+mods/
+ └── mods-go-here.txt
+ ```
+
+Once that's done add the asset path to your `project.xml`.
 
 ```xml
 <assets path="mods" />
-<haxelib name="flixel-modding" />
 ```
+
+## 3. Setting up flixel-modding
 
 Before creating your `FlxGame` instance, initialize the modding system using the following code:
 
@@ -19,7 +40,7 @@ Before creating your `FlxGame` instance, initialize the modding system using the
 FlxModding.init();
 ```
 
-This sets up the modding environment, scans the `mods/` folder, and ensures all mod assets are ready before the game starts. If this line is skipped, mods will not load.
+This sets up the modding environment, scans the `mods` folder, and ensures all mod assets are ready before the game starts. If this line is skipped, mods will not load.
 
 Here’s a complete example of a `Main.hx` with modding properly initialized:
 
@@ -34,15 +55,6 @@ class Main extends Sprite
 }
 ```
 
-After setup, create a `mods/` folder in your project directory. To ensure the filesystem detects the folder, add a placeholder file inside it called something like `mods-go-here.txt`. Then place any replacement assets inside the folder, making sure the file paths match the originals. For example:
-
-```
-mods/
- ├── mods-go-here.txt
- └── images/
-     └── player.png
-```
-
-If an asset with the same path and name exists in both the `mods/` folder and your default assets folder, the version from `mods/` will automatically override the default one. This allows for simple replacements without changing any code. New assets can also be added in the same way and loaded with your usual asset calls.
-
-With this setup complete, your project is now capable of loading and swapping assets from mods. From here you can expand into creating structured mods with metadata, icons, and custom systems depending on how advanced you want your mod support to be.
+## More documentation
+### [How to Create modpacks flixel-modding](docs/doc_create.md)
+### [How to Customize flixel-modding](docs/doc_customize.md)
