@@ -23,30 +23,6 @@ flixel-modding is intended for developers of HaxeFlixel games who want to:
 - Enable community content through custom mods
 - Simplify the process of managing mod files and directories
 
-## Tutorial
-Install flixel-modding using haxelib:
-
-```sh
-haxelib install flixel-modding
-```
-
-Add the path and the library to your `project.xml`:
-
-```xml
-<assets path="mods" />
-```
-```xml
-<haxelib name="flixel-modding" />
-```
-
-Before creating your `FlxGame` instance, initialize the modding system using the following code:
-
-```haxe
-FlxModding.init();
-```
-
-This sets up the modding environment and ensures all mod assets are ready before the game starts.
-
 ## Examples
 ### Initilizing FlxModding
 ```haxe

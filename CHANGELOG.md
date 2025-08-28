@@ -1,6 +1,6 @@
 ## Changelog
 
-# [1.5.0] **Beta** - (Augest 26, 2025)
+# [1.5.0] **Beta** - (Augest 29, 2025)
 
 Better scripting, Macros, and more
 

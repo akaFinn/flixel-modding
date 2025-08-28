@@ -4,6 +4,7 @@ import flixel.sound.FlxSound;
 import flixel.system.FlxModding;
 import flixel.system.macros.FlxMacroUtil;
 import flixel.text.FlxText;
+import rulescript.types.Typedefs;
 
 #if hscript
 import hscript.Interp;
@@ -18,6 +19,8 @@ import rulescript.types.ScriptedTypeUtil;
 #if polymod
 import polymod.hscript._internal.PolymodScriptClass;
 #end
+
+private class FlxScriptedSprite extends FlxSprite implements rulescript.scriptedClass.RuleScriptedClass {}
 
 /**
  * @since 1.5.0
@@ -48,7 +51,7 @@ class FlxScriptUtil
 
         {
             name: "FlxColor",
-            cls: FlxScriptColor,
+            cls: FlxScriptedColor,
         },
 
         {
@@ -108,7 +111,10 @@ class FlxScriptUtil
             return parser.parseModule(FlxModding.system.fileSystem.getFileContent(path + ".rhx"));
         }
 
+        Typedefs.register("flixel.FlxSprite", FlxScriptedSprite);
+
         var script = new Access(ScriptedTypeUtil.resolveScript("assets.data.RuleScriptTest"));
+        script.doThing();
         return script;
     }
     #end
@@ -121,7 +127,7 @@ typedef FlxGlobalClass =
     var cls:Class<Dynamic>;
 }
 
-private class FlxScriptColor
+private class FlxScriptedColor
 {
 	public static var TRANSPARENT:FlxColor = 0x00000000;
 	public static var WHITE:FlxColor = 0xFFFFFFFF;
