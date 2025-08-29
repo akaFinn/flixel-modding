@@ -19,6 +19,7 @@ Better scripting, Metadata Macros, and more
 - Changed the `buildDebuggerTools` function to only run if the `FLX_DEBUG` flag is active to avoid crashing
 - Updated the `README.md` to include a example of how you can inject a custom Modpack & MetadataFormat Class
 - Changed the `create` function so that it detects what type it is based off the provided Metadataformat
+- Changed `FlxModding.mods` to `FlxModding.modpacks`
 
 ### Removed
 - Deleted the `metaPath` & `iconPath` variables from both `FlxMetadataFormat`, and `PolymodMetadataFormat`

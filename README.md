@@ -1,6 +1,13 @@
 ![](assets/images/logo_normal.png?raw=true)
 ### Design by [l0go](https://github.com/l0go)
 
+[![Haxelib Version](https://badgen.net/haxelib/v/flixel-modding)](https://lib.haxe.org/p/flixel-modding)
+[![Haxelib Downloads](https://badgen.net/haxelib/d/flixel-modding?color=green)](https://lib.haxe.org/p/flixel-modding)
+[![Haxelib License](https://badgen.net/haxelib/license/flixel-modding?color=red)](LICENSE.md)
+
+![](assets/images/promo.png?raw=true)
+Art by: [MyKarm](https://x.com/Mykarm09)
+
 ## About
 **flixel-modding** is a robust and easy-to-use modding system built specifically for **HaxeFlixel**. It is designed to help developers add straightforward mod support to their games. Whether you're looking to allow asset replacement or loading entirely new assets from mods, flixel-modding has you covered.
 
@@ -24,40 +31,12 @@ flixel-modding is intended for developers of HaxeFlixel games who want to:
 - Simplify the process of managing mod files and directories
 
 ## Links
-[Haxelib](https://lib.haxe.org/p/flixel-modding/)
+### [Haxelib](https://lib.haxe.org/p/flixel-modding/)
+### [Github](https://github.com/akaFinn/flixel-modding/tree/master)
 
-[Github](https://github.com/akaFinn/flixel-modding/tree/master)
-
-<!-- start-github-only -->
 ## Documentation
 [How to Setup flixel-modding](docs/doc_setup.md)
 
 [How to Create modpacks flixel-modding](docs/doc_create.md)
 
 [How to Customize flixel-modding](docs/doc_customize.md)
-<!-- end-github-only -->
-
-## Examples
-### Making compatible Classes
-```haxe
-@:buildModpack(CustomMetadataFormat)
-class CustomModpack extends flixel.system.FlxBaseModpack<CustomMetadataFormat> {}
-
-@:buildMetadata("metadata_file.json", "icon_file.png")
-class CustomMetadataFormat extends flixel.system.FlxBaseMetadataFormat {}
-
-// Yes, 
-// when using the @:buildModpack & buildMetadata metadata tag, 
-// a constructor is not needed. 
-// Thanks macros.
-```
-### Customizing FlxModding
-```haxe
-var customFileSystem:IFileSystem = new CustomFileSystem();
-var customAssetSystem:IAssetSystem = new CustomAssetSystem();
-
-var customAssetPath:String = "assets_folder";
-var customModPath:String = "mods_folder";
-
-FlxModding.init(CustomModpack, CustomMetadataFormat, customFileSystem, customAssetSystem, customAssetPath, customModPath);
-```

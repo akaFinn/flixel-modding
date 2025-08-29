@@ -114,7 +114,7 @@ class FlxScriptUtil
         Typedefs.register("flixel.FlxSprite", FlxScriptedSprite);
 
         var script = new Access(ScriptedTypeUtil.resolveScript("assets.data.RuleScriptTest"));
-        script.doThing();
+        //script.doThing();
         return script;
     }
     #end

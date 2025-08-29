@@ -77,7 +77,7 @@ class FlxModding
 	 * The container for every single mod available for Flixel-Modding.
 	 * All mods are listed here, whether active or not.
 	 */
-	public static var mods:FlxTypedContainer<FlxBaseModpack<FlxBaseMetadataFormat>>;
+	public static var modpacks:FlxTypedContainer<FlxBaseModpack<FlxBaseMetadataFormat>>;
 
     /**
      * A toggle for weither or not scripting is enabled on runtime
@@ -282,7 +282,7 @@ class FlxModding
         {
             flixel.system.FlxModding.customModpack = customModpack != null ? customModpack : flixel.system.FlxModding.customModpack;
             flixel.system.FlxModding.customFormat = customFormat != null ? customFormat : flixel.system.FlxModding.customFormat;
-            mods = new FlxTypedContainer<FlxBaseModpack<FlxBaseMetadataFormat>>();
+            modpacks = new FlxTypedContainer<FlxBaseModpack<FlxBaseMetadataFormat>>();
 
             if (flixel.system.FlxModding.scripting)
             {
@@ -327,7 +327,7 @@ class FlxModding
     }
 
     /**
-     * Reloads all modpacks found in the mods directory and populates them into `FlxModding.mods`.
+     * Reloads all modpacks found in the mods directory and populates them into `FlxModding.modpacks`.
      * This is automatically triggered during game reset events to ensure all mod data is refreshed.
      * 
      * Useful for reinitializing modpacks without restarting the entire application.
@@ -342,7 +342,7 @@ class FlxModding
         system.lastReload = FlxG.elapsed;
         system.reloadCount++;
 
-        if (updateMetadata == true && mods.length != 0)
+        if (updateMetadata == true && modpacks.length != 0)
         {
             if (enabled)
             {
@@ -350,7 +350,7 @@ class FlxModding
             }
         }
 
-        mods.clear();
+        FlxModding.clear();
 
         for (modFile in system.fileSystem.readFolder(FlxModding.modsDirectory + "/"))
         {
@@ -409,7 +409,7 @@ class FlxModding
         }
         else
         {
-            for (otherModpack in mods)
+            for (otherModpack in modpacks)
             {
                 otherModpack.updateMetadata();
             }
@@ -428,7 +428,7 @@ class FlxModding
 	public static function sort():Void
 	{
         #if (!js || !flash)
-		mods.sort((order, mod1, mod2) ->
+		modpacks.sort((order, mod1, mod2) ->
 		{
 			return FlxSort.byValues(order, mod1.ID, mod2.ID);
 		});
@@ -513,7 +513,31 @@ class FlxModding
                     return cast modpack;
 
                 default:
-                    trace("This aint done chief");
+                    var modpack = Type.createInstance(customModpack, [fileName]);
+                    modpack.fromMetadata(cast metadata);
+
+                    system.fileSystem.createFolder(FlxModding.modsDirectory + "/", fileName);
+                    system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/", Reflect.field(FlxModding.customFormat, "metaPath"), metadata.toJsonString());
+
+                    var encodedBytes = iconBitmap.encode(iconBitmap.rect, new PNGEncoderOptions());
+                    var iconData = Bytes.alloc(encodedBytes.length);
+                    encodedBytes.position = 0;
+                    encodedBytes.readBytes(iconData, 0, encodedBytes.length);
+
+                    system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/", Reflect.field(FlxModding.customFormat, "iconPath"), iconData);
+
+                    if (makeAssetFolders == true)
+                    {
+                        for (asset in system.fileSystem.readFolder(FlxModding.assetDirectory))
+                        {
+                            system.fileSystem.createFolder(FlxModding.modsDirectory + "/" + fileName + "/", asset);
+                            system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/" + asset + "/", "content-goes-here.txt", "");
+                        }
+                    }
+
+                    add(cast modpack);
+                    FlxModding.log("Modpack Created!");
+                    return cast modpack;
             }
 
             return null;
@@ -538,7 +562,7 @@ class FlxModding
     public static function get(fileName:String):FlxBaseModpack<FlxBaseMetadataFormat>
     {
         #if (!js || !flash)
-        for (modpack in mods.members)
+        for (modpack in modpacks.members)
         {
             if (modpack.file == fileName && FlxModding.exists(fileName))
             {
@@ -563,7 +587,7 @@ class FlxModding
     public static function exists(fileName:String):Bool
     {
         #if (!js || !flash)
-        for (modpack in mods.members)
+        for (modpack in modpacks.members)
         {
             if (modpack.file == fileName)
             {
@@ -584,7 +608,7 @@ class FlxModding
     public static function clear():Void
     {
         #if (!js || !flash)
-        mods.clear();
+        modpacks.clear();
         onModsCleared.dispatch();
         #else
         FlxModding.error("Failed to clear modpacks while running on a HTML5/JavaScript or Flash build target.");
@@ -602,7 +626,7 @@ class FlxModding
         #if (!js || !flash)
         FlxModding.log("Added Modpack: " + modpack.directory());
 
-        mods.add(modpack);
+        modpacks.add(modpack);
         onModAdded.dispatch(modpack);
         #else
         FlxModding.error("Failed to add modpack while running on a HTML5/JavaScript or Flash build target.");
@@ -620,7 +644,7 @@ class FlxModding
         #if (!js || !flash)
         FlxModding.log("Removed Modpack: " + modpack.directory());
 
-        mods.remove(modpack);
+        modpacks.remove(modpack);
         onModRemoved.dispatch(modpack);
         #else
         FlxModding.error("Failed to remove modpack while running on a HTML5/JavaScript or Flash build target.");
@@ -697,7 +721,7 @@ class FlxModding
     {
         var directory = FlxModding.assetDirectory;
 
-        for (modpack in FlxModding.mods)
+        for (modpack in FlxModding.modpacks)
         {
             if ((modpack.active && modpack.alive && modpack.exists) && FlxModding.enabled && system.fileSystem.exists(modpack.directory() + "/" + id))
             {
@@ -742,7 +766,7 @@ class FlxModding
 
             FlxG.console.registerFunction("listMods", () -> 
             {
-                for (modpack in mods)
+                for (modpack in modpacks)
                 {
                     FlxG.log.add(modpack.directory() + ", " + Type.getClassName(Type.getClass(modpack)).split(".").pop() + ", active: " + modpack.active);
                 }
@@ -750,7 +774,7 @@ class FlxModding
 
             FlxG.console.registerFunction("listActiveMods", () -> 
             {
-                for (modpack in mods)
+                for (modpack in modpacks)
                 {
                     if (modpack.active)
                         FlxG.log.add(modpack.directory() + ", " + Type.getClassName(Type.getClass(modpack)).split(".").pop());
