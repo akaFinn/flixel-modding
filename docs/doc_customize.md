@@ -43,3 +43,5 @@ This gives you full control over how mods are loaded, stored, and accessed withi
 [How to Setup flixel-modding](doc_setup.md)
 
 [How to Create modpacks flixel-modding](doc_create.md)
+
+[Back to Main Page](../README.md)

@@ -56,3 +56,5 @@ After that, the create function should create the folder for the modpack, and fr
 [How to Setup flixel-modding](doc_setup.md)
 
 [How to Customize flixel-modding](doc_customize.md)
+
+[Back to Main Page](../README.md)

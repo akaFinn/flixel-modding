@@ -5,6 +5,7 @@ import flixel.group.FlxContainer.FlxTypedContainer;
 import flixel.system.FlxBaseModpack.FlxModpackType;
 import flixel.system.assetSystem.FlxAssetSystem;
 import flixel.system.assetSystem.IAssetSystem;
+import flixel.system.debug.log.LogStyle;
 import flixel.system.fileSystem.IFileSystem;
 import flixel.system.fileSystem.RamFileSystem;
 import flixel.system.fileSystem.SysFileSystem;
@@ -134,6 +135,17 @@ class FlxModding
 	public static var onModsCleared:FlxSignal = new FlxSignal();
 
     /**
+     * Signal dispatched when a mod gets activated.
+     */
+    public static var onModActived:FlxTypedSignal<FlxBaseModpack<FlxBaseMetadataFormat>->Void> = new FlxTypedSignal<FlxBaseModpack<FlxBaseMetadataFormat>->Void>();
+
+    /** 
+     * Signal dispatched when a mod gets deactivated. 
+     */
+    public static var onModDeactived:FlxTypedSignal<FlxBaseModpack<FlxBaseMetadataFormat>->Void> = new FlxTypedSignal<FlxBaseModpack<FlxBaseMetadataFormat>->Void>();
+
+
+    /**
      * INSTANCE API
      */
 
@@ -173,6 +185,16 @@ class FlxModding
      */
 
     /**
+     * Default asset folder used by the system.
+     */
+    static var assetDirectory:String = "assets";
+
+    /**
+     * Directory where all installed mods are stored.
+     */
+    static var modsDirectory:String = "mods";
+
+    /**
      * Flixel-specific assets directory.
      */
     static inline var flixelDirectory:String = "flixel";
@@ -180,17 +202,17 @@ class FlxModding
 	/**
 	 * File extension used for hscript.
 	 */
-	static var hScriptExt:String = flixel.util.FlxModUtil.getDefinedString("FLX_HSCRIPT_EXT", ".hxs");
+	static inline var hScriptExt:String = flixel.util.FlxModUtil.getDefinedString("FLX_HSCRIPT_EXT", ".hxs");
 
 	/**
 	 * File extension used for Polymod script classes.
 	 */
-	static var polymodScriptExt:String = flixel.util.FlxModUtil.getDefinedString("FLX_POLYMOD_SCRIPT_EXT", ".hxc");
+	static inline var polymodScriptExt:String = flixel.util.FlxModUtil.getDefinedString("FLX_POLYMOD_SCRIPT_EXT", ".hxc");
 
 	/**
 	 * File extension used for RuleScript classes.
 	 */
-	static var ruleScriptExt:String = flixel.util.FlxModUtil.getDefinedString("FLX_RULESCRIPT_EXT", '.rhx');
+	static inline var ruleScriptExt:String = flixel.util.FlxModUtil.getDefinedString("FLX_RULESCRIPT_EXT", '.rhx');
 
     /**
      * Flixel’s default modpack class.
@@ -211,16 +233,6 @@ class FlxModding
      * Polymod’s default metadata format class.
      */
     static inline var polymodFormat:Class<PolymodMetadataFormat> = PolymodMetadataFormat;
-
-    /**
-     * Default asset folder used by the system.
-     */
-    static var assetDirectory:String = "assets";
-
-    /**
-     * Directory where all installed mods are stored.
-     */
-    static var modsDirectory:String = "mods";
 
     /**
      * Base modpack class used for custom implementations.
@@ -286,14 +298,16 @@ class FlxModding
 
             if (flixel.system.FlxModding.scripting)
             {
-                FlxG.signals.postGameStart.add(() ->
+                flixel.system.FlxModding.postModsReload.add(() ->
                 {
                     for (asset in system.assetSystem.list(TEXT))
                     {
+                        var code:String = system.fileSystem.getFileContent(asset);
+
                         #if rulescript
                         if (StringTools.endsWith(asset, ruleScriptExt))
                         {
-                            FlxScriptUtil.buildRuleScript(system.fileSystem.getFileContent(asset));
+                            FlxScriptUtil.buildRuleScript(code);
                             continue;
                         }
                         #end
@@ -301,13 +315,13 @@ class FlxModding
                         #if polymod
                         if (StringTools.endsWith(asset, polymodScriptExt))
                         {
-                            FlxScriptUtil.buildPolymodScript(system.fileSystem.getFileContent(asset));
+                            FlxScriptUtil.buildPolymodScript(code);
                             continue;
                         }
                         #end
 
                         if (StringTools.endsWith(asset, hScriptExt))
-                            FlxScriptUtil.buildHScript(system.fileSystem.getFileContent(asset));
+                            FlxScriptUtil.buildHScript(code);
                     }
                 });
             }
@@ -772,13 +786,38 @@ class FlxModding
                 }
             });
 
-            FlxG.console.registerFunction("listActiveMods", () -> 
+            FlxG.console.registerFunction("reloadMods", () -> 
+            {
+                FlxModding.reload();
+                FlxG.resetState();
+            });
+
+            FlxG.console.registerFunction("toggleModding", () -> 
+            {
+                FlxModding.enabled = !FlxModding.enabled;
+                FlxG.log.advanced("moddingEnabled: " + FlxModding.enabled, LogStyle.CONSOLE);
+
+                FlxG.resetState();
+            });
+
+            FlxG.console.registerFunction("activateMods", () -> 
             {
                 for (modpack in modpacks)
                 {
-                    if (modpack.active)
-                        FlxG.log.add(modpack.directory() + ", " + Type.getClassName(Type.getClass(modpack)).split(".").pop());
+                    modpack.active = true;
                 }
+
+                FlxG.resetState();
+            });
+
+            FlxG.console.registerFunction("deactiveMods", () -> 
+            {
+                for (modpack in modpacks)
+                {
+                    modpack.active = false;
+                }
+
+                FlxG.resetState();
             });
         });
         #end
@@ -786,15 +825,8 @@ class FlxModding
 
     function setupModdingSignals():Void
     {
-        FlxG.signals.preGameReset.add(() ->
-        {
-            FlxModding.reload();
-        });
-
-        FlxG.signals.preStateSwitch.add(() ->
-        {
-            assetSystem.clear();
-        });
+        FlxG.signals.preGameReset.add(() -> FlxModding.reload());
+        FlxG.signals.preStateSwitch.add(() -> assetSystem.clear());
     }
 
     static function log(data:Dynamic):Void

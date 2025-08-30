@@ -133,4 +133,16 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 			LabelValuePair.weak("active", active)
 		]);
     }
+
+	override function set_active(Value:Bool):Bool
+	{
+		active = Value;
+
+		if (Value != false)
+			FlxModding.onModActived.dispatch(cast this);
+		else
+			FlxModding.onModDeactived.dispatch(cast this);
+
+		return Value;
+	}
 }

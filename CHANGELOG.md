@@ -1,16 +1,17 @@
 ## Changelog
 
-# [1.5.0] **Beta** - (Augest 29, 2025)
+# [1.5.0] **Beta** - (Augest 30, 2025)
 
 Better scripting, Metadata Macros, and more
 
 ### Added
 - Created `flixel.util.FlxModUtil` to better store functions and macros designed for modding
 - Created `flixel.util.FlxScriptUtil` as a way to handle scripting for hscript, polymod, and rulescript
+- Made two new signals `onModActived` and `onModDeactived` found in `FlxModding` and do exactly what you think they do
 - Added `buildMetadata` to `flixel.util.FlxModUtil` a metadata tag made with macros
 - Added `buildModpack` to `flixel.util.FlxModUtil` a metadata tag made with macros
 - Added support for RuleScript Classes **BETA**
-- Added 2 console commands `listMods` & `listActiveMods`
+- Added console commands `listMods`, `reloadMods`, `toggleModding`, `activateMods`, and `deactiveMods`
 - Added better documentation for flixel-modding
 - Added support to create custom modpack's using `create`
 

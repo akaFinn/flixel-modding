@@ -2,10 +2,17 @@
 # How to Setup flixel-modding
 
 ## 1. Installing flixel-modding
+
 Install **flixel-modding** using haxelib.
 
 ```sh
 haxelib install flixel-modding
+```
+
+Or install **flixel-modding** using [git](https://git-scm.com/downloads)
+
+```sh
+haxelib git flixel-modding https://github.com/akaFinn/flixel-modding.git
 ```
 
 Add the library to your `project.xml`.
@@ -59,3 +66,5 @@ class Main extends Sprite
 [How to Create modpacks flixel-modding](doc_create.md)
 
 [How to Customize flixel-modding](doc_customize.md)
+
+[Back to Main Page](../README.md)

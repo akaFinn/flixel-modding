@@ -4,7 +4,6 @@ import flixel.sound.FlxSound;
 import flixel.system.FlxModding;
 import flixel.system.macros.FlxMacroUtil;
 import flixel.text.FlxText;
-import rulescript.types.Typedefs;
 
 #if hscript
 import hscript.Interp;
@@ -14,13 +13,12 @@ import hscript.Parser;
 import rulescript.parsers.HxParser;
 import rulescript.scriptedClass.RuleScriptedClass.Access;
 import rulescript.types.ScriptedTypeUtil;
+import rulescript.types.Typedefs;
 #end
 
 #if polymod
 import polymod.hscript._internal.PolymodScriptClass;
 #end
-
-private class FlxScriptedSprite extends FlxSprite implements rulescript.scriptedClass.RuleScriptedClass {}
 
 /**
  * @since 1.5.0
@@ -98,7 +96,7 @@ class FlxScriptUtil
     #end
 
     #if rulescript
-    public static function buildRuleScript(code:String):Access
+    public static function buildRuleScript(code:String):Void
     {
         ScriptedTypeUtil.resolveModule = (name:String) -> 
         {
@@ -111,11 +109,8 @@ class FlxScriptUtil
             return parser.parseModule(FlxModding.system.fileSystem.getFileContent(path + ".rhx"));
         }
 
-        Typedefs.register("flixel.FlxSprite", FlxScriptedSprite);
-
-        var script = new Access(ScriptedTypeUtil.resolveScript("assets.data.RuleScriptTest"));
-        //script.doThing();
-        return script;
+        var script:Access = new Access(ScriptedTypeUtil.resolveScript("assets.data.RuleScriptTest"));
+        //script.main();
     }
     #end
 }
