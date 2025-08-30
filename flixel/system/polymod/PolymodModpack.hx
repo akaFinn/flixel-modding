@@ -51,7 +51,7 @@ class PolymodModpack extends FlxBaseModpack<PolymodMetadataFormat>
 
 	public function openHomepage():Void
 	{
-		FlxG.openURL(homepage);	
+		FlxG.openURL(homepage);
 	}
 
 	override public function updateMetadata(?saveToDisk:Bool = true):Void
@@ -73,7 +73,7 @@ class PolymodModpack extends FlxBaseModpack<PolymodMetadataFormat>
 
 	override public function fromMetadata(metadata:PolymodMetadataFormat):FlxBaseModpack<PolymodMetadataFormat>
 	{
-        this.type = POLYMOD;
+		this.type = POLYMOD;
 		this.metadata = metadata;
 
 		this.title = metadata.title;

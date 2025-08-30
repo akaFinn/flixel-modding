@@ -6,9 +6,9 @@ import haxe.Json;
 
 enum FlxModpackType
 {
-    FLIXEL;
-    POLYMOD;
-    CUSTOM;
+	FLIXEL;
+	POLYMOD;
+	CUSTOM;
 }
 
 /**
@@ -107,32 +107,32 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 	}
 
 	/**
-     * Converts this modpack runtime data into a JSON string.
-     * The base implementation simply returns an empty string — override to customize output.
-     */
+	 * Converts this modpack runtime data into a JSON string.
+	 * The base implementation simply returns an empty string — override to customize output.
+	 */
 	public function toJsonString():String
-    {
-        return "";
-    }
+	{
+		return "";
+	}
 
 	override public function destroy():Void
-    {
+	{
 		metadata = null;
 
 		type = null;
 		file = null;
 
-        super.destroy();   
-    }
+		super.destroy();
+	}
 
-    override public function toString():String
-    {
-        return FlxStringUtil.getDebugString([
+	override public function toString():String
+	{
+		return FlxStringUtil.getDebugString([
 			LabelValuePair.weak("class", Type.getClassName(Type.getClass(this)).split(".").pop()),
 			LabelValuePair.weak("path", directory()),
 			LabelValuePair.weak("active", active)
 		]);
-    }
+	}
 
 	override function set_active(Value:Bool):Bool
 	{
