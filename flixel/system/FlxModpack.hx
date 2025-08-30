@@ -55,20 +55,20 @@ class FlxModpack extends FlxBaseModpack<FlxMetadataFormat>
 		}
 	}
 
-    override public function destroy():Void
-    {
+	override public function destroy():Void
+	{
 		name = null;
 		version = null;
 		description = null;
 
 		credits = null;
 
-        super.destroy();
-    }
+		super.destroy();
+	}
 
 	override public function fromMetadata(metadata:FlxMetadataFormat):FlxBaseModpack<FlxMetadataFormat>
 	{
-        this.type = FLIXEL;
+		this.type = FLIXEL;
 		this.metadata = metadata;
 
 		this.name = metadata.name;

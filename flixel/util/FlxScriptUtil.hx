@@ -4,18 +4,15 @@ import flixel.sound.FlxSound;
 import flixel.system.FlxModding;
 import flixel.system.macros.FlxMacroUtil;
 import flixel.text.FlxText;
-
 #if hscript
 import hscript.Interp;
 import hscript.Parser;
-
 #if rulescript
 import rulescript.parsers.HxParser;
 import rulescript.scriptedClass.RuleScriptedClass.Access;
 import rulescript.types.ScriptedTypeUtil;
 import rulescript.types.Typedefs;
 #end
-
 #if polymod
 import polymod.hscript._internal.PolymodScriptClass;
 #end
@@ -25,101 +22,93 @@ import polymod.hscript._internal.PolymodScriptClass;
  */
 class FlxScriptUtil
 {
-    private static var defaultGlobalClasses:Array<FlxGlobalClass> =
-    [
-        {
-            name: "FlxSprite",
-            cls: FlxSprite,
-        },
+	private static var defaultGlobalClasses:Array<FlxGlobalClass> = [
+		{
+			name: "FlxSprite",
+			cls: FlxSprite,
+		},
+		{
+			name: "FlxG",
+			cls: FlxG,
+		},
+		{
+			name: "FlxState",
+			cls: FlxState,
+		},
+		{
+			name: "FlxModding",
+			cls: FlxModding,
+		},
+		{
+			name: "FlxColor",
+			cls: FlxScriptedColor,
+		},
+		{
+			name: "FlxText",
+			cls: FlxText,
+		},
+		{
+			name: "FlxObject",
+			cls: FlxObject,
+		},
+		{
+			name: "FlxBasic",
+			cls: FlxBasic,
+		},
+		{
+			name: "FlxSound",
+			cls: FlxSound,
+		}
+	];
 
-        {
-            name: "FlxG",
-            cls: FlxG,
-        },
+	public static function buildHScript(code:String):Interp
+	{
+		var parser:Parser = new Parser();
+		parser.allowJSON = true;
+		parser.allowTypes = true;
+		var interp:Interp = new Interp();
 
-        {
-            name: "FlxState",
-            cls: FlxState,
-        },
+		for (globalClass in defaultGlobalClasses)
+			interp.variables.set(globalClass.name, globalClass.cls);
 
-        {
-            name: "FlxModding",
-            cls: FlxModding,
-        },
+		interp.execute(parser.parseString(code));
+		return interp;
+	}
 
-        {
-            name: "FlxColor",
-            cls: FlxScriptedColor,
-        },
+	#if polymod
+	public static function buildPolymodScript(code:String):Void
+	{
+		@:privateAccess
+		PolymodScriptClass.registerScriptClassByString(code);
+	}
+	#end
 
-        {
-            name: "FlxText",
-            cls: FlxText,
-        },
-
-        {
-            name: "FlxObject",
-            cls: FlxObject,
-        },
-
-        {
-            name: "FlxBasic",
-            cls: FlxBasic,
-        },
-
-        {
-            name: "FlxSound",
-            cls: FlxSound,
-        }
-    ];
-
-    public static function buildHScript(code:String):Interp
-    {
-        var parser:Parser = new Parser();
-        parser.allowJSON = true;
-        parser.allowTypes = true;
-        var interp:Interp = new Interp();
-
-        for (globalClass in defaultGlobalClasses)
-            interp.variables.set(globalClass.name, globalClass.cls);
-
-        interp.execute(parser.parseString(code));
-        return interp;
-    }
-
-    #if polymod
-    public static function buildPolymodScript(code:String):Void
-    {
-        @:privateAccess
-        PolymodScriptClass.registerScriptClassByString(code);
-    }
-    #end
-
-    #if rulescript
-    public static function buildRuleScript(code:String):Void
-    {
-        ScriptedTypeUtil.resolveModule = (name:String) -> 
-        {
-            var path = StringTools.replace(name, ".", "/");
-
-            var parser = new HxParser();
-            parser.allowAll();
-            parser.mode = MODULE;
-
-            return parser.parseModule(FlxModding.system.fileSystem.getFileContent(path + ".rhx"));
-        }
-
-        var script:Access = new Access(ScriptedTypeUtil.resolveScript("assets.data.RuleScriptTest"));
-        //script.main();
-    }
-    #end
+	#if rulescript
+	public static function buildRuleScript(path:String):Void
+	{
+		// the path should be something like "assets/data/test.rhx" or whatever the extension is
+		path = StringTools.replace(path, FlxModding.ruleScriptExt, "");
+		ScriptedTypeUtil.resolveModule = (name:String) ->
+		{
+			final content:String = FlxModding.system.fileSystem.getFileContent(path + FlxModding.ruleScriptExt) ?? null;
+			if (content == null)
+				return null;
+			var parser = new HxParser();
+			parser.allowAll();
+			parser.mode = MODULE;
+			return parser.parseModule(content);
+		}
+		var script:Access = new Access(ScriptedTypeUtil.resolveScript(StringTools.replace(path, "/", ".")));
+		script.main();
+	}
+	#end
 }
 #end
 
-typedef FlxGlobalClass = 
+typedef FlxGlobalClass =
 {
-    var name:String;
-    var cls:Class<Dynamic>;
+	var name:String;
+	var cls:Class<Dynamic>;
 }
 
 private class FlxScriptedColor
@@ -141,34 +130,34 @@ private class FlxScriptedColor
 	public static var MAGENTA:FlxColor = 0xFFFF00FF;
 	public static var CYAN:FlxColor = 0xFF00FFFF;
 
-    public static var colorLookup(default, null):Map<String, Int> = FlxMacroUtil.buildMap("flixel.util.FlxColor");
+	public static var colorLookup(default, null):Map<String, Int> = FlxMacroUtil.buildMap("flixel.util.FlxColor");
 
-    static var COLOR_REGEX = ~/^(0x|#)(([A-F0-9]{2}){3,4})$/i;
+	static var COLOR_REGEX = ~/^(0x|#)(([A-F0-9]{2}){3,4})$/i;
 
-    public static function fromInt(Value:Int):FlxColor
+	public static function fromInt(Value:Int):FlxColor
 	{
 		return new FlxColor(Value);
 	}
 
-    public static function fromRGB(Red:Int, Green:Int, Blue:Int, Alpha:Int = 255):FlxColor
+	public static function fromRGB(Red:Int, Green:Int, Blue:Int, Alpha:Int = 255):FlxColor
 	{
 		var color = new FlxColor();
 		return color.setRGB(Red, Green, Blue, Alpha);
 	}
 
-    public static function fromRGBFloat(Red:Float, Green:Float, Blue:Float, Alpha:Float = 1):FlxColor
+	public static function fromRGBFloat(Red:Float, Green:Float, Blue:Float, Alpha:Float = 1):FlxColor
 	{
 		var color = new FlxColor();
 		return color.setRGBFloat(Red, Green, Blue, Alpha);
 	}
 
-    public static function fromCMYK(Cyan:Float, Magenta:Float, Yellow:Float, Black:Float, Alpha:Float = 1):FlxColor
+	public static function fromCMYK(Cyan:Float, Magenta:Float, Yellow:Float, Black:Float, Alpha:Float = 1):FlxColor
 	{
 		var color = new FlxColor();
 		return color.setCMYK(Cyan, Magenta, Yellow, Black, Alpha);
 	}
 
-    public static function fromHSB(Hue:Float, Saturation:Float, Brightness:Float, Alpha:Float = 1):FlxColor
+	public static function fromHSB(Hue:Float, Saturation:Float, Brightness:Float, Alpha:Float = 1):FlxColor
 	{
 		var color = new FlxColor();
 		return color.setHSB(Hue, Saturation, Brightness, Alpha);
@@ -180,7 +169,7 @@ private class FlxScriptedColor
 		return color.setHSL(Hue, Saturation, Lightness, Alpha);
 	}
 
-    public static function fromString(str:String):Null<FlxColor>
+	public static function fromString(str:String):Null<FlxColor>
 	{
 		var result:Null<FlxColor> = null;
 		str = StringTools.trim(str);
