@@ -91,28 +91,25 @@ class FlxAssetSystem implements IAssetSystem
         openfl.utils.Assets.cache.clear();
     }
 
-    public function list(?type:FlxAssetType):Array<String>
-    {
-        var list = [];
+	public function list(?type:FlxAssetType):Array<String>
+	{
+		var list:Array<String> = [];
+
 		function addFiles(directory:String, prefix = "")
 		{
 			for (path in FlxModding.system.fileSystem.readFolder(directory))
 			{
-				if (FlxModding.system.fileSystem.isFolder('$directory/$path'))
-					addFiles('$directory/$path', prefix + path + '/');
+				if (FlxModding.system.fileSystem.isFolder(directory + "/" + path))
+					addFiles(directory + "/" + path, prefix + path + "/");
 				else
-					list.push(prefix + path);
+					list.push(FlxModding.system.sanitize(prefix + path));
 			}
 		}
 
-        @:privateAccess
-        {
-            addFiles(FlxModding.assetDirectory, FlxModding.assetDirectory + "/");
-            addFiles(FlxModding.modsDirectory, FlxModding.modsDirectory + "/");
-        }
-
+		@:privateAccess
+        addFiles(FlxModding.assetDirectory);
 		return list;
-    }
+	}
 
     public function isLocal(id:String, ?type:FlxAssetType, useCache:Bool = true):Bool
     {

@@ -1,6 +1,13 @@
 ![](assets/images/logo_normal.png?raw=true)
 ### Design by [l0go](https://github.com/l0go)
 
+[![Haxelib Version](https://badgen.net/haxelib/v/flixel-modding)](https://lib.haxe.org/p/flixel-modding)
+[![Haxelib Downloads](https://badgen.net/haxelib/d/flixel-modding?color=green)](https://lib.haxe.org/p/flixel-modding/versions/)
+[![Haxelib License](https://badgen.net/haxelib/license/flixel-modding?color=red)](LICENSE)
+
+![](assets/images/promo.png?raw=true)
+Art by: [MyKarm](https://x.com/Mykarm09)
+
 ## About
 **flixel-modding** is a robust and easy-to-use modding system built specifically for **HaxeFlixel**. It is designed to help developers add straightforward mod support to their games. Whether you're looking to allow asset replacement or loading entirely new assets from mods, flixel-modding has you covered.
 
@@ -15,7 +22,7 @@
 - (Optional) HScript 2.6.0+
 
 ## Limitations
-- You cannot use flixel-modding for JavaScript or HTML5 targets.
+- You cannot use flixel-modding for JavaScript/HTML5 or Flash targets.
 
 ## Intended Usage
 flixel-modding is intended for developers of HaxeFlixel games who want to:
@@ -23,68 +30,13 @@ flixel-modding is intended for developers of HaxeFlixel games who want to:
 - Enable community content through custom mods
 - Simplify the process of managing mod files and directories
 
-## Tutorial
-Install flixel-modding using haxelib:
+## Links
+### [Haxelib](https://lib.haxe.org/p/flixel-modding/)
+### [Github](https://github.com/akaFinn/flixel-modding/tree/master)
 
-```sh
-haxelib install flixel-modding
-```
+## Documentation
+[How to Setup flixel-modding](docs/doc_setup.md)
 
-Add the path and the library to your `project.xml`:
+[How to Create modpacks flixel-modding](docs/doc_create.md)
 
-```xml
-<assets path="mods" />
-```
-```xml
-<haxelib name="flixel-modding" />
-```
-
-Before creating your `FlxGame` instance, initialize the modding system using the following code:
-
-```haxe
-FlxModding.init();
-```
-
-This sets up the modding environment and ensures all mod assets are ready before the game starts.
-
-## Examples
-### Initilizing FlxModding
-```haxe
-class Main extends Sprite
-{
-    public function new()
-    {
-        FlxModding.init();
-        addChild(new FlxGame(0, 0, PlayState));
-    }
-}
-```
-### Creating mods using FlxModding
-```haxe
-FlxModding.create("coolestMod", new BitmapData(128, 128), new FlxMetadataFormat().fromDynamicData({
-	name: "Cool Awesome Mod",
-	version: "1.2.3",
-	description: "Cool mod made for cooler people. B)",
-
-	credits: [
-		{
-			name: "akaFinn_",
-			title: "Creator",
-			socials: "https://x.com/akaFinn_"
-		}
-	],
-
-	priority: 1,
-	active: true,
-}));
-```
-### Customizing FlxModding
-```haxe
-var customFileSystem:IFileSystem = new CoolFileSystem();
-var customAssetSystem:IAssetSystem = new CoolAssetSystem();
-
-var customAssetPath:String = "coolAssets";
-var customModPath:String = "coolMods";
-
-FlxModding.init(CoolModpack, CoolMetadataFormat, customFileSystem, customAssetSystem, customAssetPath, customModPath);
-```
+[How to Customize flixel-modding](docs/doc_customize.md)

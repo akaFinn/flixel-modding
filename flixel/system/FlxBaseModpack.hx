@@ -1,5 +1,6 @@
 package flixel.system;
 
+import flixel.system.polymod.PolymodMetadataFormat;
 import flixel.util.FlxStringUtil;
 import haxe.Json;
 
@@ -19,6 +20,7 @@ enum FlxModpackType
  * providing shared variables and basic setup behavior that specialized modpack
  * classes can build upon.
  */
+@:autoBuild(flixel.util.FlxModUtil.buildModpack())
 class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 {
 	/**
@@ -44,10 +46,17 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 	 * Also auto-assigns an internal ID and default priority based on how many modpacks exist at creation time.
 	 * The `file` parameter is expected to be the folder name (not a full path).
 	 */
-	public function new(file:String, metadata:MetaFormat)
+	public function new(file:String, metadata:Class<MetaFormat>)
 	{
 		this.file = file;
-		this.metadata = metadata;
+		this.metadata = Type.createInstance(metadata, []);
+
+		if (metadata is FlxMetadataFormat)
+			type = FLIXEL;
+		else if (metadata is PolymodMetadataFormat)
+			type = POLYMOD;
+		else
+			type = CUSTOM;
 
 		super();
 
@@ -66,20 +75,18 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 
 	/**
 	 * Returns the directory path where this modpack's metadata is stored.
-	 * Function is designed and made to be overridden.
 	 */
 	public function metaDirectory():String
 	{
-		return directory() + "/metadata.json";
+		return directory() + "/" + Reflect.field(Type.getClass(metadata), "metaPath");
 	}
 
 	/**
 	 * Returns the directory path where the modpack's icon is located.
-	 * Function is designed and made to be overridden.
 	 */
 	public function iconDirectory():String
 	{
-		return directory() + "/picture.png";
+		return directory() + "/" + Reflect.field(Type.getClass(metadata), "iconPath");
 	}
 
 	/**
@@ -126,34 +133,16 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 			LabelValuePair.weak("active", active)
 		]);
     }
-}
 
-/**
- * Basic metadata format representation used by FlxModding.
- * Defines the core structure for storing and converting modpack metadata,
- * acting as a base class that can be extended for custom formats.
- */
-class FlxBaseMetadataFormat
-{
-    /** 
-	 * Creates a new metadata format with paths and an optional format override.
-	*/
-    public function new() {}
+	override function set_active(Value:Bool):Bool
+	{
+		active = Value;
 
-    /**
-     * Converts this metadata format into a JSON string.
-     * The base implementation simply returns an empty string — override to customize output.
-     */
-	public function toJsonString():String
-    {
-        return "";
-    }
+		if (Value != false)
+			FlxModding.onModActived.dispatch(cast this);
+		else
+			FlxModding.onModDeactived.dispatch(cast this);
 
-	/** 
-	 * Parses Dynamic data into this metadata format. Currently returns itself without modification.
-	*/
-    public function fromDynamicData(data:Dynamic):FlxBaseMetadataFormat
-    {
-        return this;
-    }
+		return Value;
+	}
 }

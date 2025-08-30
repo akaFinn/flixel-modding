@@ -2,12 +2,13 @@
 	"name": "flixel-modding",
 	"url" : "https://github.com/akaFinn/flixel-modding",
 	"license": "MIT",
-	"tags": ["flixel", "modding"],
+	"tags": ["flixel", "modding", "mod", "asset"],
 	"description": "A robust modding system for HaxeFlixel.",
-	"version": "1.4.0",
-	"releasenote": "Custom Modpack & Metadata formatting, File & Asset System changeability, and Asset compatibility for OpenFL/Lime Assets",
-	"contributors": ["akaFinn"],
-	"dependencies": {
+	"version": "1.5.0",
+	"releasenote": "Better scripting, Metadata Macros, and more",
+	"contributors": ["akaFinn", "therealjake_12"],
+	"dependencies": 
+	{
 		"flixel": ""
 	}
 }
