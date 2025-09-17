@@ -34,10 +34,6 @@ enum abstract FlxAssetType(String)
 
 interface IAssetSystem
 {
-	private var bitmaps:Map<String, BitmapData>;
-	private var sounds:Map<String, Sound>;
-	private var fonts:Map<String, Font>;
-
     public function getAsset(id:String, type:FlxAssetType, useCache:Bool = true):Null<Any>;
     public function loadAsset(id:String, type:FlxAssetType, useCache:Bool = true):Future<Any>;
     public function exists(id:String, ?type:FlxAssetType):Bool;

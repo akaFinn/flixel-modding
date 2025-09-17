@@ -27,7 +27,10 @@ import polymod.hscript._internal.PolymodScriptClass;
 class FlxScriptUtil
 {
     static var hScripts:Map<String, Interp> = new Map<String, Interp>();
+
+    #if rulescript
     static var ruleScripts:Map<String, Access> = new Map<String, Access>();
+    #end
 
     private static var defaultGlobalClasses:Array<FlxGlobalClass> =
     [

@@ -45,7 +45,7 @@ class FlxMetadataFormat extends FlxBaseMetadataFormat
         return buf.toString();
 	}
 
-	override public function fromDynamicData(data:Dynamic):FlxMetadataFormat
+	override public function fromDynamic(data:Dynamic):FlxMetadataFormat
     {
 		this.name = data.name;
         this.version = data.version;

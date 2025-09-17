@@ -47,7 +47,7 @@ class PolymodMetadataFormat extends FlxBaseMetadataFormat
         return buf.toString();
 	}
 
-	override public function fromDynamicData(data:Dynamic):PolymodMetadataFormat
+	override public function fromDynamic(data:Dynamic):PolymodMetadataFormat
     {
 		this.title = data.title;
         this.description = data.description;

@@ -25,7 +25,7 @@ class FlxBaseMetadataFormat
 	/** 
 	 * Parses Dynamic data into this metadata format. Currently returns itself without modification.
 	*/
-    public function fromDynamicData(data:Dynamic):FlxBaseMetadataFormat
+    public function fromDynamic(data:Dynamic):FlxBaseMetadataFormat
     {
         return this;
     }

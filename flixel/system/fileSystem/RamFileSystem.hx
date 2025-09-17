@@ -4,12 +4,12 @@ import haxe.io.Bytes;
 
 class RamFileSystem implements IFileSystem
 {
-    var files:Map<String, Bytes>;
+    var files:Map<String, Dynamic>;
     var folders:Map<String, Bool>;
 
     public function new()
     {
-        files = new Map<String, Bytes>();
+        files = new Map<String, Dynamic>();
         folders = new Map<String, Bool>();
     }
 
@@ -83,13 +83,23 @@ class RamFileSystem implements IFileSystem
         return result;
     }
 
+    public function setFolder(path:String):Void
+    {
+        @:privateAccess
+        folders.set(path, StringTools.startsWith(path, FlxModding.modsDirectory));
+    }
+
+    public function getFolder(path:String):Bool
+    {
+        return folders.get(path);
+    }
+
     public function createFolder(path:String, name:String):Void
     {
         if (this.exists(path + (StringTools.endsWith(path, "/") ? "" : "/") + name))
             folders.remove(path + (StringTools.endsWith(path, "/") ? "" : "/") + name);
 
-        @:privateAccess
-        folders.set(path + (StringTools.endsWith(path, "/") ? "" : "/") + name, StringTools.startsWith(path, FlxModding.modsDirectory));
+        setFolder(path + (StringTools.endsWith(path, "/") ? "" : "/") + name);
     }
 
     public function renameFolder(path:String, name:String):Void

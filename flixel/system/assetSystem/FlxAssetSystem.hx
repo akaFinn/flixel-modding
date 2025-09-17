@@ -14,18 +14,8 @@ import flixel.system.assetSystem.IAssetSystem.FlxAssetType;
 
 class FlxAssetSystem implements IAssetSystem
 {
-	private var bitmaps:Map<String, BitmapData>;
-	private var sounds:Map<String, Sound>;
-	private var fonts:Map<String, Font>;
-
     public function new()
     {
-        lime.utils.Assets.cache.enabled = false;
-        openfl.utils.Assets.cache.enabled = false;
-
-        bitmaps = new Map<String, BitmapData>();
-        sounds = new Map<String, Sound>();
-        fonts = new Map<String, Font>();
         clear();
     }
 
@@ -41,27 +31,27 @@ class FlxAssetSystem implements IAssetSystem
 			case BINARY:
 				FlxModding.system.fileSystem.getFileBytes(FlxModding.system.sanitize(id));
 			
-			case IMAGE if (useCache && bitmaps.exists(FlxModding.system.sanitize(id))):
-				bitmaps.get(FlxModding.system.sanitize(id));
-			case SOUND if (useCache && sounds.exists(FlxModding.system.sanitize(id))):
-				sounds.get(FlxModding.system.sanitize(id));
-			case FONT if (useCache && fonts.exists(FlxModding.system.sanitize(id))):
-				fonts.get(FlxModding.system.sanitize(id));
+			case IMAGE if (useCache && Assets.cache.hasBitmapData(FlxModding.system.sanitize(id))):
+				Assets.cache.getBitmapData(FlxModding.system.sanitize(id));
+			case SOUND if (useCache && Assets.cache.hasSound(FlxModding.system.sanitize(id))):
+				Assets.cache.getSound(FlxModding.system.sanitize(id));
+			case FONT if (useCache && Assets.cache.hasFont(FlxModding.system.sanitize(id))):
+				Assets.cache.getFont(FlxModding.system.sanitize(id));
 			
 			case IMAGE:
 				var bitmap = BitmapData.fromFile(FlxModding.system.sanitize(id));
 				if (useCache)
-					bitmaps.set(FlxModding.system.sanitize(id), bitmap);
+					Assets.cache.setBitmapData(FlxModding.system.sanitize(id), bitmap);
 				bitmap;
 			case SOUND:
 				var sound = Sound.fromFile(FlxModding.system.sanitize(id));
 				if (useCache) 
-					sounds.set(FlxModding.system.sanitize(id), sound);
+					Assets.cache.setSound(FlxModding.system.sanitize(id), sound);
 				sound;
 			case FONT:
 				var font = Font.fromFile(FlxModding.system.sanitize(id));
 				if (useCache)
-					fonts.set(FlxModding.system.sanitize(id), font);
+					Assets.cache.setFont(FlxModding.system.sanitize(id), font);
 				font;
 		}
 
@@ -83,12 +73,7 @@ class FlxAssetSystem implements IAssetSystem
 
     public function clear():Void
     {
-        bitmaps.clear();
-        sounds.clear();
-        fonts.clear();
-
-        lime.utils.Assets.cache.clear();
-        openfl.utils.Assets.cache.clear();
+        Assets.cache.clear();
     }
 
 	public function list(?type:FlxAssetType):Array<String>
