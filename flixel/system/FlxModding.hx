@@ -2,7 +2,9 @@ package flixel.system;
 
 import flixel.FlxG;
 import flixel.group.FlxContainer.FlxTypedContainer;
+import flixel.system.FlxBaseMetadataFormat;
 import flixel.system.FlxBaseModpack.FlxModpackType;
+import flixel.system.FlxBaseModpack;
 import flixel.system.assetSystem.FlxAssetSystem;
 import flixel.system.assetSystem.IAssetSystem;
 import flixel.system.debug.log.LogStyle;
@@ -48,7 +50,7 @@ import openfl.utils.Future;
  * @author akaFinn
  */
 @:access(flixel.system.FlxBaseModpack)
-class FlxModding
+class FlxModding           
 {
     /**
      * PUBLIC API
@@ -81,7 +83,7 @@ class FlxModding
 	 * The container for every single mod available for Flixel-Modding.
 	 * All mods are listed here, whether active or not.
 	 */
-	public static var modpacks:FlxTypedContainer<FlxBaseModpack<FlxBaseMetadataFormat>>;
+	public static var modpacks:FlxTypedContainer<FlxBaseModpack<Dynamic>>;
 
     /**
      * A toggle for weither or not scripting is enabled on runtime
@@ -218,34 +220,19 @@ class FlxModding
 	static inline var ruleScriptExt:String = flixel.util.FlxModUtil.getDefinedString("FLX_RULESCRIPT_EXT", '.rhx');
 
     /**
-     * Flixel’s default modpack class.
+	 * Flixel’s default modpac
      */
-    static inline var flixelModpack:Class<FlxModpack> = FlxModpack;
-
-    /**
-     * Flixel’s default metadata format class.
-     */
-    static inline var flixelFormat:Class<FlxMetadataFormat> = FlxMetadataFormat;
-
-    /**
-     * Polymod’s default modpack class.
-     */
-    static inline var polymodModpack:Class<PolymodModpack> = PolymodModpack;
+	static var flixelLibrary:FlxModLibrary = new FlxModLibrary();
 
     /**
      * Polymod’s default metadata format class.
      */
-    static inline var polymodFormat:Class<PolymodMetadataFormat> = PolymodMetadataFormat;
-
-    /**
-     * Base modpack class used for custom implementations.
-     */
-    static var customModpack:Class<FlxBaseModpack<FlxBaseMetadataFormat>> = FlxBaseModpack;
+	static var polymodLibrary:PolymodModLibrary = new PolymodModLibrary();
 
     /**
      * Base metadata format class for custom modpacks.
      */
-    static var customFormat:Class<FlxBaseMetadataFormat> = FlxMetadataFormat;
+	static var customLibrary:FlxBaseModLibrary<FlxModpack, FlxMetadataFormat> = new FlxBaseModLibrary<FlxModpack, FlxMetadataFormat>();
 
     /**
      * Initializes Flixel-Modding to enable support for loading and reloading modded assets at runtime.
@@ -283,21 +270,20 @@ class FlxModding
      * 
      * @return                    The initialized FlxModding system so it can be assigned or used directly.
      */
-    public static function init(?customModpack:Dynamic, ?customFormat:Class<FlxBaseMetadataFormat>, ?fileSystem:IFileSystem, ?assetSystem:IAssetSystem, ?assetDirectory:String, ?modsDirectory:String):FlxModding
+	public static function init(?customLibrary:FlxBaseModLibrary<FlxBaseModpack<FlxMetadataFormat>, FlxMetadataFormat>, ?fileSystem:IFileSystem, ?assetSystem:IAssetSystem, ?assetDirectory:String, ?modsDirectory:String):FlxModding
     {   
         FlxModding.log("Attempting to Initialize FlxModding...");
+
+		flixel.system.FlxModding.customLibrary = customLibrary != null ? customLibrary : flixel.system.FlxModding.customLibrary;
 
         flixel.system.FlxModding.assetDirectory = assetDirectory != null ? assetDirectory : flixel.system.FlxModding.assetDirectory;
         flixel.system.FlxModding.modsDirectory = modsDirectory != null ? modsDirectory : flixel.system.FlxModding.modsDirectory;
 
-        modpacks = new FlxTypedContainer<FlxBaseModpack<FlxBaseMetadataFormat>>();
+        modpacks = new FlxTypedContainer<FlxBaseModpack<Dynamic>>();
         system = new FlxModding(fileSystem, assetSystem);
 
         if (system.fileSystem.exists(FlxModding.modsDirectory + "/"))
-        {
-            flixel.system.FlxModding.customModpack = customModpack != null ? customModpack : flixel.system.FlxModding.customModpack;
-            flixel.system.FlxModding.customFormat = customFormat != null ? customFormat : flixel.system.FlxModding.customFormat;
-
+		{
             FlxModding.log("FlxModding Initialized!");
             return system;
         }
@@ -333,26 +319,25 @@ class FlxModding
 
         FlxModding.clear();
 
-        #if (!js)
         for (modFile in system.fileSystem.readFolder(FlxModding.modsDirectory + "/"))
         {
             if (system.fileSystem.isFolder(FlxModding.modsDirectory + "/" + modFile) && enabled)
             {
-                if (FlxModding.system.assetSystem.exists(FlxModding.modsDirectory + "/" + modFile + "/" + Reflect.field(FlxModding.flixelFormat, "metaPath")))
+				if (FlxModding.system.assetSystem.exists(FlxModding.modsDirectory + "/" + modFile + "/" + Reflect.field(flixelLibrary.format, "metaPath")))
                 {
-                    var modpack:FlxModpack = Type.createInstance(flixelModpack, [modFile]);
+					var modpack:FlxModpack = Type.createInstance(flixelLibrary.modpack, [modFile]);
                     modpack.fromMetadata(modpack.metadata.fromDynamic(Json.parse(FlxModding.system.assetSystem.getText(modpack.metaDirectory()))));
                     add(cast modpack);
                 }
-                else if (FlxModding.system.assetSystem.exists(FlxModding.modsDirectory + "/" + modFile + "/" + Reflect.field(FlxModding.polymodFormat, "metaPath")))
+				else if (FlxModding.system.assetSystem.exists(FlxModding.modsDirectory + "/" + modFile + "/" + Reflect.field(polymodLibrary.format, "metaPath")))
                 {
-                    var modpack:PolymodModpack = Type.createInstance(polymodModpack, [modFile]);
+					var modpack:PolymodModpack = Type.createInstance(polymodLibrary.modpack, [modFile]);
                     modpack.fromMetadata(modpack.metadata.fromDynamic(Json.parse(FlxModding.system.assetSystem.getText(modpack.metaDirectory()))));
                     add(cast modpack);
                 }
-                else if (FlxModding.system.assetSystem.exists(FlxModding.modsDirectory + "/" + modFile + "/" + Reflect.field(FlxModding.customFormat, "metaPath")))
+				else if (FlxModding.system.assetSystem.exists(FlxModding.modsDirectory + "/" + modFile + "/" + Reflect.field(customLibrary.format, "metaPath")))
                 {
-                    var modpack = Type.createInstance(customModpack, [modFile]);
+					var modpack = Type.createInstance(customLibrary.modpack, [modFile]);
                     modpack.fromMetadata(modpack.metadata.fromDynamic(Json.parse(FlxModding.system.assetSystem.getText(modpack.metaDirectory()))));
                     add(cast modpack);
                 }
@@ -361,11 +346,9 @@ class FlxModding
                     FlxModding.warn('Failed to add "$modFile", metadata file could not be found. Make sure that the metadata file is spelt correctly and or your custom metadata formatting was properly set.');
                 }
             }
-        }
-        #end
+		}
 
-        FlxModding.sort();
-
+		FlxModding.sort();
         FlxModding.log("Modpacks Reloaded!");
         postModsReload.dispatch();
     }
@@ -431,18 +414,18 @@ class FlxModding
             switch Type.getClass(metadata)
             {
                 case FlxMetadataFormat:
-                    var modpack:FlxModpack = Type.createInstance(flixelModpack, [fileName]);
+					var modpack:FlxModpack = Type.createInstance(flixelLibrary.modpack, [fileName]);
                     modpack.fromMetadata(cast metadata);
 
                     system.fileSystem.createFolder(FlxModding.modsDirectory + "/", fileName);
-                    system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/", Reflect.field(FlxModding.flixelFormat, "metaPath"), metadata.toJsonString());
+                    system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/", Reflect.field(flixelLibrary.format, "metaPath"), metadata.toJsonString());
 
                     var encodedBytes = iconBitmap.encode(iconBitmap.rect, new PNGEncoderOptions());
                     var iconData = Bytes.alloc(encodedBytes.length);
                     encodedBytes.position = 0;
                     encodedBytes.readBytes(iconData, 0, encodedBytes.length);
 
-                    system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/", Reflect.field(FlxModding.flixelFormat, "iconPath"), iconData);
+                    system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/", Reflect.field(flixelLibrary.format, "iconPath"), iconData);
 
                     if (makeAssetFolders == true)
                     {
@@ -458,18 +441,18 @@ class FlxModding
                     return cast modpack;
 
                 case PolymodMetadataFormat:
-                    var modpack:PolymodModpack = Type.createInstance(polymodModpack, [fileName]);
+                    var modpack:PolymodModpack = Type.createInstance(polymodLibrary.modpack, [fileName]);
                     modpack.fromMetadata(cast metadata);
 
                     system.fileSystem.createFolder(FlxModding.modsDirectory + "/", fileName);
-                    system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/", Reflect.field(FlxModding.polymodFormat, "metaPath"), metadata.toJsonString());
+                    system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/", Reflect.field(polymodLibrary.format, "metaPath"), metadata.toJsonString());
 
                     var encodedBytes = iconBitmap.encode(iconBitmap.rect, new PNGEncoderOptions());
                     var iconData = Bytes.alloc(encodedBytes.length);
                     encodedBytes.position = 0;
                     encodedBytes.readBytes(iconData, 0, encodedBytes.length);
 
-                    system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/", Reflect.field(FlxModding.polymodFormat, "iconPath"), iconData);
+                    system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/", Reflect.field(polymodLibrary.format, "iconPath"), iconData);
 
                     if (makeAssetFolders == true)
                     {
@@ -485,18 +468,18 @@ class FlxModding
                     return cast modpack;
 
                 default:
-                    var modpack = Type.createInstance(customModpack, [fileName]);
+                    var modpack = Type.createInstance(customLibrary.modpack, [fileName]);
                     modpack.fromMetadata(cast metadata);
 
                     system.fileSystem.createFolder(FlxModding.modsDirectory + "/", fileName);
-                    system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/", Reflect.field(FlxModding.customFormat, "metaPath"), metadata.toJsonString());
+                    system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/", Reflect.field(customLibrary.format, "metaPath"), metadata.toJsonString());
 
                     var encodedBytes = iconBitmap.encode(iconBitmap.rect, new PNGEncoderOptions());
                     var iconData = Bytes.alloc(encodedBytes.length);
                     encodedBytes.position = 0;
                     encodedBytes.readBytes(iconData, 0, encodedBytes.length);
 
-                    system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/", Reflect.field(FlxModding.customFormat, "iconPath"), iconData);
+                    system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/", Reflect.field(customLibrary.format, "iconPath"), iconData);
 
                     if (makeAssetFolders == true)
                     {
@@ -582,7 +565,7 @@ class FlxModding
      * @param   fileName   The file name used to find your targeted modpack
      * @return             The modpack you were looking for
      */
-    public static function get(fileName:String):FlxBaseModpack<FlxBaseMetadataFormat>
+    public static function get(fileName:String):FlxBaseModpack<Dynamic>
     {
         for (modpack in modpacks.members)
         {
@@ -1294,6 +1277,17 @@ private class FlxModVersion extends FlxVersion
             return '$display$major.$minor.$patch';
 	}   
 }
+
+class FlxBaseModLibrary<ModClass:FlxBaseModpack<FormatClass>, FormatClass:FlxBaseMetadataFormat>
+{
+	public var modpack:Class<ModClass>;
+	public var format:Class<FormatClass>;
+
+	public function new() {}
+}
+
+private class FlxModLibrary extends FlxBaseModLibrary<FlxModpack, FlxMetadataFormat> {}
+private class PolymodModLibrary extends FlxBaseModLibrary<PolymodModpack, PolymodMetadataFormat> {}
 
 private enum abstract FlxVersionBranch(String)
 {

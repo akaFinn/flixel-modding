@@ -5,6 +5,7 @@ import haxe.io.Bytes;
 import haxe.io.BytesInput;
 import haxe.zip.Entry;
 import haxe.zip.Reader;
+import flixel.FlxG;
 
 #if sys
 import sys.FileSystem;
