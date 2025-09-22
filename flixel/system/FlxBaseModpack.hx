@@ -39,6 +39,10 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 	 */
 	public var metadata:MetaFormat;
 
+	/**
+	 * The file path to the modpack archive or directory.
+	 * Used internally for locating and loading the modpack’s data.
+	 */
 	var file:String;
 
 	/**
@@ -115,6 +119,40 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
         return "";
     }
 
+	/**
+	 * Returns the total size of the modpack in bytes.
+	 * Includes all files and subfolders contained within.
+	 */
+	public function getModpackSize(?path:String):Int
+	{
+		#if sys
+		function getSysFolderSize(path:String):Int
+		{
+			var total:Int = 0;
+
+			if (!sys.FileSystem.exists(path) || !sys.FileSystem.isDirectory(path)) return 0;
+
+			for (entry in sys.FileSystem.readDirectory(path))
+        	{
+				var fullPath = sys.FileSystem.fullPath(path + "/" + entry);
+
+				if (sys.FileSystem.isDirectory(fullPath))
+            	{
+					total += getSysFolderSize(fullPath);
+				}
+            	else
+            	{
+					total += sys.FileSystem.stat(fullPath).size;
+				}
+			}
+
+			return total;
+		}
+
+		return getSysFolderSize(directory());
+		#end
+	}
+
 	override public function destroy():Void
     {
 		metadata = null;
@@ -130,7 +168,8 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
         return FlxStringUtil.getDebugString([
 			LabelValuePair.weak("class", Type.getClassName(Type.getClass(this)).split(".").pop()),
 			LabelValuePair.weak("path", directory()),
-			LabelValuePair.weak("active", active)
+			LabelValuePair.weak("active", active),
+			LabelValuePair.weak("size", FlxStringUtil.formatBytes(getModpackSize()))
 		]);
     }
 

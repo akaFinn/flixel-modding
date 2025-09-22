@@ -744,9 +744,11 @@ class FlxModding
 
             FlxG.console.registerFunction("listMods", () -> 
             {
+                FlxModding.sort();
+
                 for (modpack in modpacks)
                 {
-                    FlxG.log.add(modpack.directory() + ", " + Type.getClassName(Type.getClass(modpack)).split(".").pop() + ", active: " + modpack.active);
+                    FlxG.log.add(modpack.toString());
                 }
             });
 
@@ -754,6 +756,11 @@ class FlxModding
             {
                 FlxModding.reload();
                 FlxG.resetState();
+            });
+
+            FlxG.console.registerFunction("sortsMods", () -> 
+            {
+                FlxModding.sort();
             });
 
             FlxG.console.registerFunction("toggleModding", () -> 
