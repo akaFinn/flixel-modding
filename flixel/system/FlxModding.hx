@@ -1298,9 +1298,6 @@ private class FlxModSignals
     public function new() {}
 }
 
-@:bitmap("assets/debugger/icon.png")
-private class DebugIcon extends BitmapData {}
-
 private enum abstract FlxVersionBranch(String)
 {
 	var NONE = "none";
