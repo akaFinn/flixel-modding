@@ -8,10 +8,10 @@ import flixel.system.FlxBaseModpack;
 import flixel.system.assetSystem.FlxAssetSystem;
 import flixel.system.assetSystem.IAssetSystem;
 import flixel.system.debug.log.LogStyle;
-import flixel.system.fileSystem.IFileSystem;
-import flixel.system.fileSystem.RamFileSystem;
-import flixel.system.fileSystem.SysFileSystem;
-import flixel.system.fileSystem.WebFileSystem;
+import flixel.system.fileSystems.IFileSystem;
+import flixel.system.fileSystems.JsFileSystem;
+import flixel.system.fileSystems.RamFileSystem;
+import flixel.system.fileSystems.SysFileSystem;
 import flixel.system.polymod.PolymodMetadataFormat;
 import flixel.system.polymod.PolymodModpack;
 import flixel.util.FlxScriptUtil;
@@ -50,7 +50,7 @@ import openfl.utils.Future;
  * @author akaFinn
  */
 @:access(flixel.system.FlxBaseModpack)
-class FlxModding           
+class FlxModding
 {
     /**
      * PUBLIC API
@@ -80,6 +80,12 @@ class FlxModding
 	public static var system:FlxModding;
 
 	/**
+	 * Stores all global signals used by the modding framework.
+	 * Acts as the central hub for broadcasting and listening to events.
+	 */
+	public static var signals:FlxModSignals = new FlxModSignals();
+
+	/**
 	 * The container for every single mod available for Flixel-Modding.
 	 * All mods are listed here, whether active or not.
 	 */
@@ -91,68 +97,15 @@ class FlxModding
     public static var scripting:Bool = #if hscript flixel.util.FlxModUtil.getDefinedBool("FLX_SCRIPTING", true); #else false; #end
 
     /**
-     * SIGNALS API
-     */
-
-	/**
-	 * Signal fired before modpacks are reloaded.
-	 * Useful for saving state or cleaning up.
-	 */
-	public static var preModsReload:FlxSignal = new FlxSignal();
-
-	/**
-	 * Signal fired after modpacks are reloaded.
-	 * Can be used to refresh UI or data.
-	 */
-	public static var postModsReload:FlxSignal = new FlxSignal();
-
-	/**
-	 * Signal fired before modpacks update.
-	 * Great for prep work or modifying metadata.
-	 */
-	public static var preModsUpdate:FlxSignal = new FlxSignal();
-
-	/**
-	 * Signal fired after modpacks update.
-	 * Use this to apply changes or react to updates.
-	 */
-	public static var postModsUpdate:FlxSignal = new FlxSignal();
-
-	/**
-	 * Fires when a new modpack is added.
-	 * Can be used to initialize systems or load mod-specific content.
-	 * Passes the added FlxBaseModpack.
-	 */
-	public static var onModAdded:FlxTypedSignal<FlxBaseModpack<FlxBaseMetadataFormat>->Void> = new FlxTypedSignal<FlxBaseModpack<FlxBaseMetadataFormat>->Void>();
-
-	/**
-	 * Fires when a modpack is removed from the system.
-	 * Useful for cleaning up resources tied to that mod.
-	 * Passes the removed FlxBaseModpack.
-	 */
-	public static var onModRemoved:FlxTypedSignal<FlxBaseModpack<FlxBaseMetadataFormat>->Void> = new FlxTypedSignal<FlxBaseModpack<FlxBaseMetadataFormat>->Void>();
-
-	/**
-	 * Fires when all modpacks are cleared from the system at once.
-	 * Can be used to reset state, release resources, or reinitialize systems
-	 * that depend on active mods.
-	 */
-	public static var onModsCleared:FlxSignal = new FlxSignal();
-
-    /**
-     * Signal dispatched when a mod gets activated.
-     */
-    public static var onModActived:FlxTypedSignal<FlxBaseModpack<FlxBaseMetadataFormat>->Void> = new FlxTypedSignal<FlxBaseModpack<FlxBaseMetadataFormat>->Void>();
-
-    /** 
-     * Signal dispatched when a mod gets deactivated. 
-     */
-    public static var onModDeactived:FlxTypedSignal<FlxBaseModpack<FlxBaseMetadataFormat>->Void> = new FlxTypedSignal<FlxBaseModpack<FlxBaseMetadataFormat>->Void>();
-
-
-    /**
      * INSTANCE API
      */
+
+    /**
+     * Asset system handler for this instance.
+     * Lets you swap between different asset systems (native, virtual, embedded, etc.)
+     * without affecting other instances.
+     */
+    public var assets:IAssetSystem;
 
     /**
      * File system handler for this instance.
@@ -160,13 +113,6 @@ class FlxModding
      * without affecting other instances.
      */
     public var fileSystem:IFileSystem;
-
-    /**
-     * Asset system handler for this instance.
-     * Lets you swap between different asset systems (native, virtual, embedded, etc.)
-     * without affecting other instances.
-     */
-    public var assetSystem:IAssetSystem;
 
     /**
      * Tracks whether this instance has been initialized.
@@ -242,7 +188,7 @@ class FlxModding
     /**
      * Base modpack class used for custom implementations.
      */
-    static var customModpack:Class<FlxBaseModpack<FlxBaseMetadataFormat>> = FlxBaseModpack;
+    static var customModpack:Class<FlxBaseModpack<Dynamic>> = FlxBaseModpack;
 
     /**
      * Base metadata format class for custom modpacks.
@@ -260,6 +206,8 @@ class FlxModding
      * This setup is only available on native targets (like Windows, Mac, or Linux). 
      * It will not function in JS/HTML5 & Flash builds due to file system access restrictions.
      * 
+     * // TODO: Fix these comments
+     * 
      * @param   customModpack     (Optional) A pre-defined modpack class (extending `FlxBaseModpack`)
      *                            to use instead of automatically generating one. This allows you to
      *                            plug in a fully customized modpack.
@@ -272,7 +220,7 @@ class FlxModding
      *                            handle how files are read. Useful for embedding mods, virtual file systems,
      *                            or advanced loading scenarios beyond the default behavior.
      * 
-     * @param   assetSystem       (Optional) A custom asset system interface (extending `IAssetSystem`)
+     * @param   assets       (Optional) A custom asset system interface (extending `IAssetSystem`)
      *                            to manage asset grabbing and loading. Use this to hook into alternative
      *                            asset pipelines, enable hot-reloading, or redirect asset lookups without
      *                            relying solely on the default OpenFL/Lime systems.
@@ -285,7 +233,7 @@ class FlxModding
      * 
      * @return                    The initialized FlxModding system so it can be assigned or used directly.
      */
-	public static function init(?customModpack:Dynamic, ?customFormat:Class<FlxBaseMetadataFormat>, ?fileSystem:IFileSystem, ?assetSystem:IAssetSystem, ?assetDirectory:String, ?modsDirectory:String):FlxModding
+	public static function init(?customModpack:Class<FlxBaseModpack<Dynamic>>, ?customFormat:Class<FlxBaseMetadataFormat>, ?autoLoadMods:Bool = true, ?fileSystem:IFileSystem, ?assets:IAssetSystem, ?assetDirectory:String, ?modsDirectory:String):FlxModding
     {   
         FlxModding.log("Attempting to Initialize FlxModding...");
 
@@ -293,14 +241,26 @@ class FlxModding
         flixel.system.FlxModding.modsDirectory = modsDirectory != null ? modsDirectory : flixel.system.FlxModding.modsDirectory;
 
         modpacks = new FlxTypedContainer<FlxBaseModpack<FlxBaseMetadataFormat>>();
-        buildAssetSystem(assetSystem);
-        buildFileSystem(fileSystem);
 
         system = new FlxModding();
+        buildAssetSystem(assets);
+        buildFileSystem(fileSystem);
+
         if (system.fileSystem.exists(FlxModding.modsDirectory + "/"))
 		{
             flixel.system.FlxModding.customModpack = customModpack != null ? customModpack : flixel.system.FlxModding.customModpack;
             flixel.system.FlxModding.customFormat = customFormat != null ? customFormat : flixel.system.FlxModding.customFormat;
+
+            if (autoLoadMods != false)
+            {
+                FlxG.signals.preStateCreate.addOnce((state:FlxState) -> FlxModding.reload());
+            }
+
+            FlxG.signals.preGameStart.addOnce(() -> 
+            {
+                FlxG.signals.preGameReset.add(() -> FlxModding.reload());
+                FlxG.signals.preStateSwitch.add(() -> system.assets.clear());
+            });
 
             FlxModding.log("FlxModding Initialized!");
             return system;
@@ -322,7 +282,7 @@ class FlxModding
      */
     public static function reload(?updateMetadata:Bool = true):Void
     {
-        preModsReload.dispatch();
+        signals.preModsReload.dispatch();
         FlxModding.log("Attempting to Reload modpacks...");
         system.lastReload = FlxG.elapsed;
         system.reloadCount++;
@@ -341,22 +301,22 @@ class FlxModding
         {
             if (system.fileSystem.isFolder(FlxModding.modsDirectory + "/" + modFile) && enabled)
             {
-				if (FlxModding.system.assetSystem.exists(FlxModding.modsDirectory + "/" + modFile + "/" + Reflect.field(FlxModding.flixelFormat, "metaPath")))
+				if (FlxModding.system.assets.exists(FlxModding.modsDirectory + "/" + modFile + "/" + Reflect.field(FlxModding.flixelFormat, "metaPath")))
                 {
 					var modpack:FlxModpack = Type.createInstance(FlxModding.flixelModpack, [modFile]);
-                    modpack.fromMetadata(modpack.metadata.fromDynamic(Json.parse(FlxModding.system.assetSystem.getText(modpack.metaDirectory()))));
+                    modpack.fromMetadata(modpack.metadata.fromDynamic(Json.parse(FlxModding.system.assets.getText(modpack.metaDirectory()))));
                     add(cast modpack);
                 }
-				else if (FlxModding.system.assetSystem.exists(FlxModding.modsDirectory + "/" + modFile + "/" + Reflect.field(FlxModding.polymodFormat, "metaPath")))
+				else if (FlxModding.system.assets.exists(FlxModding.modsDirectory + "/" + modFile + "/" + Reflect.field(FlxModding.polymodFormat, "metaPath")))
                 {
 					var modpack:PolymodModpack = Type.createInstance(FlxModding.polymodModpack, [modFile]);
-                    modpack.fromMetadata(modpack.metadata.fromDynamic(Json.parse(FlxModding.system.assetSystem.getText(modpack.metaDirectory()))));
+                    modpack.fromMetadata(modpack.metadata.fromDynamic(Json.parse(FlxModding.system.assets.getText(modpack.metaDirectory()))));
                     add(cast modpack);
                 }
-				else if (FlxModding.system.assetSystem.exists(FlxModding.modsDirectory + "/" + modFile + "/" + Reflect.field(FlxModding.customFormat, "metaPath")))
+				else if (FlxModding.system.assets.exists(FlxModding.modsDirectory + "/" + modFile + "/" + Reflect.field(FlxModding.customFormat, "metaPath")))
                 {
 					var modpack = Type.createInstance(FlxModding.customModpack, [modFile]);
-                    modpack.fromMetadata(modpack.metadata.fromDynamic(Json.parse(FlxModding.system.assetSystem.getText(modpack.metaDirectory()))));
+                    modpack.fromMetadata(modpack.metadata.fromDynamic(Json.parse(FlxModding.system.assets.getText(modpack.metaDirectory()))));
                     add(cast modpack);
                 }
                 else
@@ -368,7 +328,7 @@ class FlxModding
 
 		FlxModding.sort();
         FlxModding.log("Modpacks Reloaded!");
-        postModsReload.dispatch();
+        signals.postModsReload.dispatch();
     }
 
     /**
@@ -382,7 +342,7 @@ class FlxModding
      */
     public static function update(?modpack:FlxBaseModpack<FlxBaseMetadataFormat>):Void
     {
-        preModsUpdate.dispatch();
+        signals.preModsUpdate.dispatch();
 
         if (modpack != null)
         {
@@ -396,7 +356,7 @@ class FlxModding
             }
         }
 
-        postModsUpdate.dispatch();
+        signals.postModsUpdate.dispatch();
     }
 
 	/**
@@ -416,17 +376,18 @@ class FlxModding
      * Automatically places the generated modpack inside the active mods directory.
      * 
      * @param   fileName            The name of the file/folder to create for the modpack.
-     * @param   iconBitmap          The icon image used to visually represent the modpack.
      * @param   metadata            Contains modpack information such as the name and structure.
      *                              If you're using a custom-named assets folder, this helps define it.
+     * @param   iconBitmap          (Optional) The icon image used to visually represent the modpack.
      * @param   makeAssetFolders    (Optional) If true, automatically generates empty asset subfolders within the modpack.
      *                              Useful when you want to scaffold common asset paths.
      *
      * @return                      A new FlxBaseModpack instance configured with the provided data.
      */
-    public static function create(fileName:String, iconBitmap:BitmapData, metadata:FlxBaseMetadataFormat, ?makeAssetFolders:Bool = true):FlxBaseModpack<FlxBaseMetadataFormat>
+    public static function create(fileName:String, metadata:FlxBaseMetadataFormat, ?iconBitmap:BitmapData, ?makeAssetFolders:Bool = true):FlxBaseModpack<FlxBaseMetadataFormat>
     {
         FlxModding.log("Attempting to Create a modpack...");
+
         if (!system.fileSystem.exists(FlxModding.modsDirectory + "/" + fileName))
         {
             switch Type.getClass(metadata)
@@ -438,20 +399,14 @@ class FlxModding
                     system.fileSystem.createFolder(FlxModding.modsDirectory + "/", fileName);
                     system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/", Reflect.field(FlxModding.flixelFormat, "metaPath"), metadata.toJsonString());
 
-                    var encodedBytes = iconBitmap.encode(iconBitmap.rect, new PNGEncoderOptions());
-                    var iconData = Bytes.alloc(encodedBytes.length);
-                    encodedBytes.position = 0;
-                    encodedBytes.readBytes(iconData, 0, encodedBytes.length);
-
-                    system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/", Reflect.field(FlxModding.flixelFormat, "iconPath"), iconData);
-
-                    if (makeAssetFolders == true)
+                    if (iconBitmap != null)
                     {
-                        for (asset in system.fileSystem.readFolder(FlxModding.assetDirectory))
-                        {
-                            system.fileSystem.createFolder(FlxModding.modsDirectory + "/" + fileName + "/", asset);
-                            system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/" + asset + "/", "content-goes-here.txt", "");
-                        }
+                        var encodedBytes = iconBitmap.encode(iconBitmap.rect, new PNGEncoderOptions());
+                        var iconData = Bytes.alloc(encodedBytes.length);
+                        encodedBytes.position = 0;
+                        encodedBytes.readBytes(iconData, 0, encodedBytes.length);
+
+                        system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/", Reflect.field(FlxModding.flixelFormat, "iconPath"), iconData);
                     }
 
                     add(cast modpack);
@@ -465,20 +420,14 @@ class FlxModding
                     system.fileSystem.createFolder(FlxModding.modsDirectory + "/", fileName);
                     system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/", Reflect.field(FlxModding.polymodFormat, "metaPath"), metadata.toJsonString());
 
-                    var encodedBytes = iconBitmap.encode(iconBitmap.rect, new PNGEncoderOptions());
-                    var iconData = Bytes.alloc(encodedBytes.length);
-                    encodedBytes.position = 0;
-                    encodedBytes.readBytes(iconData, 0, encodedBytes.length);
-
-                    system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/", Reflect.field(FlxModding.polymodFormat, "iconPath"), iconData);
-
-                    if (makeAssetFolders == true)
+                    if (iconBitmap != null)
                     {
-                        for (asset in system.fileSystem.readFolder(FlxModding.assetDirectory))
-                        {
-                            system.fileSystem.createFolder(FlxModding.modsDirectory + "/" + fileName + "/", asset);
-                            system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/" + asset + "/", "content-goes-here.txt", "");
-                        }
+                        var encodedBytes = iconBitmap.encode(iconBitmap.rect, new PNGEncoderOptions());
+                        var iconData = Bytes.alloc(encodedBytes.length);
+                        encodedBytes.position = 0;
+                        encodedBytes.readBytes(iconData, 0, encodedBytes.length);
+
+                        system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/", Reflect.field(FlxModding.polymodFormat, "iconPath"), iconData);
                     }
 
                     add(cast modpack);
@@ -492,25 +441,28 @@ class FlxModding
                     system.fileSystem.createFolder(FlxModding.modsDirectory + "/", fileName);
                     system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/", Reflect.field(FlxModding.customFormat, "metaPath"), metadata.toJsonString());
 
-                    var encodedBytes = iconBitmap.encode(iconBitmap.rect, new PNGEncoderOptions());
-                    var iconData = Bytes.alloc(encodedBytes.length);
-                    encodedBytes.position = 0;
-                    encodedBytes.readBytes(iconData, 0, encodedBytes.length);
-
-                    system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/", Reflect.field(FlxModding.customFormat, "iconPath"), iconData);
-
-                    if (makeAssetFolders == true)
+                    if (iconBitmap != null)
                     {
-                        for (asset in system.fileSystem.readFolder(FlxModding.assetDirectory))
-                        {
-                            system.fileSystem.createFolder(FlxModding.modsDirectory + "/" + fileName + "/", asset);
-                            system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/" + asset + "/", "content-goes-here.txt", "");
-                        }
+                        var encodedBytes = iconBitmap.encode(iconBitmap.rect, new PNGEncoderOptions());
+                        var iconData = Bytes.alloc(encodedBytes.length);
+                        encodedBytes.position = 0;
+                        encodedBytes.readBytes(iconData, 0, encodedBytes.length);
+
+                        system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/", Reflect.field(FlxModding.customFormat, "iconPath"), iconData);
                     }
 
                     add(cast modpack);
                     FlxModding.log("Modpack Created!");
                     return cast modpack;
+            }
+
+            if (makeAssetFolders)
+            {
+                for (asset in system.fileSystem.readFolder(FlxModding.assetDirectory))
+                {
+                    system.fileSystem.createFolder(FlxModding.modsDirectory + "/" + fileName + "/", asset);
+                    system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/" + asset + "/", "content-goes-here.txt", "");
+                }
             }
 
             return null;
@@ -631,7 +583,7 @@ class FlxModding
     public static function clear():Void
     {
         modpacks.clear();
-        onModsCleared.dispatch();
+        signals.onModsCleared.dispatch();
     }
 
     /**
@@ -645,7 +597,7 @@ class FlxModding
         FlxModding.log("Added Modpack: " + modpack.directory());
 
         modpacks.add(modpack);
-        onModAdded.dispatch(modpack);
+        signals.onModAdded.dispatch(modpack);
     }
 
     /**
@@ -659,39 +611,16 @@ class FlxModding
         FlxModding.log("Removed Modpack: " + modpack.directory());
 
         modpacks.remove(modpack);
-        onModRemoved.dispatch(modpack);
+        signals.onModRemoved.dispatch(modpack);
     }
     
     /**
      * Creates a new FlxModding instance, setting up the core systems
      * responsible for managing mods and their assets.
-     *
-     * @param   fileSystem    (Optional) custom implementation of IFileSystem,
-     *                        used to handle mod file access (reading, writing,
-     *                        directory traversal, etc.). If null, the default
-     *                        file system will be used.
-     *
-     * @param   assetSystem   (Optional) custom implementation of IAssetSystem,
-     *                        responsible for loading, reloading, and resolving
-     *                        assets from mods. If null, the default asset system
-     *                        will be used.
      */
-    public function new(?fileSystem:IFileSystem, ?assetSystem:IAssetSystem)
+    public function new()
     {
-        buildModdedAssetLibrarys();
-
-        #if (flixel >= "5.9.0")
-        FlxG.assets.getAssetUnsafe = this.assetSystem.getAsset;
-        FlxG.assets.loadAsset = this.assetSystem.loadAsset;
-        FlxG.assets.exists = this.assetSystem.exists;
-
-        FlxG.assets.list = this.assetSystem.list;
-        FlxG.assets.isLocal = this.assetSystem.isLocal;
-        #end
-
         buildDebuggerTools();
-        buildScriptedClasses();
-        setupModdingSignals();
         this.initialized = true;
     }
 
@@ -769,7 +698,7 @@ class FlxModding
 		    addFiles(FlxModding.assetDirectory, FlxModding.assetDirectory + "/");
             addFiles(FlxModding.modsDirectory, FlxModding.modsDirectory + "/");
 
-            FlxModding.postModsReload.add(() ->
+            FlxModding.signals.postModsReload.add(() ->
             {
                 for (asset in list)
                 {
@@ -858,12 +787,6 @@ class FlxModding
         #end
     }
 
-    function setupModdingSignals():Void
-    {
-        FlxG.signals.preGameReset.add(() -> FlxModding.reload());
-        FlxG.signals.preStateSwitch.add(() -> assetSystem.clear());
-    }
-
     static function log(data:Dynamic):Void
     {
         if (debug)
@@ -880,27 +803,39 @@ class FlxModding
         FlxG.log.error(data); 
     }
 
-    static function buildAssetSystem(?assetSystem:IAssetSystem):Void
+    static function buildAssetSystem(?assets:IAssetSystem):Void
     {
-        this.assetSystem = (assetSystem != null) ? assetSystem : new FlxAssetSystem();
+        system.assets = (assets != null) ? assets : new FlxAssetSystem();
+        system.buildModdedAssetLibrarys();
+
+        #if (flixel >= "5.9.0")
+        FlxG.assets.getAssetUnsafe = system.assets.getAsset;
+        FlxG.assets.loadAsset = system.assets.loadAsset;
+        FlxG.assets.exists = system.assets.exists;
+
+        FlxG.assets.list = system.assets.list;
+        FlxG.assets.isLocal = system.assets.isLocal;
+        #end
     }
 
     static function buildFileSystem(?fileSystem:IFileSystem):Void
     {
         if (fileSystem != null)
         {
-            this.fileSystem = fileSystem;
+            system.fileSystem = fileSystem;
         }
         else
         {
-            #if js
-            this.fileSystem = new WebFileSystem();
+            #if (js && html5)
+            system.fileSystem = new JsFileSystem();
             #elseif sys
-            this.fileSystem = new SysFileSystem();
+            system.fileSystem = new SysFileSystem();
             #else
-            this.fileSystem = new RamFileSystem();
+            system.fileSystem = new RamFileSystem();
             #end
         }
+
+        system.buildScriptedClasses();
     }
 }
 
@@ -1011,11 +946,11 @@ private class AssetModLibrary extends AssetLibrary
     {
         return switch (cast(type, AssetType))
 		{
-			case BINARY: FlxModding.system.assetSystem.exists(id, BINARY);
-			case TEXT: FlxModding.system.assetSystem.exists(id, TEXT);
-			case IMAGE: FlxModding.system.assetSystem.exists(id, IMAGE);
-            case FONT: FlxModding.system.assetSystem.exists(id, FONT);
-			case MUSIC, SOUND: FlxModding.system.assetSystem.exists(id, SOUND);
+			case BINARY: FlxModding.system.assets.exists(id, BINARY);
+			case TEXT: FlxModding.system.assets.exists(id, TEXT);
+			case IMAGE: FlxModding.system.assets.exists(id, IMAGE);
+            case FONT: FlxModding.system.assets.exists(id, FONT);
+			case MUSIC, SOUND: FlxModding.system.assets.exists(id, SOUND);
 
 			default: FlxG.log.error("Unknown asset type: " + type); false;
 		}
@@ -1029,18 +964,18 @@ private class AssetModLibrary extends AssetLibrary
         {
             result = switch (cast(type, AssetType))
 		    {
-			    case BINARY: FlxModding.system.assetSystem.list(BINARY);
-			    case TEXT: FlxModding.system.assetSystem.list(TEXT);
-			    case IMAGE: FlxModding.system.assetSystem.list(IMAGE);
-                case FONT: FlxModding.system.assetSystem.list(FONT);
-			    case MUSIC, SOUND: FlxModding.system.assetSystem.list(SOUND);
+			    case BINARY: FlxModding.system.assets.list(BINARY);
+			    case TEXT: FlxModding.system.assets.list(TEXT);
+			    case IMAGE: FlxModding.system.assets.list(IMAGE);
+                case FONT: FlxModding.system.assets.list(FONT);
+			    case MUSIC, SOUND: FlxModding.system.assets.list(SOUND);
 
 			    default: FlxG.log.error("Unknown asset type: " + type); [];
 		    }
         }
         else
         {
-            result = FlxModding.system.assetSystem.list();
+            result = FlxModding.system.assets.list();
         }
 
         return result;
@@ -1063,11 +998,11 @@ private class AssetModLibrary extends AssetLibrary
     {
         return switch (cast(type, AssetType))
 		{
-			case BINARY: FlxModding.system.assetSystem.isLocal(id, BINARY);
-			case TEXT: FlxModding.system.assetSystem.isLocal(id, TEXT);
-			case IMAGE: FlxModding.system.assetSystem.isLocal(id, IMAGE);
-            case FONT: FlxModding.system.assetSystem.isLocal(id, FONT);
-			case MUSIC, SOUND: FlxModding.system.assetSystem.isLocal(id, SOUND);
+			case BINARY: FlxModding.system.assets.isLocal(id, BINARY);
+			case TEXT: FlxModding.system.assets.isLocal(id, TEXT);
+			case IMAGE: FlxModding.system.assets.isLocal(id, IMAGE);
+            case FONT: FlxModding.system.assets.isLocal(id, FONT);
+			case MUSIC, SOUND: FlxModding.system.assets.isLocal(id, SOUND);
 
 			default: FlxG.log.error("Unknown asset type: " + type); false;
 		}
@@ -1106,7 +1041,7 @@ private class AssetModLibrary extends AssetLibrary
 
     public function getTextModded(id:String):String
     {
-        return FlxModding.system.assetSystem.getText(id);    
+        return FlxModding.system.assets.getText(id);    
     }
 
     override public function getBytes(id:String):lime.utils.Bytes
@@ -1124,7 +1059,7 @@ private class AssetModLibrary extends AssetLibrary
 
     public function getBytesModded(id:String):lime.utils.Bytes
     {
-        return lime.utils.Bytes.fromBytes(FlxModding.system.assetSystem.getBytes(id));
+        return lime.utils.Bytes.fromBytes(FlxModding.system.assets.getBytes(id));
     }
 
     override public function getImage(id:String):lime.graphics.Image
@@ -1132,7 +1067,7 @@ private class AssetModLibrary extends AssetLibrary
         if (isDefaultAsset(id))
             return getImageDefault(id);
 
-        return lime.graphics.Image.fromBitmapData(FlxModding.system.assetSystem.getBitmapData(id));
+        return lime.graphics.Image.fromBitmapData(FlxModding.system.assets.getBitmapData(id));
     }
 
     public function getImageDefault(id:String):lime.graphics.Image
@@ -1142,7 +1077,7 @@ private class AssetModLibrary extends AssetLibrary
 
     public function getImageModded(id:String):lime.graphics.Image
     {
-        return lime.graphics.Image.fromBitmapData(FlxModding.system.assetSystem.getBitmapData(id));
+        return lime.graphics.Image.fromBitmapData(FlxModding.system.assets.getBitmapData(id));
     }
 
     override public function getAudioBuffer(id:String):lime.media.AudioBuffer
@@ -1161,7 +1096,7 @@ private class AssetModLibrary extends AssetLibrary
     public function getAudioBufferModded(id:String):lime.media.AudioBuffer
     {
         @:privateAccess
-        return FlxModding.system.assetSystem.getSound(id).__buffer;    
+        return FlxModding.system.assets.getSound(id).__buffer;    
     }
 
     override public function getFont(id:String):lime.text.Font
@@ -1179,7 +1114,7 @@ private class AssetModLibrary extends AssetLibrary
 
     public function getFontModded(id:String):lime.text.Font
     {
-        return FlxModding.system.assetSystem.getFont(id);
+        return FlxModding.system.assets.getFont(id);
     }
 
     override public function loadText(id:String):Future<String>
@@ -1302,6 +1237,69 @@ private class FlxModVersion extends FlxVersion
             return '$display$major.$minor.$patch';
 	}   
 }
+
+private class FlxModSignals
+{
+    /**
+	 * Signal fired before modpacks are reloaded.
+	 * Useful for saving state or cleaning up.
+	 */
+	public var preModsReload:FlxSignal = new FlxSignal();
+
+	/**
+	 * Signal fired after modpacks are reloaded.
+	 * Can be used to refresh UI or data.
+	 */
+	public var postModsReload:FlxSignal = new FlxSignal();
+
+	/**
+	 * Signal fired before modpacks update.
+	 * Great for prep work or modifying metadata.
+	 */
+	public var preModsUpdate:FlxSignal = new FlxSignal();
+
+	/**
+	 * Signal fired after modpacks update.
+	 * Use this to apply changes or react to updates.
+	 */
+	public var postModsUpdate:FlxSignal = new FlxSignal();
+
+	/**
+	 * Fires when a new modpack is added.
+	 * Can be used to initialize systems or load mod-specific content.
+	 * Passes the added FlxBaseModpack.
+	 */
+	public var onModAdded:FlxTypedSignal<FlxBaseModpack<FlxBaseMetadataFormat>->Void> = new FlxTypedSignal<FlxBaseModpack<FlxBaseMetadataFormat>->Void>();
+
+	/**
+	 * Fires when a modpack is removed from the system.
+	 * Useful for cleaning up resources tied to that mod.
+	 * Passes the removed FlxBaseModpack.
+	 */
+	public var onModRemoved:FlxTypedSignal<FlxBaseModpack<FlxBaseMetadataFormat>->Void> = new FlxTypedSignal<FlxBaseModpack<FlxBaseMetadataFormat>->Void>();
+
+	/**
+	 * Fires when all modpacks are cleared from the system at once.
+	 * Can be used to reset state, release resources, or reinitialize systems
+	 * that depend on active mods.
+	 */
+	public var onModsCleared:FlxSignal = new FlxSignal();
+
+    /**
+     * Signal dispatched when a mod gets activated.
+     */
+    public var onModActived:FlxTypedSignal<FlxBaseModpack<FlxBaseMetadataFormat>->Void> = new FlxTypedSignal<FlxBaseModpack<FlxBaseMetadataFormat>->Void>();
+
+    /** 
+     * Signal dispatched when a mod gets deactivated. 
+     */
+    public var onModDeactived:FlxTypedSignal<FlxBaseModpack<FlxBaseMetadataFormat>->Void> = new FlxTypedSignal<FlxBaseModpack<FlxBaseMetadataFormat>->Void>();
+
+    public function new() {}
+}
+
+@:bitmap("assets/debugger/icon.png")
+private class DebugIcon extends BitmapData {}
 
 private enum abstract FlxVersionBranch(String)
 {

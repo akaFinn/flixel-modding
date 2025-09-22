@@ -1,4 +1,4 @@
-package flixel.system.fileSystem;
+package flixel.system.fileSystems;
 
 import haxe.io.Bytes;
 

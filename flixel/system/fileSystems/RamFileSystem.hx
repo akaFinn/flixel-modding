@@ -1,14 +1,18 @@
-package flixel.system.fileSystem;
+package flixel.system.fileSystems;
 
 import haxe.io.Bytes;
 
 class RamFileSystem implements IFileSystem
 {
+    public static var instance:RamFileSystem;
+
     var files:Map<String, Dynamic>;
     var folders:Map<String, Bool>;
 
     public function new()
     {
+        RamFileSystem.instance = this;
+
         files = new Map<String, Dynamic>();
         folders = new Map<String, Bool>();
     }

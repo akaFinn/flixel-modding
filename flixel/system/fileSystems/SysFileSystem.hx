@@ -1,4 +1,4 @@
-package flixel.system.fileSystem;
+package flixel.system.fileSystems;
 
 import haxe.io.Bytes;
 
@@ -8,7 +8,12 @@ import sys.io.File;
 
 class SysFileSystem implements IFileSystem
 {
-    public function new() {}
+    public static var instance:SysFileSystem;
+
+    public function new()
+    {
+        SysFileSystem.instance = this;
+    }
 
     public function createFile(path:String, name:String, data:Dynamic):Void
     {

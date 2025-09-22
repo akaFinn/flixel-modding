@@ -139,9 +139,9 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 		active = Value;
 
 		if (Value != false)
-			FlxModding.onModActived.dispatch(cast this);
+			FlxModding.signals.onModActived.dispatch(cast this);
 		else
-			FlxModding.onModDeactived.dispatch(cast this);
+			FlxModding.signals.onModDeactived.dispatch(cast this);
 
 		return Value;
 	}

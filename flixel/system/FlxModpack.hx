@@ -14,27 +14,21 @@ class FlxModpack extends FlxBaseModpack<FlxMetadataFormat>
 {
 	/**
 	 * The display name of the modpack.
-	 * This is what players will see in the mod menu, credits, or any other UI elements referencing the mod.
-	 * It should be a human-readable title like "Cool Mod" rather than a technical ID.
 	 */
 	public var name:String;
 
 	/**
 	 * The version string for the modpack.
-	 * Typically formatted like "1.0.0", "1.2.3-beta", etc.
 	 */
 	public var version:String;
 
 	/**
 	 * A short description of the modpack, usually one or two sentences.
-	 * This is often shown in mod browsers or detail views to summarize what the mod does or contains.
 	 */
 	public var description:String;
 
 	/**
 	 * An array of credit entries tied to the modpack.
-	 * Each credit entry contains contributor names, roles, and optionally contact or link info.
-	 * Used to populate credits screens or author listings.
 	 */
 	public var credits:Array<CreditFormat>;
 

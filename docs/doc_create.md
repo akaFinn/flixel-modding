@@ -30,7 +30,7 @@ class Main extends Sprite
         FlxModding.init();
         addChild(new FlxGame(0, 0, PlayState));
 
-        FlxModding.create("newMod", new BitmapData(128, 128), new FlxMetadataFormat().fromDynamicData({
+        FlxModding.create("newMod", new FlxMetadataFormat().fromDynamicData({
 	        name: "New Awesome Mod",
 	        version: "1.2.3",
 	        description: "This is a brand new mod for the world!",
@@ -45,7 +45,7 @@ class Main extends Sprite
 
 	        priority: 1,
 	        active: true,
-        }));
+        }), new BitmapData(128, 128));
     }
 }
 ```
