@@ -1,4 +1,4 @@
-package flixel.system.assetSystem;
+package flixel.system.backends;
 
 import haxe.io.Bytes;
 import openfl.display.BitmapData;
@@ -9,7 +9,7 @@ import openfl.utils.Future;
 #if (flixel >= "5.9.0")
 import flixel.system.frontEnds.AssetFrontEnd.FlxAssetType;
 #else
-import flixel.system.assetSystem.IAssetSystem.FlxAssetType;
+import flixel.system.backends.IAssetSystem.FlxAssetType;
 #end
 
 class FlxAssetSystem implements IAssetSystem

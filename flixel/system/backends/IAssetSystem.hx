@@ -1,4 +1,4 @@
-package flixel.system.assetSystem;
+package flixel.system.backends;
 
 import haxe.io.Bytes;
 import openfl.display.BitmapData;
