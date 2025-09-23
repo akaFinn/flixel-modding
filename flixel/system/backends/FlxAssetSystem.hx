@@ -21,8 +21,8 @@ class FlxAssetSystem implements IAssetSystem
 
     public function getAsset(id:String, type:FlxAssetType, useCache:Bool = true):Null<Any>
     {
-        if (isFlixelAsset(id))
-            return getFlixelAsset(id, type, useCache);
+        if (isOpenFLAsset(id))
+            return getOpenFLAsset(id, type, useCache);
         
         var asset:Any = switch type
 		{
@@ -55,6 +55,11 @@ class FlxAssetSystem implements IAssetSystem
 				font;
 		}
 
+        if (type == FONT)
+        {
+            trace(id, asset);
+        }
+
 		return asset;
     }
 
@@ -65,7 +70,7 @@ class FlxAssetSystem implements IAssetSystem
 
     public function exists(id:String, ?type:FlxAssetType):Bool
     {
-        if (isFlixelAsset(id))
+        if (isOpenFLAsset(id))
             return Assets.exists(id, type.toOpenFlType());
 
         return FlxModding.system.fileSystem.exists(FlxModding.system.sanitize(id));
@@ -98,7 +103,7 @@ class FlxAssetSystem implements IAssetSystem
 
     public function isLocal(id:String, ?type:FlxAssetType, useCache:Bool = true):Bool
     {
-        if (isFlixelAsset(id) && useCache)
+        if (isOpenFLAsset(id) && useCache)
 			return Assets.isLocal(id, type.toOpenFlType());
 
         return true;
@@ -129,13 +134,13 @@ class FlxAssetSystem implements IAssetSystem
         return getAsset(id, FONT, useCache);
     }
 
-    function isFlixelAsset(id:String):Bool
+    function isOpenFLAsset(id:String):Bool
     {
         @:privateAccess
-        return StringTools.startsWith(id, FlxModding.flixelDirectory);
+        return StringTools.startsWith(id, FlxModding.flixelDirectory) || StringTools.contains(id, ":");
     }
 
-    function getFlixelAsset(id:String, type:FlxAssetType, useCache:Bool = true):Null<Any>
+    function getOpenFLAsset(id:String, type:FlxAssetType, useCache:Bool = true):Null<Any>
 	{
 		return switch (type)
 		{

@@ -634,6 +634,13 @@ class FlxModding
         {
             return redirect(id.substr(Std.string(FlxModding.assetDirectory + "/").length));
         }
+        else if (StringTools.contains(id, ":"))
+        {
+            var library:String = id.split(":")[0];
+            var path:String = id.substr(Std.string(library + ":").length);
+
+            return library + ":" + sanitize(path);
+        }
         else
         {
             return redirect(id);
