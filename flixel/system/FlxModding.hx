@@ -1,7 +1,7 @@
 package flixel.system;
 
 import flixel.FlxG;
-import flixel.group.FlxContainer.FlxTypedContainer;
+import flixel.group.FlxModpackContainer;
 import flixel.system.FlxBaseMetadataFormat;
 import flixel.system.FlxBaseModpack.FlxModpackType;
 import flixel.system.FlxBaseModpack;
@@ -89,7 +89,7 @@ class FlxModding
 	 * The container for every single mod available for Flixel-Modding.
 	 * All mods are listed here, whether active or not.
 	 */
-	public static var modpacks:FlxTypedContainer<FlxBaseModpack<FlxBaseMetadataFormat>>;
+	public static var modpacks:FlxModpackContainer;
 
     /**
      * A toggle for weither or not scripting is enabled on runtime
@@ -240,7 +240,7 @@ class FlxModding
         flixel.system.FlxModding.assetDirectory = assetDirectory != null ? assetDirectory : flixel.system.FlxModding.assetDirectory;
         flixel.system.FlxModding.modsDirectory = modsDirectory != null ? modsDirectory : flixel.system.FlxModding.modsDirectory;
 
-        modpacks = new FlxTypedContainer<FlxBaseModpack<FlxBaseMetadataFormat>>();
+        modpacks = new FlxModpackContainer();
 
         system = new FlxModding();
         buildAssetSystem(assets);
@@ -546,7 +546,7 @@ class FlxModding
      */
     public static function get(fileName:String):FlxBaseModpack<FlxBaseMetadataFormat>
     {
-        for (modpack in modpacks.members)
+        for (modpack in modpacks.getModpacks())
         {
             if (modpack.file == fileName && FlxModding.exists(fileName))
             {
@@ -566,7 +566,7 @@ class FlxModding
      */
     public static function exists(fileName:String):Bool
     {
-        for (modpack in modpacks.members)
+        for (modpack in modpacks.getModpacks())
         {
             if (modpack.file == fileName)
             {
@@ -1223,7 +1223,7 @@ private class AssetModLibrary extends AssetLibrary
 
     function isDefaultAsset(id:String):Bool
     {
-        return StringTools.startsWith(id, FlxModding.flixelDirectory) || StringTools.startsWith(id, "embed");
+        return StringTools.startsWith(id, FlxModding.flixelDirectory);
     }
 }
 
