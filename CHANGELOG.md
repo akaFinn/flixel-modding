@@ -1,5 +1,33 @@
 ## Changelog
 
+# [1.6.0] *ALPHA* - (January 1st, 1970)
+
+Modding support for HTML5 build targets + modpack unzipping
+
+### Added
+- Created `flixel.group.FlxModpackContainer` a container designed for modpacks only
+- Created `flixel.system.fileSystems.JsFileSystem` a file system built and made for Js/HTML5 targets
+- Craeted `flixel.utils.FlxZipUtil` as a way to manage and handle zip files of any kind in terms of unzipping
+- Moved all signals from `FlxModding` to `FlxModding.signals` to make the class more clean
+- Added a comment to the `file` variable in `FlxBaseModpack`
+- Added `getModpackSize` to `FlxBaseModpack` the function grabs the file size of the modpack
+- Added the `autoLoadMods` parameter to `FlxModding.init`
+- Added `FlxModding.unzip` which takes the bytes of a .zip file and converts it to a modpack
+- Added `buildAssetSystem` and `buildFileSystem` to `FlxModding`
+
+### Changed
+- Changed the `fromDynamicData` function from the `FlxBaseModpack` class to `fromDynamic`
+- Changed the `toString` function from `FlxBaseModpack` to also give out the file size of the modpack
+- Changed the `fileSystem` folder to `fileSystems` I know amazing
+- Changed the `assetSystem` variable's name to `assets` in `FlxModding.system`
+- Changed the `iconBitmap` for `FlxModding.create` to only work if it doesnt equal `null`
+- Changed the `sanitize` function to have support for Lime/OpenFL librarys
+- Changed the location of all AssetSystem's from `assetSystem` to `backends`
+- Updated the docs
+
+### Removed
+- Removed the custom cache system in `FlxAssetSystem`
+
 # [1.5.0] - (Augest 30, 2025)
 
 Better scripting, Metadata Macros, and more

@@ -4,7 +4,7 @@
 	"license": "MIT",
 	"tags": ["flixel", "modding", "mod", "asset"],
 	"description": "A robust modding system for HaxeFlixel.",
-	"version": "1.6.0-beta",
+	"version": "1.6.0-alpha",
 	"releasenote": "Modding support for HTML5 build targets + modpack unzipping",
 	"contributors": ["akaFinn", "therealjake_12"],
 	"dependencies": 

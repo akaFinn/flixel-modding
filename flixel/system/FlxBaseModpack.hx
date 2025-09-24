@@ -123,7 +123,7 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 	 * Returns the total size of the modpack in bytes.
 	 * Includes all files and subfolders contained within.
 	 */
-	public function getModpackSize(?path:String):Int
+	public function getModpackSize():Int
 	{
 		#if sys
 		function getSysFolderSize(path:String):Int
