@@ -12,8 +12,10 @@ import flixel.system.fileSystems.IFileSystem;
 import flixel.system.fileSystems.JsFileSystem;
 import flixel.system.fileSystems.RamFileSystem;
 import flixel.system.fileSystems.SysFileSystem;
+import flixel.system.fileSystems.SysZipFileSystem;
 import flixel.system.polymod.PolymodMetadataFormat;
 import flixel.system.polymod.PolymodModpack;
+import flixel.util.FlxModUtil;
 import flixel.util.FlxScriptUtil;
 import flixel.util.FlxSignal;
 import flixel.util.FlxSort;
@@ -79,22 +81,17 @@ class FlxModding
 	 */
 	public static var system:FlxModding;
 
-	/**
-	 * Stores all global signals used by the modding framework.
-	 * Acts as the central hub for broadcasting and listening to events.
-	 */
-	public static var signals:FlxModSignals = new FlxModSignals();
-
-	/**
+    /**
 	 * The container for every single mod available for Flixel-Modding.
 	 * All mods are listed here, whether active or not.
 	 */
 	public static var modpacks:FlxModpackContainer;
 
-    /**
-     * A toggle for weither or not scripting is enabled on runtime
-     */
-    public static var scripting:Bool = #if hscript flixel.util.FlxModUtil.getDefinedBool("FLX_SCRIPTING", true); #else false; #end
+	/**
+	 * Stores all global signals used by the modding framework.
+	 * Acts as the central hub for broadcasting and listening to events.
+	 */
+	public static var signals:FlxModSignals = new FlxModSignals();
 
     /**
      * INSTANCE API
@@ -220,7 +217,7 @@ class FlxModding
      *                            handle how files are read. Useful for embedding mods, virtual file systems,
      *                            or advanced loading scenarios beyond the default behavior.
      * 
-     * @param   assets       (Optional) A custom asset system interface (extending `IAssetSystem`)
+     * @param   assets            (Optional) A custom asset system interface (extending `IAssetSystem`)
      *                            to manage asset grabbing and loading. Use this to hook into alternative
      *                            asset pipelines, enable hot-reloading, or redirect asset lookups without
      *                            relying solely on the default OpenFL/Lime systems.
@@ -289,7 +286,7 @@ class FlxModding
 
         if (updateMetadata == true && modpacks.length != 0)
         {
-            if (enabled)
+            if (enabled != false)
             {
                 FlxModding.update();
             }
@@ -297,31 +294,35 @@ class FlxModding
 
         FlxModding.clear();
 
-        for (modFile in system.fileSystem.readFolder(FlxModding.modsDirectory + "/"))
+        if (enabled != false)
         {
-            if (system.fileSystem.isFolder(FlxModding.modsDirectory + "/" + modFile) && enabled)
+            for (modFile in system.fileSystem.readFolder(FlxModding.modsDirectory + "/"))
             {
-				if (FlxModding.system.assets.exists(FlxModding.modsDirectory + "/" + modFile + "/" + Reflect.field(FlxModding.flixelFormat, "metaPath")))
+                var modFilePath:String = FlxModding.modsDirectory + "/" + modFile;
+                var isZipFile:Bool = StringTools.endsWith(modFilePath, FlxZipUtil.ZIP_PREFIX);
+
+                if (system.fileSystem.isFolder(modFilePath) || isZipFile != false)
                 {
-					var modpack:FlxModpack = Type.createInstance(FlxModding.flixelModpack, [modFile]);
-                    modpack.fromMetadata(modpack.metadata.fromDynamic(Json.parse(FlxModding.system.assets.getText(modpack.metaDirectory()))));
-                    add(cast modpack);
-                }
-				else if (FlxModding.system.assets.exists(FlxModding.modsDirectory + "/" + modFile + "/" + Reflect.field(FlxModding.polymodFormat, "metaPath")))
-                {
-					var modpack:PolymodModpack = Type.createInstance(FlxModding.polymodModpack, [modFile]);
-                    modpack.fromMetadata(modpack.metadata.fromDynamic(Json.parse(FlxModding.system.assets.getText(modpack.metaDirectory()))));
-                    add(cast modpack);
-                }
-				else if (FlxModding.system.assets.exists(FlxModding.modsDirectory + "/" + modFile + "/" + Reflect.field(FlxModding.customFormat, "metaPath")))
-                {
-					var modpack = Type.createInstance(FlxModding.customModpack, [modFile]);
-                    modpack.fromMetadata(modpack.metadata.fromDynamic(Json.parse(FlxModding.system.assets.getText(modpack.metaDirectory()))));
-                    add(cast modpack);
-                }
-                else
-                {
-                    FlxModding.warn('Failed to add "$modFile", metadata file could not be found. Make sure that the metadata file is spelt correctly and or your custom metadata formatting was properly set.');
+                    if (isZipFile != false) FlxZipUtil.cachedZipFiles.set(modFilePath, FlxZipUtil.unzipFromBytes(system.fileSystem.getFileBytes(modFilePath)));
+
+                    var packages:Array<{modpackClass:Dynamic, metadataFormat:Dynamic}> = 
+                    [
+                        {modpackClass: FlxModding.flixelModpack, metadataFormat: FlxModding.flixelFormat},
+                        {modpackClass: FlxModding.polymodModpack, metadataFormat: FlxModding.polymodFormat},
+                        {modpackClass: FlxModding.customModpack, metadataFormat: FlxModding.customFormat}
+                    ];
+
+                    for (entry in packages)
+                    {
+                        if (FlxModding.system.assets.exists(modFilePath + "/" + Reflect.field(entry.metadataFormat, "metaPath")))
+                        {
+					        var modpack = Type.createInstance(entry.modpackClass, [modFile]);
+                            modpack.fromMetadata(modpack.metadata.fromDynamic(Json.parse(FlxModding.system.assets.getText(modpack.metaDirectory()))));
+                            add(cast modpack);
+
+                            continue;
+                        }                        
+                    }
                 }
             }
 		}
@@ -478,64 +479,20 @@ class FlxModding
      * Unzips raw byte data into a usable FlxBaseModpack instance.
      *
      * @param bytes The raw zip archive data containing the modpack files.
-     * @param type  The type of modpack to interpret the data as (determines how the files are read and structured).
      * 
      * @return      A new FlxBaseModpack instance built from the extracted data, or null if extraction fails.
      */
 
-    public static function unzip(bytes:Bytes, type:FlxModpackType):FlxBaseModpack<FlxBaseMetadataFormat>
+    public static function unzip(bytes:Bytes):FlxBaseModpack<FlxBaseMetadataFormat>
     {
         FlxModding.log("Attempting to Unzip a modpack...");
 
         var zip:FlxZipFile = FlxZipUtil.unzipFromBytes(bytes);
-
-        var file:String = zip.file;
         var contents:Map<String, Bytes> = zip.contents;
+        var type:FlxModpackType = FLIXEL;
 
-        if (!system.fileSystem.exists(FlxModding.modsDirectory + "/" + file))
-        {
-            system.fileSystem.createFolder(FlxModding.modsDirectory, file);
-
-            for (key in FlxZipFile.filterContentKeys(contents.keys()))
-            {
-                var content:Bytes = contents.get(key);
-            
-                if (!StringTools.endsWith(key, "/"))
-                {
-                    var folderPath:String = FlxModding.modsDirectory + "/" + key.substring(0, key.lastIndexOf("/") + 1);
-                    var fileName:String = key.substr(key.lastIndexOf("/") + 1);
-
-                    system.fileSystem.createFile(folderPath, fileName, content);
-                }
-                else
-                {
-                    var folderPath:String = FlxModding.modsDirectory + "/" + key.substr(0, key.indexOf("/"));
-                    var folderName:String = key.substr(0, key.length - 1).substr(key.substr(0, key.length - 1).lastIndexOf("/") + 1);
-
-                    system.fileSystem.createFolder(folderPath, folderName);
-                }
-            }
-
-            switch (type)
-            {
-                case FLIXEL:
-                    var modpack = new FlxModpack(file);
-                    modpack.fromMetadata(new FlxMetadataFormat().fromDynamic(Json.parse(contents.get(file + "/" + FlxMetadataFormat.metaPath).toString())));
-                    add(cast modpack);
-
-                    return cast modpack;
-
-                case POLYMOD:
-                case CUSTOM:
-            }
-
-            return null;
-        }
-        else
-        {
-            FlxModding.warn("The mod: " + file + " has already been created. You cannot unzip a mod with the same name.");
-            return null;
-        }
+        //FlxModding.warn("The mod: " + file + " has already been unzipped. You cannot unzip a mod with the same name.");
+        return null;
     }
 
     /**
@@ -685,9 +642,10 @@ class FlxModding
         }
     }
 
+    #if hscript
     function buildScriptedClasses():Void
     {
-        if (FlxModding.scripting)
+        if (FlxModUtil.getDefinedBool("FLX_SCRIPTING", true))
         {
             var list:Array<String> = [];
 
@@ -731,6 +689,7 @@ class FlxModding
             });
         }    
     }
+    #end
 
     function buildDebuggerTools():Void
     {
@@ -843,13 +802,15 @@ class FlxModding
             #if (js && html5)
             system.fileSystem = new JsFileSystem();
             #elseif sys
-            system.fileSystem = new SysFileSystem();
+            system.fileSystem = new SysZipFileSystem();
             #else
             system.fileSystem = new RamFileSystem();
             #end
         }
 
+        #if hscript
         system.buildScriptedClasses();
+        #end
     }
 }
 

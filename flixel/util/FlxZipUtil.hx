@@ -1,11 +1,11 @@
 package flixel.util;
 
+import flixel.FlxG;
 import haxe.ds.List;
 import haxe.io.Bytes;
 import haxe.io.BytesInput;
 import haxe.zip.Entry;
 import haxe.zip.Reader;
-import flixel.FlxG;
 
 #if sys
 import sys.FileSystem;
@@ -14,6 +14,10 @@ import sys.io.File;
 
 class FlxZipUtil
 {
+    public static inline var ZIP_PREFIX:String = ".zip";
+
+    public static var cachedZipFiles:Map<String, FlxZipFile> = new Map<String, FlxZipFile>();
+
     public static function unzipFromBytes(bytes:Bytes):FlxZipFile
     {
         var input = new BytesInput(bytes);
@@ -48,7 +52,6 @@ class FlxZipUtil
 
 class FlxZipFile
 {
-    public var file:String;
     public var contents:Map<String, Bytes>;
     
     public function new(entries:List<Entry>)
@@ -60,8 +63,6 @@ class FlxZipFile
             var data = Reader.unzip(entry);
             contents.set(entry.fileName, data);
         }
-
-        file = contents.keys().next().split("/")[0];
     }
 
     public static function filterContentKeys(keys:Iterator<String>):Array<String>

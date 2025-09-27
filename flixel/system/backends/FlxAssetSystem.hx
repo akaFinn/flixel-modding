@@ -1,10 +1,12 @@
 package flixel.system.backends;
 
 import haxe.io.Bytes;
+import lime.media.AudioBuffer;
 import openfl.display.BitmapData;
 import openfl.media.Sound;
 import openfl.text.Font;
 import openfl.utils.Assets;
+import openfl.utils.ByteArray;
 import openfl.utils.Future;
 #if (flixel >= "5.9.0")
 import flixel.system.frontEnds.AssetFrontEnd.FlxAssetType;
@@ -22,50 +24,51 @@ class FlxAssetSystem implements IAssetSystem
     public function getAsset(id:String, type:FlxAssetType, useCache:Bool = true):Null<Any>
     {
         if (isOpenFLAsset(id))
-            return getOpenFLAsset(id, type, useCache);
-        
-        var asset:Any = switch type
-		{
-            case TEXT:
-                FlxModding.system.fileSystem.getFileContent(FlxModding.system.sanitize(id));
-			case BINARY:
-				FlxModding.system.fileSystem.getFileBytes(FlxModding.system.sanitize(id));
-			
-			case IMAGE if (useCache && Assets.cache.hasBitmapData(FlxModding.system.sanitize(id))):
-				Assets.cache.getBitmapData(FlxModding.system.sanitize(id));
-			case SOUND if (useCache && Assets.cache.hasSound(FlxModding.system.sanitize(id))):
-				Assets.cache.getSound(FlxModding.system.sanitize(id));
-			case FONT if (useCache && Assets.cache.hasFont(FlxModding.system.sanitize(id))):
-				Assets.cache.getFont(FlxModding.system.sanitize(id));
-			
-			case IMAGE:
-				var bitmap = BitmapData.fromFile(FlxModding.system.sanitize(id));
-				if (useCache)
-					Assets.cache.setBitmapData(FlxModding.system.sanitize(id), bitmap);
-				bitmap;
-			case SOUND:
-				var sound = Sound.fromFile(FlxModding.system.sanitize(id));
-				if (useCache) 
-					Assets.cache.setSound(FlxModding.system.sanitize(id), sound);
-				sound;
-			case FONT:
-				var font = Font.fromFile(FlxModding.system.sanitize(id));
-				if (useCache)
-					Assets.cache.setFont(FlxModding.system.sanitize(id), font);
-				font;
-		}
-
-        if (type == FONT)
         {
-            trace(id, asset);
+            return getOpenFLAsset(id, type, useCache != false);
         }
+        else
+        {
+            var santizedPathway:String = FlxModding.system.sanitize(id);
+            var textContent:String = FlxModding.system.fileSystem.getFileContent(santizedPathway);
+            var binaryContent:Bytes = FlxModding.system.fileSystem.getFileBytes(santizedPathway);
 
-		return asset;
+            switch (type)
+		    {
+                case TEXT:
+                    return textContent;
+			    case BINARY:
+				    return binaryContent;
+			
+			    case IMAGE if (useCache && Assets.cache.hasBitmapData(santizedPathway)):
+				    return Assets.cache.getBitmapData(santizedPathway);
+			    case SOUND if (useCache && Assets.cache.hasSound(santizedPathway)):
+				    return Assets.cache.getSound(santizedPathway);
+			    case FONT if (useCache && Assets.cache.hasFont(santizedPathway)):
+				    return Assets.cache.getFont(santizedPathway);
+			
+			    case IMAGE:
+				    var bitmap = BitmapData.fromBytes(ByteArray.fromBytes(binaryContent));
+				    if (useCache != false) Assets.cache.setBitmapData(santizedPathway, bitmap);
+
+				    return bitmap;
+			    case SOUND:
+				    var sound = Sound.fromAudioBuffer(AudioBuffer.fromBytes(binaryContent));
+				    if (useCache != false) Assets.cache.setSound(santizedPathway, sound);
+
+				    return sound;
+			    case FONT:
+				    var font = Font.fromBytes(ByteArray.fromBytes(binaryContent));
+				    if (useCache != false) Assets.cache.setFont(santizedPathway, font);
+
+				    return font;
+		    }
+        }
     }
 
     public function loadAsset(id:String, type:FlxAssetType, useCache:Bool = true):Future<Any>
     {
-        return Future.withValue(getAsset(id, type, useCache));
+        return Future.withValue(getAsset(id, type, useCache != false));
     }
 
     public function exists(id:String, ?type:FlxAssetType):Bool
@@ -103,7 +106,7 @@ class FlxAssetSystem implements IAssetSystem
 
     public function isLocal(id:String, ?type:FlxAssetType, useCache:Bool = true):Bool
     {
-        if (isOpenFLAsset(id) && useCache)
+        if (isOpenFLAsset(id) && useCache != false)
 			return Assets.isLocal(id, type.toOpenFlType());
 
         return true;
@@ -111,27 +114,27 @@ class FlxAssetSystem implements IAssetSystem
 
     public function getText(id:String, useCache:Bool = true):String
     {
-        return getAsset(id, TEXT, useCache);
+        return getAsset(id, TEXT, useCache != false);
     }
 
     public function getBytes(id:String, useCache:Bool = true):Bytes
     {
-        return getAsset(id, BINARY, useCache);
+        return getAsset(id, BINARY, useCache != false);
     }
 
     public function getBitmapData(id:String, useCache:Bool = true):BitmapData
     {
-        return getAsset(id, IMAGE, useCache);
+        return getAsset(id, IMAGE, useCache != false);
     }
 
     public function getSound(id:String, useCache:Bool = true):Sound
     {
-        return getAsset(id, SOUND, useCache);
+        return getAsset(id, SOUND, useCache != false);
     }
 
     public function getFont(id:String, useCache:Bool = true):Font
     {
-        return getAsset(id, FONT, useCache);
+        return getAsset(id, FONT, useCache != false);
     }
 
     function isOpenFLAsset(id:String):Bool
@@ -146,9 +149,9 @@ class FlxAssetSystem implements IAssetSystem
 		{
             case TEXT: Assets.getText(id);
 			case BINARY: Assets.getBytes(id);
-			case IMAGE: Assets.getBitmapData(id, useCache);
-			case SOUND: Assets.getSound(id, useCache);
-			case FONT: Assets.getFont(id, useCache);
+			case IMAGE: Assets.getBitmapData(id, useCache != false);
+			case SOUND: Assets.getSound(id, useCache != false);
+			case FONT: Assets.getFont(id, useCache != false);
 		}
 	}
 }

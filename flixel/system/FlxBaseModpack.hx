@@ -2,8 +2,17 @@ package flixel.system;
 
 import flixel.system.polymod.PolymodMetadataFormat;
 import flixel.util.FlxStringUtil;
+import flixel.util.FlxZipUtil;
 import haxe.Json;
 
+/**
+ * Represents the different supported types of modpacks in FlxModding.
+ * 
+ * Each type corresponds to a distinct system or integration method:
+ * - FLIXEL: Standard Flixel-style modpacks using the built-in structure.
+ * - POLYMOD: Modpacks using the Polymod library for patching/modifying content.
+ * - CUSTOM: A user-defined or specialized modpack format outside the defaults.
+ */
 enum FlxModpackType
 {
     FLIXEL;
@@ -20,6 +29,7 @@ enum FlxModpackType
  * providing shared variables and basic setup behavior that specialized modpack
  * classes can build upon.
  */
+@:access(flixel.system.FlxModding)
 @:autoBuild(flixel.util.FlxModUtil.buildModpack())
 class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 {
@@ -73,7 +83,6 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 	 */
 	public function directory():String
 	{
-		@:privateAccess
 		return FlxModding.modsDirectory + "/" + file;
 	}
 
