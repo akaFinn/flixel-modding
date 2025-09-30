@@ -150,17 +150,17 @@ class FlxModding
 	/**
 	 * File extension used for hscript.
 	 */
-	static inline var hScriptExt:String = flixel.util.FlxModUtil.getDefinedString("FLX_HSCRIPT_EXT", ".hxs");
+	static inline var hScriptExt:String = FlxModUtil.getDefinedString("FLX_HSCRIPT_EXT", ".hxs");
 
 	/**
 	 * File extension used for Polymod script classes.
 	 */
-	static inline var polymodScriptExt:String = flixel.util.FlxModUtil.getDefinedString("FLX_POLYMOD_SCRIPT_EXT", ".hxc");
+	static inline var polymodScriptExt:String = FlxModUtil.getDefinedString("FLX_POLYMOD_SCRIPT_EXT", ".hxc");
 
 	/**
 	 * File extension used for RuleScript classes.
 	 */
-	static inline var ruleScriptExt:String = flixel.util.FlxModUtil.getDefinedString("FLX_RULESCRIPT_EXT", '.rhx');
+	static inline var ruleScriptExt:String = FlxModUtil.getDefinedString("FLX_RULESCRIPT_EXT", '.rhx');
 
     /**
      * Flixel’s default modpack class.
@@ -250,14 +250,10 @@ class FlxModding
 
             if (autoLoadMods != false)
             {
-                FlxG.signals.preStateCreate.addOnce((state:FlxState) -> FlxModding.reload());
+                FlxG.signals.preGameReset.add(() -> FlxModding.reload());
             }
 
-            FlxG.signals.preGameStart.addOnce(() -> 
-            {
-                FlxG.signals.preGameReset.add(() -> FlxModding.reload());
-                FlxG.signals.preStateSwitch.add(() -> system.assets.clear());
-            });
+            FlxG.signals.preStateSwitch.add(() -> system.assets.clear());
 
             FlxModding.log("FlxModding Initialized!");
             return system;
@@ -321,7 +317,7 @@ class FlxModding
                             add(cast modpack);
 
                             continue;
-                        }                        
+                        }
                     }
                 }
             }

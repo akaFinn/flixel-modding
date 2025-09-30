@@ -1,12 +1,13 @@
 ## Changelog
 
-# [1.6.0] *ALPHA* - (January 1st, 1970)
+# [1.6.0] *ALPHA* - (September 29st, 2025)
 
 Modding support for HTML5 build targets + modpack unzipping
 
 ### Added
 - Created `flixel.group.FlxModpackContainer` a container designed for modpacks only
 - Created `flixel.system.fileSystems.JsFileSystem` a file system built and made for Js/HTML5 targets
+- Created `flixel.system.fileSystems.SysZipFileSystem` a file system made for grabbing & setting data for zip files when using sys
 - Craeted `flixel.utils.FlxZipUtil` as a way to manage and handle zip files of any kind in terms of unzipping
 - Moved all signals from `FlxModding` to `FlxModding.signals` to make the class more clean
 - Added a comment to the `file` variable in `FlxBaseModpack`
@@ -16,6 +17,9 @@ Modding support for HTML5 build targets + modpack unzipping
 - Added `buildAssetSystem` and `buildFileSystem` to `FlxModding`
 
 ### Changed
+- Reworked how modpacks reload in `FlxModding.reload` to now also load zipped modpacks when found
+- Moved all signals in `FlxModding` to `FlxModding.signals` as a way to make the class cleaner and easier to manage
+- Fixed `FlxModding.init` to not let `FlxModding.reload` get called twice
 - Changed the `fromDynamicData` function from the `FlxBaseModpack` class to `fromDynamic`
 - Changed the `toString` function from `FlxBaseModpack` to also give out the file size of the modpack
 - Changed the `fileSystem` folder to `fileSystems` I know amazing

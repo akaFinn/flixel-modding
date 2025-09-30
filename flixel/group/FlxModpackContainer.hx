@@ -11,6 +11,10 @@ enum FlxModpackContainerStatus
     INACTIVE;
 }
 
+/**
+ * @author akaFinn
+ * @since 1.6.0
+ */
 class FlxModpackContainer extends FlxTypedContainer<FlxBaseModpack<FlxBaseMetadataFormat>>
 {
     public function new()

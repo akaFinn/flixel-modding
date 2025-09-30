@@ -24,8 +24,10 @@ class SysZipFileSystem extends SysFileSystem
 
             zipFile.contents.set(path + (StringTools.endsWith(path, "/") ? "" : "/") + name, data);
         }
-
-        super.createFile(path, name, data);
+        else
+        {
+            super.createFile(path, name, data);
+        }
     }
 
     override public function renameFile(path:String, name:String):Void
@@ -35,7 +37,17 @@ class SysZipFileSystem extends SysFileSystem
 
     override public function deleteFile(path:String):Void
     {
-        super.deleteFile(path);
+        if (isZipFile(path))
+        {
+            var zipFile:FlxZipFile = getZipFile(path);
+            var zipPath:String = getZipAssetPath(path);
+
+            zipFile.contents.remove(path);
+        }
+        else
+        {
+            super.deleteFile(path);
+        }
     }
 
     override public function isFile(path:String):Bool
@@ -76,12 +88,32 @@ class SysZipFileSystem extends SysFileSystem
 
     override public function setFileContent(path:String, content:String):Void
     {
-        super.setFileContent(path, content);
+        if (isZipFile(path))
+        {
+            var zipFile:FlxZipFile = getZipFile(path);
+            var zipPath:String = getZipAssetPath(path);
+
+            zipFile.contents.set(path, Bytes.ofString(content));
+        }
+        else
+        {
+            super.setFileContent(path, content);
+        }
     }
 
     override public function setFileBytes(path:String, bytes:Bytes):Void
     {
-        super.setFileBytes(path, bytes);
+        if (isZipFile(path))
+        {
+            var zipFile:FlxZipFile = getZipFile(path);
+            var zipPath:String = getZipAssetPath(path);
+
+            zipFile.contents.set(path, bytes);
+        }
+        else
+        {
+            super.setFileBytes(path, bytes);
+        }
     }
 
     override public function readFolder(path:String):Array<String>
@@ -91,7 +123,17 @@ class SysZipFileSystem extends SysFileSystem
 
     override public function createFolder(path:String, name:String):Void
     {
-        super.createFolder(path, name);
+        if (isZipFile(path))
+        {
+            var zipFile:FlxZipFile = getZipFile(path);
+            var zipPath:String = getZipAssetPath(path + (StringTools.endsWith(path, "/") ? "" : "/") + name);
+
+            zipFile.contents.set(path + (StringTools.endsWith(path, "/") ? "" : "/") + name + "/", null);
+        }
+        else
+        {
+            super.createFolder(path, name);
+        }
     }
 
     override public function renameFolder(path:String, name:String):Void
@@ -101,7 +143,17 @@ class SysZipFileSystem extends SysFileSystem
 
     override public function deleteFolder(path:String):Void
     {
-        super.deleteFolder(path);
+        if (isZipFile(path))
+        {
+            var zipFile:FlxZipFile = getZipFile(path);
+            var zipPath:String = getZipAssetPath(path);
+
+            zipFile.contents.remove(path);
+        }
+        else
+        {
+            super.deleteFolder(path);
+        }
     }
 
     override public function isFolder(path:String):Bool

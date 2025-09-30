@@ -16,6 +16,10 @@ class FlxZipUtil
 {
     public static inline var ZIP_PREFIX:String = ".zip";
 
+    public static inline var SEVENZIP_PREFIX:String = ".7z";
+    
+    public static inline var WINRAR_PREFIX:String = ".rar";
+
     public static var cachedZipFiles:Map<String, FlxZipFile> = new Map<String, FlxZipFile>();
 
     public static function unzipFromBytes(bytes:Bytes):FlxZipFile
