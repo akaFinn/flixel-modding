@@ -20,6 +20,7 @@ import flixel.util.FlxScriptUtil;
 import flixel.util.FlxSignal;
 import flixel.util.FlxSort;
 import flixel.util.FlxZipUtil;
+import flixel.util.helpers.FlxStringHelper;
 import haxe.Json;
 import haxe.io.Bytes;
 import haxe.io.BytesInput;
@@ -61,7 +62,7 @@ class FlxModding
 	/**
 	 * The Base Flixel-Modding version, in semantic versioning syntax.
 	 */
-	public static var VERSION:FlxVersion = new FlxModVersion(1, 6, 0, ALPHA, "FlxModding");
+	public static var VERSION:FlxVersion = new FlxModVersion(1, 6, 0, BETA, "FlxModding");
 
 	/**
 	 * Use this to toggle Flixel-Modding between on and off.
@@ -602,19 +603,28 @@ class FlxModding
 
     public function redirect(id:String):String
     {
-        var directory = FlxModding.assetDirectory;
+        var directory:String = FlxModding.assetDirectory;
 
         for (modpack in FlxModding.modpacks)
         {
-            if ((modpack.active && modpack.alive && modpack.exists) && FlxModding.enabled && system.fileSystem.exists(modpack.directory() + "/" + id))
+            if ((modpack.active && modpack.alive && modpack.exists) && FlxModding.enabled)
             {
-                directory = modpack.directory();
+                var modpackDirectory:String = modpack.directory();
+
+                var appendDirectory:String = modpack.directory() + "/" + FlxStringHelper.DEFAULT_APPEND_PREFIX;
+                var mergeDirectory:String = modpack.directory() + "/" + FlxStringHelper.DEFAULT_MERGE_PREFIX;
+
+                for (foundDirectory in [modpackDirectory, appendDirectory, mergeDirectory])
+                {
+                    if (system.fileSystem.exists(foundDirectory + "/" + id))
+                    {
+                        directory = foundDirectory;
+                    }
+                }
             }
         }
 
         return directory + "/" + id;
-        
-        return null;
     }
 
     function getDefaultAssetLibrarys():Array<String>

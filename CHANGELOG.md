@@ -1,20 +1,22 @@
 ## Changelog
 
-# [1.6.0] *ALPHA* - (September 29st, 2025)
+# [1.6.0] *BETA* - (September 30, 2025)
 
 Modding support for HTML5 build targets + modpack unzipping
 
 ### Added
 - Created `flixel.group.FlxModpackContainer` a container designed for modpacks only
-- Created `flixel.system.fileSystems.JsFileSystem` a file system built and made for Js/HTML5 targets
+- **[WIP]** Created `flixel.system.fileSystems.JsFileSystem` a file system built and made for Js/HTML5 targets
 - Created `flixel.system.fileSystems.SysZipFileSystem` a file system made for grabbing & setting data for zip files when using sys
 - Craeted `flixel.utils.FlxZipUtil` as a way to manage and handle zip files of any kind in terms of unzipping
+- **[WIP]** Created `flixel.utils.helpers.FlxStringHelper` as a string manager for appending, merging, ect.
 - Moved all signals from `FlxModding` to `FlxModding.signals` to make the class more clean
 - Added a comment to the `file` variable in `FlxBaseModpack`
 - Added `getModpackSize` to `FlxBaseModpack` the function grabs the file size of the modpack
 - Added the `autoLoadMods` parameter to `FlxModding.init`
 - Added `FlxModding.unzip` which takes the bytes of a .zip file and converts it to a modpack
 - Added `buildAssetSystem` and `buildFileSystem` to `FlxModding`
+- Added support for appended & merged text content in `FlxAssetSystem`
 
 ### Changed
 - Reworked how modpacks reload in `FlxModding.reload` to now also load zipped modpacks when found
@@ -26,6 +28,7 @@ Modding support for HTML5 build targets + modpack unzipping
 - Changed the `assetSystem` variable's name to `assets` in `FlxModding.system`
 - Changed the `iconBitmap` for `FlxModding.create` to only work if it doesnt equal `null`
 - Changed the `sanitize` function to have support for Lime/OpenFL librarys
+- Changed the `redirect` function to have support for appended or merged assets
 - Changed the location of all AssetSystem's from `assetSystem` to `backends`
 - Updated the docs
 

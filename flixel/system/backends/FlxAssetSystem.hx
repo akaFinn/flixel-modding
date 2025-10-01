@@ -1,6 +1,8 @@
 package flixel.system.backends;
 
+import flixel.util.helpers.FlxStringHelper;
 import haxe.io.Bytes;
+import haxe.io.Path;
 import lime.media.AudioBuffer;
 import openfl.display.BitmapData;
 import openfl.media.Sound;
@@ -30,12 +32,34 @@ class FlxAssetSystem implements IAssetSystem
         else
         {
             var santizedPathway:String = FlxModding.system.sanitize(id);
+
             var textContent:String = FlxModding.system.fileSystem.getFileContent(santizedPathway);
             var binaryContent:Bytes = FlxModding.system.fileSystem.getFileBytes(santizedPathway);
 
             switch (type)
 		    {
                 case TEXT:
+                    var isMergePathway:Bool = StringTools.contains(santizedPathway, FlxStringHelper.DEFAULT_MERGE_PREFIX);
+                    var isAppendPathway:Bool = StringTools.contains(santizedPathway, FlxStringHelper.DEFAULT_APPEND_PREFIX);
+
+                    if (isMergePathway || isAppendPathway)
+                    {
+                        var defaultTextContent:String = FlxModding.system.fileSystem.getFileContent(id);
+
+                        if (isAppendPathway)
+                        {
+                            switch (Path.extension(santizedPathway).toLowerCase())
+                            {
+                                case FlxStringHelper.XML_FILE_EXT:
+                                    return FlxStringHelper.appendXmlText(defaultTextContent, textContent);
+                                case FlxStringHelper.JSON_FILE_EXT:
+                                    return FlxStringHelper.appendJsonText(defaultTextContent, textContent);
+                                default:
+                                    return FlxStringHelper.appendPlainText(defaultTextContent, textContent);
+                            }
+                        }
+                    }
+
                     return textContent;
 			    case BINARY:
 				    return binaryContent;
