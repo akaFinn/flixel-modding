@@ -23,6 +23,11 @@ class FlxStringHelper
 	public static inline var DEFAULT_MERGE_PREFIX:String = "_merge";
 
 	/**
+	 * File extension for plain text files
+	 */	
+	public static inline var PLAIN_TEXT_FILE_EXT:String = ".txt";
+
+	/**
 	 * File extension for XML files
 	 */
 	public static inline var XML_FILE_EXT:String = ".xml";

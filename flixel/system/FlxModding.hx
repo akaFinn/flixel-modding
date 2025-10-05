@@ -231,7 +231,7 @@ class FlxModding
      * 
      * @return                    The initialized FlxModding system so it can be assigned or used directly.
      */
-	public static function init(?customModpack:Class<FlxBaseModpack<Dynamic>>, ?customFormat:Class<FlxBaseMetadataFormat>, ?autoLoadMods:Bool = true, ?fileSystem:IFileSystem, ?assets:IAssetSystem, ?assetDirectory:String, ?modsDirectory:String):FlxModding
+	public static function init(?customModpack:Class<FlxBaseModpack<Dynamic>>, ?customFormat:Class<FlxBaseMetadataFormat>, ?autoLoadModpacks:Bool = true, ?fileSystem:IFileSystem, ?assets:IAssetSystem, ?assetDirectory:String, ?modsDirectory:String):FlxModding
     {   
         FlxModding.log("Attempting to Initialize FlxModding...");
 
@@ -249,12 +249,10 @@ class FlxModding
             flixel.system.FlxModding.customModpack = customModpack != null ? customModpack : flixel.system.FlxModding.customModpack;
             flixel.system.FlxModding.customFormat = customFormat != null ? customFormat : flixel.system.FlxModding.customFormat;
 
-            if (autoLoadMods != false)
+            if (autoLoadModpacks != false)
             {
                 FlxG.signals.preGameReset.add(() -> FlxModding.reload());
             }
-
-            FlxG.signals.preStateSwitch.add(() -> system.assets.clear());
 
             FlxModding.log("FlxModding Initialized!");
             return system;
@@ -314,7 +312,7 @@ class FlxModding
                         if (FlxModding.system.assets.exists(modFilePath + "/" + Reflect.field(entry.metadataFormat, "metaPath")))
                         {
 					        var modpack = Type.createInstance(entry.modpackClass, [modFile]);
-                            modpack.fromMetadata(modpack.metadata.fromDynamic(Json.parse(FlxModding.system.assets.getText(modpack.metaDirectory()))));
+                            modpack.fromMetadata(modpack.metadata.fromDynamic(FlxStringHelper.parseJsonString(FlxModding.system.assets.getText(modpack.metaDirectory()))));
                             add(cast modpack);
 
                             continue;
@@ -480,16 +478,44 @@ class FlxModding
      * @return      A new FlxBaseModpack instance built from the extracted data, or null if extraction fails.
      */
 
-    public static function unzip(bytes:Bytes):FlxBaseModpack<FlxBaseMetadataFormat>
+    public static function unzip(key:String, bytes:Bytes):FlxBaseModpack<FlxBaseMetadataFormat>
     {
         FlxModding.log("Attempting to Unzip a modpack...");
 
-        var zip:FlxZipFile = FlxZipUtil.unzipFromBytes(bytes);
-        var contents:Map<String, Bytes> = zip.contents;
-        var type:FlxModpackType = FLIXEL;
+            if (!FlxZipUtil.cachedZipFiles.exists(key))
+            {
+                var zip:FlxZipFile = FlxZipUtil.unzipFromBytes(bytes);
+                var contents:Map<String, Bytes> = zip.contents;
 
-        //FlxModding.warn("The mod: " + file + " has already been unzipped. You cannot unzip a mod with the same name.");
-        return null;
+                FlxZipUtil.cachedZipFiles.set(key, zip);
+
+                var packages:Array<{modpackClass:Dynamic, metadataFormat:Dynamic}> = 
+                [
+                    {modpackClass: FlxModding.flixelModpack, metadataFormat: FlxModding.flixelFormat},
+                    {modpackClass: FlxModding.polymodModpack, metadataFormat: FlxModding.polymodFormat},
+                    {modpackClass: FlxModding.customModpack, metadataFormat: FlxModding.customFormat}
+                ];
+
+                for (entry in packages)
+                {
+                    if (zip.contents.exists(Reflect.field(entry.metadataFormat, "metaPath")))
+                    {
+                        var modpack = Type.createInstance(entry.modpackClass, [key]);
+                        modpack.fromMetadata(modpack.metadata.fromDynamic(FlxStringHelper.parseJsonString(zip.contents.get(Reflect.field(entry.metadataFormat, "metaPath")).toString())));
+                        add(cast modpack);
+
+                        FlxModding.log("Modpack Unzip!");
+                        return cast modpack;
+                    }
+                }
+
+                return null;
+            }
+            else
+            {
+                FlxModding.warn("The mod: " + key + " has already been unzipped. You cannot unzip a mod with the same name.");
+                return null;
+            }
     }
 
     /**

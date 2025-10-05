@@ -10,6 +10,7 @@ import openfl.text.Font;
 import openfl.utils.Assets;
 import openfl.utils.ByteArray;
 import openfl.utils.Future;
+
 #if (flixel >= "5.9.0")
 import flixel.system.frontEnds.AssetFrontEnd.FlxAssetType;
 #else
