@@ -62,7 +62,7 @@ class FlxModding
 	/**
 	 * The Base Flixel-Modding version, in semantic versioning syntax.
 	 */
-	public static var VERSION:FlxVersion = new FlxModVersion(1, 6, 0, BETA, "FlxModding");
+	public static var VERSION:FlxVersion = new FlxModVersion(1, 6, 0, BETA);
 
 	/**
 	 * Use this to toggle Flixel-Modding between on and off.
@@ -1223,25 +1223,20 @@ private class AssetModLibrary extends AssetLibrary
 private class FlxModVersion extends FlxVersion
 {
 	public var branch(default, null):FlxVersionBranch;
-	public var display(default, null):String;
 
-	public function new(Major:Int, Minor:Int, Patch:Int, ?Branch:FlxVersionBranch = NONE, ?Display:String)
+	public function new(Major:Int, Minor:Int, Patch:Int, ?Branch:FlxVersionBranch = NONE)
 	{
         super(Major, Minor, Patch);
 
         branch = Branch;
-        display = "";
-
-        if (Display != null)
-            display = Display + " ";
 	}
 
 	override public function toString():String
 	{
 		if (branch != NONE)
-            return '$display$major.$minor.$patch-$branch';
+            return 'FlxModding $major.$minor.$patch-$branch';
         else
-            return '$display$major.$minor.$patch';
+            return 'FlxModding $major.$minor.$patch';
 	}   
 }
 
@@ -1309,6 +1304,6 @@ private enum abstract FlxVersionBranch(String)
 {
 	var NONE = "none";
 	var PROTOTYPE = "prototype";
-	var ALPHA ="alpha";
+	var ALPHA = "alpha";
 	var BETA = "beta";
 }

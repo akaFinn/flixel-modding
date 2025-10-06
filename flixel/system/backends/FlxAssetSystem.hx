@@ -40,23 +40,43 @@ class FlxAssetSystem implements IAssetSystem
             switch (type)
 		    {
                 case TEXT:
-                    var isMergePathway:Bool = StringTools.contains(santizedPathway, FlxStringHelper.DEFAULT_MERGE_PREFIX);
-                    var isAppendPathway:Bool = StringTools.contains(santizedPathway, FlxStringHelper.DEFAULT_APPEND_PREFIX);
+                    var hasMergePathway:Bool = StringTools.contains(santizedPathway, FlxStringHelper.DEFAULT_MERGE_PREFIX);
+                    var hasAppendPathway:Bool = StringTools.contains(santizedPathway, FlxStringHelper.DEFAULT_APPEND_PREFIX);
 
-                    if (isMergePathway || isAppendPathway)
+                    if (hasMergePathway || hasAppendPathway)
                     {
                         var defaultTextContent:String = FlxModding.system.fileSystem.getFileContent(id);
 
-                        if (isAppendPathway)
+                        if (hasMergePathway)
                         {
-                            switch (Path.extension(santizedPathway).toLowerCase())
+
+                            if (FlxStringHelper.XML_FILE_EXTS.contains(Path.extension(santizedPathway)))
                             {
-                                case FlxStringHelper.XML_FILE_EXT:
-                                    return FlxStringHelper.appendXmlText(defaultTextContent, textContent);
-                                case FlxStringHelper.JSON_FILE_EXT:
-                                    return FlxStringHelper.appendJsonText(defaultTextContent, textContent);
-                                default:
-                                    return FlxStringHelper.appendPlainText(defaultTextContent, textContent);
+                                return FlxStringHelper.mergeXmlText(defaultTextContent, textContent);
+                            }
+                            else if (FlxStringHelper.JSON_FILE_EXTS.contains(Path.extension(santizedPathway)))
+                            {
+                                return FlxStringHelper.mergeJsonText(defaultTextContent, textContent);
+                            }
+                            else
+                            {
+                                return FlxStringHelper.mergePlainText(defaultTextContent, textContent);
+                            }
+                        }
+
+                        if (hasAppendPathway)
+                        {
+                            if (FlxStringHelper.XML_FILE_EXTS.contains(Path.extension(santizedPathway)))
+                            {
+                                return FlxStringHelper.appendXmlText(defaultTextContent, textContent);
+                            }
+                            else if (FlxStringHelper.JSON_FILE_EXTS.contains(Path.extension(santizedPathway)))
+                            {
+                                return FlxStringHelper.appendJsonText(defaultTextContent, textContent);
+                            }
+                            else
+                            {
+                                return FlxStringHelper.appendPlainText(defaultTextContent, textContent);
                             }
                         }
                     }
