@@ -1,6 +1,7 @@
 package flixel.system;
 
 import flixel.system.FlxMetadataFormat.CreditFormat;
+import flixel.system.FlxMetadataFormat.FlxLegacyMetadataFormat;
 import flixel.system.FlxMetadataFormat;
 import flixel.util.FlxStringUtil;
 
@@ -63,6 +64,63 @@ class FlxModpack extends FlxBaseModpack<FlxMetadataFormat>
 	override public function fromMetadata(metadata:FlxMetadataFormat):FlxBaseModpack<FlxMetadataFormat>
 	{
         this.type = FLIXEL;
+		this.metadata = metadata;
+
+		this.name = metadata.name;
+		this.version = metadata.version;
+		this.description = metadata.description;
+
+		this.credits = metadata.credits;
+
+		this.active = metadata.active;
+		this.ID = metadata.priority;
+
+		return this;
+	}
+}
+
+@:buildModpack(FlxLegacyMetadataFormat)
+class FlxLegacyModpack extends FlxBaseModpack<FlxLegacyMetadataFormat>
+{
+	public var name:String;
+
+	public var version:String;
+
+	public var description:String;
+
+	public var credits:Array<CreditFormat>;
+
+	override public function updateMetadata(?saveToDisk:Bool = true):Void
+	{
+		metadata.name = name;
+		metadata.version = version;
+		metadata.description = description;
+
+		metadata.credits = credits;
+
+		metadata.active = active;
+		metadata.priority = ID;
+
+		if (saveToDisk != false)
+		{
+			FlxModding.system.fileSystem.setFileContent(metaDirectory(), metadata.toJsonString());
+		}
+	}
+
+    override public function destroy():Void
+    {
+		name = null;
+		version = null;
+		description = null;
+
+		credits = null;
+
+        super.destroy();
+    }
+
+	override public function fromMetadata(metadata:FlxLegacyMetadataFormat):FlxBaseModpack<FlxLegacyMetadataFormat>
+	{
+        this.type = LEGACY;
 		this.metadata = metadata;
 
 		this.name = metadata.name;

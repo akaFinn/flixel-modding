@@ -30,7 +30,7 @@ class FlxModUtil
         {
             if (meta.name == ":buildMetadata") 
             {
-                if (meta.params.length == 2) 
+                if (meta.params.length >= 2) 
                 {
                     var metaPathExpr = meta.params[0];
                     var iconPathExpr = meta.params[1];
@@ -55,6 +55,21 @@ class FlxModUtil
                         pos: Context.currentPos()
                     });
 
+                    if (meta.params.length == 3)
+                    {
+                        var configPathExpr = meta.params[2];
+
+                        fields.push(
+                        {
+                            name: "configPath",
+                            doc: null,
+                            meta: [],
+                            access: [Access.APublic, Access.AStatic],
+                            kind: FieldType.FProp("default", "null", macro:String, configPathExpr),
+                            pos: Context.currentPos()
+                        });
+                    }
+
                     fields.push(
                     {
                         name: "new",
@@ -73,7 +88,7 @@ class FlxModUtil
                 } 
                 else 
                 {
-                    Context.error("@:buildPaths requires 2 arguments (metaPath, iconPath)", cls.pos);
+                    Context.error("@:buildPaths requires atleast 2 arguments (metaPath, iconPath)", cls.pos);
                 }
             }
         }

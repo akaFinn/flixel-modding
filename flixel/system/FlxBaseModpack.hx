@@ -1,9 +1,10 @@
 package flixel.system;
 
+import flixel.system.FlxMetadataFormat.FlxLegacyMetadataFormat;
 import flixel.system.polymod.PolymodMetadataFormat;
 import flixel.util.FlxStringUtil;
 import flixel.util.FlxZipUtil;
-import haxe.Json;
+import flixel.util.helpers.FlxStringHelper;
 
 /**
  * Represents the different supported types of modpacks in FlxModding.
@@ -11,12 +12,14 @@ import haxe.Json;
  * Each type corresponds to a distinct system or integration method:
  * - FLIXEL: Standard Flixel-style modpacks using the built-in structure.
  * - POLYMOD: Modpacks using the Polymod library for patching/modifying content.
+ * - LEGACY: The legacy version type of Flixel modpacks.
  * - CUSTOM: A user-defined or specialized modpack format outside the defaults.
  */
 enum FlxModpackType
 {
     FLIXEL;
     POLYMOD;
+	LEGACY;
     CUSTOM;
 }
 
@@ -25,7 +28,7 @@ enum FlxModpackType
  * Holds all core metadata, file paths, and other properties
  * used to manage and identify a mod at runtime.
  * 
- * This class serves as the foundation for all modpack types (Flixel, Polymod, or custom),
+ * This class serves as the foundation for all modpack types (Flixel, Polymod, Legacy, or custom),
  * providing shared variables and basic setup behavior that specialized modpack
  * classes can build upon.
  */
@@ -34,7 +37,7 @@ enum FlxModpackType
 class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 {
 	/**
-	 * The type of modpack (Flixel, Polymod, or Custom).
+	 * The type of modpack (Flixel, Polymod, Legacy, or Custom).
 	 * Determines how the system treats this mod when loading metadata, assets, or icons.
 	 * You can use this to handle legacy mods or introduce entirely new mod formats.
 	 */
@@ -43,11 +46,13 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 	/**
 	 * The metadata information for this modpack.
 	 * Stores details such as name, version, description, and other fields
-	 * defined by the chosen metadata format (Flixel, Polymod, or custom).
+	 * defined by the chosen metadata format (Flixel, Polymod, Legacy, or custom).
 	 * This allows the system to interpret and organize mods consistently
 	 * across different formats.
 	 */
 	public var metadata:MetaFormat;
+
+	public var config:Dynamic = null;
 
 	/**
 	 * The file path to the modpack archive or directory.
@@ -63,18 +68,25 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 	public function new(file:String, metadata:Class<MetaFormat>)
 	{
 		this.file = file;
+
 		this.metadata = Type.createInstance(metadata, []);
 
-		if (metadata is FlxMetadataFormat)
-			type = FLIXEL;
-		else if (metadata is PolymodMetadataFormat)
-			type = POLYMOD;
-		else
-			type = CUSTOM;
+		switch (metadata)
+		{
+			case FlxMetadataFormat: this.type = FLIXEL;
+			case PolymodMetadataFormat: this.type = POLYMOD;
+			case FlxLegacyMetadataFormat: this.type = LEGACY;
+			default: this.type = CUSTOM;
+		}
 
 		super();
 
 		this.ID = 0;
+		
+		if (FlxG.assets.exists(configDirectory()))
+		{
+			this.config = FlxStringHelper.parseJsonString(FlxG.assets.getText(configDirectory()));
+		}
 	}
 
 	/**
@@ -101,6 +113,24 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 	{
 		return directory() + "/" + Reflect.field(Type.getClass(metadata), "iconPath");
 	}
+
+	/**
+	 * Returns the directory path where the modpack's config file is located.
+	 * Only returns a valid directory if the config file path is setup via macro.
+	 */
+	public function configDirectory():String
+	{
+		if (Reflect.hasField(Type.getClass(metadata), "configPath"))
+		{
+			return directory() + "/" + Reflect.field(Type.getClass(metadata), "configPath");
+		}
+		else
+		{
+			FlxG.log.warn("Failed to locate config directory, config file path has not been setup via metadata macro.");
+			return "";
+		}
+	}
+
 
 	/**
 	 * Saves the modpack’s runtime data back to the metadata.
@@ -159,6 +189,8 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 		}
 
 		return getSysFolderSize(directory());
+		#else
+		return 0;
 		#end
 	}
 

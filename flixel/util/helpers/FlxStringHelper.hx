@@ -5,7 +5,7 @@ import haxe.Json;
 using StringTools;
 
 /**
- * Utility class for appending and merging plain text, JSON, or XML
+ * Utility class for messing around with Plain, JSON, & XML text
  * string data into a single combined result. This allows multiple
  * text sources to be unified for parsing, storage, or exporting.
  * 
@@ -15,17 +15,17 @@ using StringTools;
 class FlxStringHelper
 {
 	/**
-	 * File extension for plain text files
+	 * File extension for Plain text files
 	 */	
 	public static var TEXT_FILE_EXTS:Array<String> = ["txt"];
 
 	/**
-	 * File extension for XML files
+	 * File extension for XML text files
 	 */
 	public static var XML_FILE_EXTS:Array<String> = ["xml"];
 
 	/**
-	 * File extension for JSON files
+	 * File extension for JSON text files
 	 */	
 	public static var JSON_FILE_EXTS:Array<String> = ["json"];
 
@@ -271,6 +271,7 @@ class FlxStringHelper
 	 */
 	public static function mergePlainText(base:String, text:String, ?forcedOperation:FlxMergeOperation):String 
 	{
+		FlxG.log.warn("Failed to merge Plain Text, this feature is not yet officially supported");
 		return base;
 	}
 
@@ -449,6 +450,7 @@ class FlxStringHelper
 	 */
 	public static function mergeXmlText(base:String, text:String, ?forcedOperation:FlxMergeOperation):String 
 	{
+		FlxG.log.warn("Failed to merge Plain Text, this feature is not yet officially supported");
 		return base;
 	}
 }
