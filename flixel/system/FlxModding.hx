@@ -151,21 +151,7 @@ class FlxModding
      */
     static inline var flixelDirectory:String = "flixel";
 
-	/**
-	 * File extension used for hscript.
-	 */
-	static inline var hScriptExt:String = FlxModUtil.getDefinedString("FLX_HSCRIPT_EXT", ".hxs");
-
-	/**
-	 * File extension used for Polymod script classes.
-	 */
-	static inline var polymodScriptExt:String = FlxModUtil.getDefinedString("FLX_POLYMOD_SCRIPT_EXT", ".hxc");
-
-	/**
-	 * File extension used for RuleScript classes.
-	 */
-	static inline var ruleScriptExt:String = FlxModUtil.getDefinedString("FLX_RULESCRIPT_EXT", '.rhx');
-
+    // TODO: Give this variable a comment
     private static var moddingPackages:Array<{cls:Class<FlxBaseModpack<Dynamic>>, meta:Class<FlxBaseMetadataFormat>}> =
     [
         {cls: FlxModpack, meta: FlxMetadataFormat},
@@ -215,6 +201,7 @@ class FlxModding
 	public static function init(?customModpack:Class<FlxBaseModpack<Dynamic>>, ?customFormat:Class<FlxBaseMetadataFormat>, ?autoLoadModpacks:Bool = true, ?fileSystem:IFileSystem, ?assets:IAssetSystem, ?assetDirectory:String, ?modsDirectory:String):FlxModding
     {   
         FlxModding.log("Attempting to Initialize FlxModding...");
+        FlxModding.signals.preInitialization.dispatch();
 
         flixel.system.FlxModding.assetDirectory = assetDirectory != null ? assetDirectory : flixel.system.FlxModding.assetDirectory;
         flixel.system.FlxModding.modsDirectory = modsDirectory != null ? modsDirectory : flixel.system.FlxModding.modsDirectory;
@@ -234,6 +221,7 @@ class FlxModding
         if (system.fileSystem.exists(FlxModding.modsDirectory + "/"))
 		{
             FlxModding.log("FlxModding Initialized!");
+            FlxModding.signals.postInitialization.dispatch();
             return system;
         }
         else
@@ -278,7 +266,7 @@ class FlxModding
                     var modFilePath:String = FlxModding.modsDirectory + "/" + modFile;
                     var isZipFile:Bool = StringTools.endsWith(modFilePath, FlxZipUtil.ZIP_PREFIX);
 
-                    if (system.fileSystem.isFolder(modFilePath) || isZipFile != false)
+                    if (system.fileSystem.isFolder(modFilePath) != false || isZipFile != false)
                     {
                         if (isZipFile != false) FlxZipUtil.cachedZipFiles.set(modFilePath, FlxZipUtil.unzipFromBytes(system.fileSystem.getFileBytes(modFilePath)));
 
@@ -583,12 +571,8 @@ class FlxModding
      */
     public function new()
     {
-        signals.preInitialization.dispatch();
-
         buildDebuggerTools();
         this.initialized = true;
-
-        signals.postInitialization.dispatch();
     }
 
     public function sanitize(id:String):String
@@ -781,7 +765,7 @@ class FlxModding
 
     static function log(data:Dynamic):Void
     {
-        if (debug)
+        if (FlxModding.debug)
             FlxG.log.add(data); 
     }
 
@@ -828,7 +812,7 @@ class FlxModding
         }
 
         #if hscript
-        system.buildScriptedClasses();
+        //system.buildScriptedClasses();
         #end
     }
 

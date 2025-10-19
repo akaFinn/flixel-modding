@@ -85,6 +85,8 @@ class FlxScriptUtil
         var parser:Parser = new Parser();
         parser.allowJSON = true;
         parser.allowTypes = true;
+        parser.allowMetadata = true;
+
         var interp:Interp = new Interp();
 
         for (globalClass in defaultGlobalClasses)

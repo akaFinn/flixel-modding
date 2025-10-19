@@ -9,7 +9,7 @@ Modding support for HTML5 build targets + modpack unzipping
 - **[WIP]** Created `flixel.system.fileSystems.JsFileSystem` a file system built and made for Js/HTML5 targets
 - Created `flixel.system.fileSystems.SysZipFileSystem` a file system made for grabbing & setting data for zip files when using sys
 - Craeted `flixel.utils.FlxZipUtil` as a way to manage and handle zip files of any kind in terms of unzipping
-- **[WIP]** Created `flixel.utils.helpers.FlxStringHelper` as a string manager for appending, merging, ect.
+- Created `flixel.utils.helpers.FlxStringHelper` as a string manager for appending, merging, ect.
 - Moved all signals from `FlxModding` to `FlxModding.signals` to make the class more clean
 - Added a comment to the `file` variable in `FlxBaseModpack`
 - Added `getModpackSize` to `FlxBaseModpack` the function grabs the file size of the modpack

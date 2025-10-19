@@ -19,7 +19,7 @@ class FlxModUtil
      * static properties into the class.
      * 
      * @return   The list of fields for the class, possibly extended with
-     *           `metaPath` and `iconPath` if the metadata was present.
+     *           `metaPath`, `iconPath`, & `configPath` if the metadata was present.
      */
     public static macro function buildMetadata():Array<Field>
     {

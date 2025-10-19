@@ -71,45 +71,57 @@ class FlxStringHelper
 	 */
     public static function appendJsonText(base:String, text:String):String
     {
-        try {
+        try
+		{
             var baseDyn:Dynamic = FlxStringHelper.parseJsonString(base);
             var addDyn:Dynamic = FlxStringHelper.parseJsonString(text);
 
             if (baseDyn == null) return text;
             if (addDyn == null) return base;
 
-            for (field in Reflect.fields(addDyn)) {
+            for (field in Reflect.fields(addDyn))
+			{
                 var aVal = Reflect.field(addDyn, field);
 
-                if (Reflect.hasField(baseDyn, field)) {
+                if (Reflect.hasField(baseDyn, field))
+				{
                     var bVal = Reflect.field(baseDyn, field);
 
-                    if (Std.isOfType(bVal, Array) && Std.isOfType(aVal, Array)) {
+                    if (Std.isOfType(bVal, Array) && Std.isOfType(aVal, Array))
+					{
                         Reflect.setField(
                             baseDyn,
                             field,
                             (cast(bVal, Array<Dynamic>)).concat(cast(aVal, Array<Dynamic>))
                         );
                     }
-                    else if (Std.isOfType(bVal, String) && Std.isOfType(aVal, String)) {
+                    else if (Std.isOfType(bVal, String) && Std.isOfType(aVal, String))
+					{
                         Reflect.setField(baseDyn, field, (cast bVal:String) + (cast aVal:String));
                     }
-                    else if (!Std.isOfType(bVal, Array) && !Std.isOfType(aVal, Array) && Reflect.fields(aVal).length > 0) {
-                        for (subField in Reflect.fields(aVal)) {
+                    else if (!Std.isOfType(bVal, Array) && !Std.isOfType(aVal, Array) && Reflect.fields(aVal).length > 0)
+					{
+                        for (subField in Reflect.fields(aVal))
+						{
                             Reflect.setField(bVal, subField, Reflect.field(aVal, subField));
                         }
                         Reflect.setField(baseDyn, field, bVal);
                     }
-                    else {
+                    else
+					{
                         Reflect.setField(baseDyn, field, aVal);
                     }
-                } else {
+                }
+				else
+				{
                     Reflect.setField(baseDyn, field, aVal);
                 }
             }
 
             return Json.stringify(baseDyn);
-        } catch (e:Dynamic) {
+        }
+		catch (e:Dynamic)
+		{
             return base;
         }
     }
@@ -131,12 +143,15 @@ class FlxStringHelper
 	 */
 	public static function appendXmlText(base:String, text:String):String
 	{
-	    try {
+	    try
+		{
 	        var baseXml:Xml = Xml.parse(base);
 	        var addXml:Xml  = Xml.parse(text);
 
-	        function clone(x:Xml):Xml {
-	            switch (x.nodeType) {
+	        function clone(x:Xml):Xml
+			{
+	            switch (x.nodeType)
+				{
 	                case Element:
 	                    var e = Xml.createElement(x.nodeName);
 	                    for (sub in x.elements()) e.addChild(clone(sub));
@@ -159,8 +174,10 @@ class FlxStringHelper
 	            return x;
 	        }
 
-	        function appendXml(base:Xml, addition:Xml):Void {
-	            for (child in addition.elements()) {
+	        function appendXml(base:Xml, addition:Xml):Void
+			{
+	            for (child in addition.elements())
+				{
 	                var tag = child.nodeName;
 	                var baseChild:Xml = null;
 	                for (b in base.elements()) if (b.nodeName == tag) { baseChild = b; break; }
@@ -172,17 +189,25 @@ class FlxStringHelper
 	                    var firstChild = child.firstChild();
 	                    var baseFirstChild = baseChild.firstChild();
 
-	                    if (!childHasElements && firstChild != null && firstChild.nodeType == Xml.PCData) {
+	                    if (!childHasElements && firstChild != null && firstChild.nodeType == Xml.PCData)
+						{
 	                        var childText = firstChild.nodeValue;
-	                        if (baseFirstChild != null && baseFirstChild.nodeType == Xml.PCData) {
+	                        if (baseFirstChild != null && baseFirstChild.nodeType == Xml.PCData)
+							{
 	                            baseFirstChild.nodeValue += childText;
-	                        } else {
+	                        }
+							else
+							{
 	                            baseChild.addChild(Xml.createPCData(childText));
 	                        }
-	                    } else {
+	                    }
+						else
+						{
 	                        appendXml(baseChild, child);
 	                    }
-	                } else {
+	                }
+					else
+					{
 	                    base.addChild(clone(child));
 	                }
 	            }
@@ -190,7 +215,9 @@ class FlxStringHelper
 
 	        appendXml(baseXml, addXml);
 	        return baseXml.toString();
-	    } catch (e:Dynamic) {
+	    }
+		catch (e:Dynamic)
+		{
 	        return base;
 	    }
 	}
@@ -218,21 +245,31 @@ class FlxStringHelper
 		var i = 0;
 		var j = 0;
 
-		while (i < oldLines.length || j < newLines.length) {
-			if (i >= oldLines.length) {
+		while (i < oldLines.length || j < newLines.length)
+		{
+			if (i >= oldLines.length)
+			{
 				diff.push("[+] " + newLines[j]);
 				j++;
-			} else if (j >= newLines.length) {
+			}
+			else if (j >= newLines.length)
+			{
 				diff.push("[-] " + oldLines[i]);
 				i++;
-			} else if (oldLines[i] == newLines[j]) {
+			}
+			else if (oldLines[i] == newLines[j])
+			{
 				diff.push("    " + oldLines[i]);
 				i++;
 				j++;
-			} else {
+			}
+			else
+			{
 				var found = false;
-				for (k in j...newLines.length) {
-					if (oldLines[i] == newLines[k]) {
+				for (k in j...newLines.length)
+				{
+					if (oldLines[i] == newLines[k])
+					{
 						for (l in j...k) diff.push("+ " + newLines[l]);
 						j = k;
 						found = true;
@@ -240,7 +277,8 @@ class FlxStringHelper
 					}
 				}
 
-				if (!found) {
+				if (!found)
+				{
 					diff.push("[-] " + oldLines[i]);
 					i++;
 				}
@@ -450,7 +488,7 @@ class FlxStringHelper
 	 */
 	public static function mergeXmlText(base:String, text:String, ?forcedOperation:FlxMergeOperation):String 
 	{
-		FlxG.log.warn("Failed to merge Plain Text, this feature is not yet officially supported");
+		FlxG.log.warn("Failed to merge Xml Text, this feature is not yet officially supported");
 		return base;
 	}
 }
