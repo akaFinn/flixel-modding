@@ -5,6 +5,7 @@ import flixel.system.polymod.PolymodMetadataFormat;
 import flixel.util.FlxStringUtil;
 import flixel.util.FlxZipUtil;
 import flixel.util.helpers.FlxStringHelper;
+import haxe.Ini;
 
 /**
  * Represents the different supported types of modpacks in FlxModding.
@@ -52,7 +53,11 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 	 */
 	public var metadata:MetaFormat;
 
-	public var config:Dynamic = null;
+	/**
+	 * Stores a custom INI configuration for this modpack.
+	 * Can be used to store and retrieve custom data/settings specific to this mod.
+	 */
+	public var config:Ini;
 
 	/**
 	 * The file path to the modpack archive or directory.
@@ -85,7 +90,7 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 		
 		if (FlxG.assets.exists(configDirectory()))
 		{
-			this.config = FlxStringHelper.parseJsonString(FlxG.assets.getText(configDirectory()));
+			this.config = FlxStringHelper.parseIniString(FlxG.assets.getText(configDirectory()));
 		}
 	}
 
@@ -207,7 +212,7 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
     override public function toString():String
     {
         return FlxStringUtil.getDebugString([
-			LabelValuePair.weak("class", Type.getClassName(Type.getClass(this)).split(".").pop()),
+			LabelValuePair.weak("class", Type.getClassName(Type.getClass(this))),
 			LabelValuePair.weak("path", directory()),
 			LabelValuePair.weak("active", active),
 			LabelValuePair.weak("size", FlxStringUtil.formatBytes(getModpackSize()))

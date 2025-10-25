@@ -28,7 +28,7 @@ Modding support for HTML5 build targets, modpack unzipping, appending/merging st
 - Changed the `toString` function from `FlxBaseModpack` to also give out the file size of the modpack
 - Changed the `fileSystem` folder to `fileSystems` I know amazing
 - Changed the `assetSystem` variable's name to `assets` in `FlxModding.system`
-- Changed the `iconBitmap` for `FlxModding.create` to only work if it doesnt equal `null`
+- Changed the `iconBitmap` parameter for `FlxModding.create` to only work if it doesnt equal `null`
 - Changed the `sanitize` function to have support for Lime/OpenFL librarys
 - Changed the `redirect` function to have support for appended or merged assets
 - Changed the location of all AssetSystem's from `assetSystem` to `backends`

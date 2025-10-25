@@ -1,5 +1,7 @@
 package flixel.util.helpers;
 
+import haxe.Csv;
+import haxe.Ini;
 import haxe.Json;
 import haxe.Srt;
 
@@ -18,7 +20,7 @@ class FlxStringHelper
 	/**
 	 * File extensions for Plain text files
 	 */	
-	public static var TEXT_FILE_EXTS:Array<String> = ["txt", "md", "log", "ini"];
+	public static var TEXT_FILE_EXTS:Array<String> = ["txt", "md", "ini", "csv"];
 
 	/**
 	 * File extensions for XML text files
@@ -340,6 +342,28 @@ class FlxStringHelper
 	public static function parseSrtString(text:String):Srt
 	{
 		return Srt.parse(text);
+	}
+
+	/**
+	 * Parses a CSV-formatted string and returns an Csv object
+	 * 
+	 * @param text The string you want to be parsed
+	 * @return A parsed Csv instance
+	 */
+	public static function parseCsvString(text:String):Csv
+	{
+		return Csv.parse(text);
+	}
+
+	/**
+	 * Parses a INI-formatted string and returns an Ini object
+	 * 
+	 * @param text The string you want to be parsed
+	 * @return A parsed Ini instance
+	 */
+	public static function parseIniString(text:String):Ini
+	{
+		return Ini.parse(text);
 	}
 
 	/**

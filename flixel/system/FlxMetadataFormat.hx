@@ -1,6 +1,6 @@
 package flixel.system;
 
-@:buildMetadata("_metadata.json", "_picture.png", "_config.json")
+@:buildMetadata("_metadata.json", "_picture.png", "_config.ini")
 class FlxMetadataFormat extends FlxBaseMetadataFormat
 {
     public var name:String;

@@ -199,7 +199,7 @@ class FlxModding
      * 
      * @return                    The initialized FlxModding system so it can be assigned or used directly.
      */
-	public static function init(?customModpack:Class<FlxBaseModpack<Dynamic>>, ?customFormat:Class<FlxBaseMetadataFormat>, ?autoLoadModpacks:Bool = true, ?fileSystem:IFileSystem, ?assets:IAssetSystem, ?assetDirectory:String, ?modsDirectory:String):FlxModding
+	public static function init(?customModpack:Class<FlxBaseModpack<Dynamic>>, ?customFormat:Class<FlxBaseMetadataFormat>, ?fileSystem:IFileSystem, ?assets:IAssetSystem, ?assetDirectory:String, ?modsDirectory:String):FlxModding
     {   
         FlxModding.log("Attempting to Initialize FlxModding...");
         FlxModding.signals.preInitialization.dispatch();
@@ -211,11 +211,7 @@ class FlxModding
 
         system = new FlxModding();
         modpacks = new FlxModpackContainer();
-
-        if (autoLoadModpacks != false)
-        {
-            FlxG.signals.preGameReset.add(() -> FlxModding.reload());
-        }
+        FlxG.signals.preGameReset.add(() -> FlxModding.reload());
 
         buildAssetSystem(assets);
         buildFileSystem(fileSystem);
@@ -280,11 +276,6 @@ class FlxModding
                                 var modpack = Type.createInstance(entry.cls, [modFile]);
                                 modpack.fromMetadata(modpack.metadata.fromDynamic(FlxStringHelper.parseJsonString(FlxModding.system.assets.getText(modpack.metaDirectory()))));
                                 add(cast modpack);
-
-                                if (Reflect.hasField(entry.meta, "configPath") != false && FlxModding.system.assets.exists(modFilePath + "/" + Reflect.field(entry.meta, "configPath")))
-                                {
-                                    modpack.config = FlxStringHelper.parseJsonString(FlxModding.system.assets.getText(modpack.configDirectory()));
-                                }
 
                                 continue;
                             }
