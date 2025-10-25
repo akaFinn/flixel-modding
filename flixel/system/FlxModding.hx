@@ -27,6 +27,7 @@ import flixel.util.FlxZipUtil;
 import flixel.util.helpers.FlxStringHelper;
 import haxe.io.Bytes;
 import haxe.io.BytesInput;
+import haxe.io.Path;
 import haxe.zip.Reader;
 import lime.utils.AssetType;
 import lime.utils.Assets;
@@ -65,19 +66,19 @@ class FlxModding
 	/**
 	 * The Base Flixel-Modding version, in semantic versioning syntax.
 	 */
-	public static var VERSION:FlxVersion = new FlxModVersion(1, 6, 0, BETA);
+	public static var VERSION:FlxBaseVersion = new FlxModVersion(1, 6, 0, BETA);
+
+    /**
+     * Whether Flixel-Modding should print debug info about loading/reloading.
+     * Useful for development and troubleshooting mod issues.
+     */
+    public static var debug:Bool = (FlxModding.VERSION.branch != NONE && FlxModding.VERSION.branch != null);
 
 	/**
 	 * Use this to toggle Flixel-Modding between on and off.
 	 * You can easily toggle this with e.g.: `FlxModding.enabled = !FlxModding.enabled;`
 	 */
 	public static var enabled:Bool = true;
-
-    /**
-     * Whether Flixel-Modding should print debug info about loading/reloading.
-     * Useful for development and troubleshooting mod issues.
-     */
-    public static var debug:Bool = #if debug true #else false #end;
 
 	/**
 	 * Used for grabbing, loading, or listing assets.
@@ -139,17 +140,17 @@ class FlxModding
     /**
      * Default asset folder used by the system.
      */
-    static var assetDirectory:String = "assets";
+    private static var assetDirectory:String = "assets";
 
     /**
      * Directory where all installed mods are stored.
      */
-    static var modsDirectory:String = "mods";
+    private static var modsDirectory:String = "mods";
 
     /**
      * Flixel-specific assets directory.
      */
-    static inline var flixelDirectory:String = "flixel";
+    private static inline var flixelDirectory:String = "flixel";
 
     // TODO: Give this variable a comment
     private static var moddingPackages:Array<{cls:Class<FlxBaseModpack<Dynamic>>, meta:Class<FlxBaseMetadataFormat>}> =
@@ -202,6 +203,8 @@ class FlxModding
     {   
         FlxModding.log("Attempting to Initialize FlxModding...");
         FlxModding.signals.preInitialization.dispatch();
+
+        if (FlxModding.debug != false) FlxModding.log("Attempting to Initialize in prerelease mode...");
 
         flixel.system.FlxModding.assetDirectory = assetDirectory != null ? assetDirectory : flixel.system.FlxModding.assetDirectory;
         flixel.system.FlxModding.modsDirectory = modsDirectory != null ? modsDirectory : flixel.system.FlxModding.modsDirectory;
@@ -359,6 +362,7 @@ class FlxModding
     public static function create(fileName:String, metadata:FlxBaseMetadataFormat, ?iconBitmap:BitmapData, ?makeAssetFolders:Bool = true):FlxBaseModpack<FlxBaseMetadataFormat>
     {
         FlxModding.log("Attempting to Create a modpack...");
+        FlxModding.error("Failed to Create a Modpack, this function is non functional for the time being");
         return null;
 
         /*if (!system.fileSystem.exists(FlxModding.modsDirectory + "/" + fileName))
@@ -638,7 +642,7 @@ class FlxModding
     }
 
     function buildModdedAssetLibrarys():Void
-    {
+    {   
         for (libraryName in getDefaultAssetLibrarys())
         {
             Assets.registerLibrary(libraryName, new AssetModLibrary(Assets.getLibrary(libraryName)));
@@ -646,48 +650,34 @@ class FlxModding
     }
 
     #if hscript
-    function buildScriptedClasses():Void
+    function buildScriptedInstances():Void
     {
         if (FlxModUtil.getDefinedBool("FLX_SCRIPTING", true))
         {
             var list:Array<String> = [];
 
-		    function addFiles(directory:String, prefix = "")
-		    {
-			    for (path in fileSystem.readFolder(directory))
-			    {
-				    if (fileSystem.isFolder(directory + "/" + path))
-					    addFiles(directory + "/" + path, prefix + path + "/");
-				    else
-					    list.push(prefix + path);
-			    }
-		    }
+            function addFiles(directory:String, prefix = "")
+            {
+                for (path in fileSystem.readFolder(directory))
+                {
+                    if (fileSystem.isFolder(directory + "/" + path))
+                        addFiles(directory + "/" + path, prefix + path + "/");
+                    else
+                        list.push(prefix + path);
+                }
+            }
 
-		    addFiles(FlxModding.assetDirectory, FlxModding.assetDirectory + "/");
+            addFiles(FlxModding.assetDirectory, FlxModding.assetDirectory + "/");
             addFiles(FlxModding.modsDirectory, FlxModding.modsDirectory + "/");
 
             FlxModding.signals.postModsReload.add(() ->
             {
                 for (asset in list)
                 {
-                    #if rulescript
-                    if (StringTools.endsWith(asset, ruleScriptExt))
+                    if (FlxScriptUtil.SCRIPT_FILE_EXTS.contains(Path.extension(asset)))
                     {
-                        FlxScriptUtil.buildRuleScript(asset);
-                        continue;
+                        FlxScriptUtil.buildScript(FlxG.assets.getText(asset));
                     }
-                    #end
-
-                    #if polymod
-                    if (StringTools.endsWith(asset, polymodScriptExt))
-                    {
-                        FlxScriptUtil.buildPolymodScript(asset);
-                        continue;
-                    }
-                    #end
-
-                    if (StringTools.endsWith(asset, hScriptExt))
-                        FlxScriptUtil.buildHScript(asset);
                 }
             });
         }    
@@ -766,17 +756,25 @@ class FlxModding
     static function log(data:Dynamic):Void
     {
         if (FlxModding.debug)
-            FlxG.log.add(data); 
+        {
+            #if FLX_DEBUG
+            FlxG.log.add(data);
+            #end
+        }
     }
 
     static function warn(data:Dynamic):Void
     {
-        FlxG.log.warn(data); 
+        #if FLX_DEBUG
+        FlxG.log.warn(data);
+        #end
     }
 
     static function error(data:Dynamic):Void
     {
-        FlxG.log.error(data); 
+        #if FLX_DEBUG
+        FlxG.log.error(data);
+        #end
     }
 
     static function buildAssetSystem(?assets:IAssetSystem):Void
@@ -812,7 +810,7 @@ class FlxModding
         }
 
         #if hscript
-        //system.buildScriptedClasses();
+        system.buildScriptedInstances();
         #end
     }
 
@@ -1200,26 +1198,6 @@ private class AssetModLibrary extends AssetLibrary
     }
 }
 
-private class FlxModVersion extends FlxVersion
-{
-	public var branch(default, null):FlxVersionBranch;
-
-	public function new(Major:Int, Minor:Int, Patch:Int, ?Branch:FlxVersionBranch = NONE)
-	{
-        super(Major, Minor, Patch);
-
-        branch = Branch;
-	}
-
-	override public function toString():String
-	{
-		if (branch != NONE)
-            return 'FlxModding $major.$minor.$patch-$branch';
-        else
-            return 'FlxModding $major.$minor.$patch';
-	}   
-}
-
 private class FlxModSignals
 {
     /**
@@ -1288,12 +1266,4 @@ private class FlxModSignals
     public var onModDeactived:FlxTypedSignal<FlxBaseModpack<FlxBaseMetadataFormat>->Void> = new FlxTypedSignal<FlxBaseModpack<FlxBaseMetadataFormat>->Void>();
 
     public function new() {}
-}
-
-private enum abstract FlxVersionBranch(String)
-{
-	var NONE = "none";
-	var PROTOTYPE = "prototype";
-	var ALPHA = "alpha";
-	var BETA = "beta";
 }

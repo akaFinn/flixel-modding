@@ -1,5 +1,6 @@
 package flixel.system.backends;
 
+import flixel.util.FlxScriptUtil;
 import flixel.util.helpers.FlxStringHelper;
 import haxe.io.Bytes;
 import haxe.io.Path;
@@ -25,7 +26,7 @@ class FlxAssetSystem implements IAssetSystem
     }
 
     public function getAsset(id:String, type:FlxAssetType, useCache:Bool = true):Null<Any>
-    {
+    {   
         if (isOpenFLAsset(id))
         {
             return getOpenFLAsset(id, type, useCache != false);
@@ -40,10 +41,11 @@ class FlxAssetSystem implements IAssetSystem
             switch (type)
 		    {
                 case TEXT:
-                    var hasMergePathway:Bool = StringTools.contains(santizedPathway, FlxStringHelper.DEFAULT_MERGE_PREFIX);
-                    var hasAppendPathway:Bool = StringTools.contains(santizedPathway, FlxStringHelper.DEFAULT_APPEND_PREFIX);
+                    var hasMergePathway:Bool = StringTools.contains(santizedPathway, "/" + FlxStringHelper.DEFAULT_MERGE_PREFIX + "/");
+                    var hasAppendPathway:Bool = StringTools.contains(santizedPathway, "/" + FlxStringHelper.DEFAULT_APPEND_PREFIX + "/");
+                    var hasSourcePathway:Bool = StringTools.contains(santizedPathway, "/" + FlxScriptUtil.DEFAULT_SOURCE_PREFIX + "/");
 
-                    if (hasMergePathway || hasAppendPathway)
+                    if (hasMergePathway || hasAppendPathway || hasSourcePathway)
                     {
                         var defaultTextContent:String = FlxModding.system.fileSystem.getFileContent(id);
 
@@ -58,8 +60,17 @@ class FlxAssetSystem implements IAssetSystem
                             {
                                 return FlxStringHelper.mergeJsonText(defaultTextContent, textContent);
                             }
+                            else if (FlxStringHelper.SRT_FILE_EXTS.contains(Path.extension(santizedPathway)))
+                            {
+                                return FlxStringHelper.mergeSrtText(defaultTextContent, textContent);
+                            }
+                            else if (FlxStringHelper.TEXT_FILE_EXTS.contains(Path.extension(santizedPathway)))
+                            {
+                                return FlxStringHelper.mergePlainText(defaultTextContent, textContent);
+                            }
                             else
                             {
+                                FlxG.log.warn("File extension not recognized, merging assets as plain text");
                                 return FlxStringHelper.mergePlainText(defaultTextContent, textContent);
                             }
                         }
@@ -74,11 +85,29 @@ class FlxAssetSystem implements IAssetSystem
                             {
                                 return FlxStringHelper.appendJsonText(defaultTextContent, textContent);
                             }
-                            else
+                            else if (FlxStringHelper.SRT_FILE_EXTS.contains(Path.extension(santizedPathway)))
+                            {
+                                return FlxStringHelper.appendSrtText(defaultTextContent, textContent);
+                            }
+                            else if (FlxStringHelper.TEXT_FILE_EXTS.contains(Path.extension(santizedPathway)))
                             {
                                 return FlxStringHelper.appendPlainText(defaultTextContent, textContent);
                             }
+                            else
+                            {
+                                FlxG.log.warn("File extension not recognized, appending assets as plain text");
+                                return FlxStringHelper.appendPlainText(defaultTextContent, textContent);
+                            }
                         }
+
+                        /*if (hasSourcePathway)
+                        {
+                            if (FlxScriptUtil.HAXE_FILE_EXTS.contains(Path.extension(santizedPathway)))
+                            {
+                                // Not done LOLOLOLOL
+                                return null;
+                            }
+                        }*/
                     }
 
                     return textContent;

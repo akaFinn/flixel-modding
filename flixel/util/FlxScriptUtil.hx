@@ -1,160 +1,64 @@
 package flixel.util;
 
-import flixel.sound.FlxSound;
-import flixel.system.FlxModding;
-import flixel.system.macros.FlxMacroUtil;
-import flixel.text.FlxText;
-
 #if hscript
+import flixel.system.hscript.FlxScriptable;
+import flixel.system.hscript.FlxScriptableClass;
 import hscript.Interp;
 import hscript.Parser;
-
-#if rulescript
-import rulescript.parsers.HxParser;
-import rulescript.scriptedClass.RuleScriptedClass.Access;
-import rulescript.types.ScriptedTypeUtil;
-import rulescript.types.Typedefs;
-#end
-
-#if polymod
-import polymod.hscript._internal.PolymodScriptClass;
-#end
 
 /**
  * @since 1.5.0
  */
-@:access(flixel.system.FlxModding)
 class FlxScriptUtil
 {
-    static var hScripts:Map<String, Interp> = new Map<String, Interp>();
+    /**
+	 * File extension for basic Script files
+	 */	
+    public static var SCRIPT_FILE_EXTS:Array<String> = ["hxs"];
 
-    #if rulescript
-    static var ruleScripts:Map<String, Access> = new Map<String, Access>();
-    #end
+    /**
+	 * File extension for Scripted Classes
+	 */	
+    public static var CLASS_FILE_EXTS:Array<String> = ["hxc"];
 
-    private static var defaultGlobalClasses:Array<FlxGlobalClass> =
-    [
-        {
-            name: "FlxSprite",
-            cls: FlxSprite,
-        },
+	/**
+	 * File extension for Haxe files
+	 */	
+    public static var HAXE_FILE_EXTS:Array<String> = ["hx"];
 
-        {
-            name: "FlxG",
-            cls: FlxG,
-        },
+    /**
+	 * Default prefix used for identifying scripted classes that want to replace the source code
+	 */	
+    public static inline var DEFAULT_SOURCE_PREFIX:String = "_source";
 
-        {
-            name: "FlxState",
-            cls: FlxState,
-        },
+    private static var interp:Interp = FlxScriptUtil.buildInterp();
 
-        {
-            name: "FlxModding",
-            cls: FlxModding,
-        },
+    public static function buildScript(content:String):Void
+    {
+        var parser:Parser = FlxScriptUtil.buildParser();
+        interp.execute(parser.parseString(content));
+    }
 
-        {
-            name: "FlxColor",
-            cls: FlxScriptedColor,
-        },
-
-        {
-            name: "FlxText",
-            cls: FlxText,
-        },
-
-        {
-            name: "FlxObject",
-            cls: FlxObject,
-        },
-
-        {
-            name: "FlxBasic",
-            cls: FlxBasic,
-        },
-
-        {
-            name: "FlxSound",
-            cls: FlxSound,
-        }
-    ];
-
-    public static function buildHScript(path:String):Interp
+    static function buildParser():Parser
     {
         var parser:Parser = new Parser();
         parser.allowJSON = true;
         parser.allowTypes = true;
-        parser.allowMetadata = true;
 
+        return parser;
+    }
+
+    static function buildInterp():Interp
+    {
         var interp:Interp = new Interp();
+		interp.variables.set("Std", Std);
+		interp.variables.set("Math", Math);
 
-        for (globalClass in defaultGlobalClasses)
-            interp.variables.set(globalClass.name, globalClass.cls);
-
-        interp.execute(parser.parseString(FlxModding.system.fileSystem.getFileContent(path)));
-        hScripts.set(path, interp);
         return interp;
     }
-
-    public static function getHScript(key:String):Interp
-    {
-        if (hScripts.exists(key))
-            return hScripts.get(key);
-
-        return null;
-    }
-
-    #if polymod
-    public static function buildPolymodScript(path:String):Void
-    {
-        @:privateAccess
-        PolymodScriptClass.registerScriptClassByString(FlxModding.system.fileSystem.getFileContent(path));
-    }
-    #end
-
-    #if rulescript
-    public static function buildRuleScript(path:String):Access
-    {
-        path = FlxModding.system.sanitize(path);
-		var newPath = StringTools.replace(path, FlxModding.ruleScriptExt, "");
-
-		ScriptedTypeUtil.resolveModule = (name:String) ->
-		{
-			final content:String = FlxModding.system.fileSystem.getFileContent(newPath + FlxModding.ruleScriptExt) ?? null;
-
-			if (content == null)
-				return null;
-
-			var parser = new HxParser();
-			parser.allowAll();
-			parser.mode = MODULE;
-			return parser.parseModule(content);
-		}
-
-		var script:Access = new Access(ScriptedTypeUtil.resolveScript(StringTools.replace(newPath, "/", ".")));
-        ruleScripts.set(path, script);
-        return script;
-    }
-
-    public static function getRuleScript(key:String):Access
-    {
-        if (ruleScripts.exists(FlxModding.system.sanitize(key)))
-            return ruleScripts.get(FlxModding.system.sanitize(key));
-
-        return null;
-    }
-    #end
-}
-#end
-
-typedef FlxGlobalClass = 
-{
-    var name:String;
-    var cls:Class<Dynamic>;
 }
 
-private class FlxScriptedColor
+/*private class FlxScriptedColor
 {
 	public static var TRANSPARENT:FlxColor = 0x00000000;
 	public static var WHITE:FlxColor = 0xFFFFFFFF;
@@ -241,4 +145,5 @@ private class FlxScriptedColor
 
 		return result;
 	}
-}
+}*/
+#end

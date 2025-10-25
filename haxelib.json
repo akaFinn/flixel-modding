@@ -5,7 +5,7 @@
 	"tags": ["flixel", "modding", "mod", "asset", "hscript"],
 	"description": "A robust modding system for HaxeFlixel.",
 	"version": "1.6.0-beta",
-	"releasenote": "Modding support for HTML5 build targets + modpack unzipping",
+	"releasenote": "Modding support for HTML5 build targets, modpack unzipping, appending/merging strings, & reworked scripting",
 	"contributors": ["akaFinn", "therealjake_12"],
 	"dependencies": 
 	{

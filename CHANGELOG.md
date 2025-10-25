@@ -1,14 +1,15 @@
 ## Changelog
 
-# [1.6.0] *BETA* - (September 30, 2025)
+# [1.6.0] *BETA* - (October 24, 2025)
 
-Modding support for HTML5 build targets + modpack unzipping
+Modding support for HTML5 build targets, modpack unzipping, appending/merging strings, & reworked scripting
 
 ### Added
+- Created `haxe.Srt` a class designed for .srt files
 - Created `flixel.group.FlxModpackContainer` a container designed for modpacks only
 - **[WIP]** Created `flixel.system.fileSystems.JsFileSystem` a file system built and made for Js/HTML5 targets
 - Created `flixel.system.fileSystems.SysZipFileSystem` a file system made for grabbing & setting data for zip files when using sys
-- Craeted `flixel.utils.FlxZipUtil` as a way to manage and handle zip files of any kind in terms of unzipping
+- Created `flixel.utils.FlxZipUtil` as a way to manage and handle zip files of any kind in terms of unzipping
 - Created `flixel.utils.helpers.FlxStringHelper` as a string manager for appending, merging, ect.
 - Moved all signals from `FlxModding` to `FlxModding.signals` to make the class more clean
 - Added a comment to the `file` variable in `FlxBaseModpack`
@@ -19,7 +20,8 @@ Modding support for HTML5 build targets + modpack unzipping
 - Added support for appended & merged text content in `FlxAssetSystem`
 
 ### Changed
-- Reworked how modpacks reload in `FlxModding.reload` to now also load zipped modpacks when found
+- **[WIP]** Reworked how modpacks reload in `FlxModding.reload` to now also load zipped modpacks when found
+- **[WIP]** Completely reworked `FlxScriptUtil` so now you can execute both scripts and scripted classes without the need of other librarys
 - Moved all signals in `FlxModding` to `FlxModding.signals` as a way to make the class cleaner and easier to manage
 - Fixed `FlxModding.init` to not let `FlxModding.reload` get called twice
 - Changed the `fromDynamicData` function from the `FlxBaseModpack` class to `fromDynamic`

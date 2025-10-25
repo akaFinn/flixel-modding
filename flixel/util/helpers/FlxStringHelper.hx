@@ -1,11 +1,12 @@
 package flixel.util.helpers;
 
 import haxe.Json;
+import haxe.Srt;
 
 using StringTools;
 
 /**
- * Utility class for messing around with Plain, JSON, & XML text
+ * Utility class for messing around with Plain, JSON, XML, & SRT text
  * string data into a single combined result. This allows multiple
  * text sources to be unified for parsing, storage, or exporting.
  * 
@@ -15,19 +16,24 @@ using StringTools;
 class FlxStringHelper
 {
 	/**
-	 * File extension for Plain text files
+	 * File extensions for Plain text files
 	 */	
-	public static var TEXT_FILE_EXTS:Array<String> = ["txt"];
+	public static var TEXT_FILE_EXTS:Array<String> = ["txt", "md", "log", "ini"];
 
 	/**
-	 * File extension for XML text files
+	 * File extensions for XML text files
 	 */
-	public static var XML_FILE_EXTS:Array<String> = ["xml"];
+	public static var XML_FILE_EXTS:Array<String> = ["xml", "svg"];
 
 	/**
-	 * File extension for JSON text files
+	 * File extensions for JSON text files
 	 */	
-	public static var JSON_FILE_EXTS:Array<String> = ["json"];
+	public static var JSON_FILE_EXTS:Array<String> = ["json", "jsonc", "webmanifest"];
+
+	/**
+	 * File extensions for SRT text files
+	 */	
+	public static var SRT_FILE_EXTS:Array<String> = ["srt"];
 
 	/**
 	 * Default prefix used for identifying appended text directories
@@ -145,8 +151,8 @@ class FlxStringHelper
 	{
 	    try
 		{
-	        var baseXml:Xml = Xml.parse(base);
-	        var addXml:Xml  = Xml.parse(text);
+	        var baseXml:Xml = FlxStringHelper.parseXmlString(base);
+	        var addXml:Xml  = FlxStringHelper.parseXmlString(text);
 
 	        function clone(x:Xml):Xml
 			{
@@ -220,6 +226,21 @@ class FlxStringHelper
 		{
 	        return base;
 	    }
+	}
+
+	/**
+	 * Appends SRT text into a base SRT string.
+	 * The function returns the appended SRT as a string, or the original base
+	 * string if parsing/append fails.
+	 *
+	 * @param base The original SRT string
+	 * @param text The SRT string to append into base
+     * 
+	 * @return The appended SRT as a string, or base on error
+	 */
+	public static function appendSrtText(base:String, text:String):String
+	{
+		return FlxStringHelper.appendPlainText(base, '\n\n$text');
 	}
 
 	/**
@@ -300,14 +321,35 @@ class FlxStringHelper
 	}
 
 	/**
+	 * Parses a XML-formatted string and returns the corresponding Xml object
+	 * 
+	 * @param text The string you want to be parsed
+	 * @return A parsed Xml instance
+	 */
+	public static function parseXmlString(text:String):Xml
+	{
+		return Xml.parse(text);
+	}
+
+	/**
+	 * Parses a SRT-formatted string and returns an Srt object
+	 * 
+	 * @param text The string you want to be parsed
+	 * @return A parsed Srt instance
+	 */
+	public static function parseSrtString(text:String):Srt
+	{
+		return Srt.parse(text);
+	}
+
+	/**
 	 * Merges plain text to the provided base string.
 	 * @param base             The original string
 	 * @param text             The text to merge
-	 * @param forcedOpperation (Optional) Forces a specific merge operation
 	 *
 	 * @return Returns a merged plain text string result.
 	 */
-	public static function mergePlainText(base:String, text:String, ?forcedOperation:FlxMergeOperation):String 
+	public static function mergePlainText(base:String, text:String):String 
 	{
 		FlxG.log.warn("Failed to merge Plain Text, this feature is not yet officially supported");
 		return base;
@@ -317,11 +359,10 @@ class FlxStringHelper
 	 * Merges JSON text into a base JSON string.
 	 * @param base             The original JSON string
 	 * @param text             The JSON text to merge
-	 * @param forcedOpperation (Optional) Forces a specific merge operation
 	 * 
 	 * @return Returns the merged JSON text result as a string.
 	 */
-	public static function mergeJsonText(base:String, text:String, ?forcedOperation:FlxMergeOperation):String 
+	public static function mergeJsonText(base:String, text:String):String 
 	{
 		var parsedBase:Dynamic = FlxStringHelper.parseJsonString(base);
 		var mergeContent:Array<FlxMergeDefinition> = FlxStringHelper.parseJsonString(text);
@@ -482,13 +523,25 @@ class FlxStringHelper
 	 * Merges XML text into a base XML string.
 	 * @param base             The original XML string
 	 * @param text             The XML text to merge
-	 * @param forcedOpperation (Optional) Forces a specific merge operation
 	 *
 	 * @return Returns the resulting merged XML string.
 	 */
-	public static function mergeXmlText(base:String, text:String, ?forcedOperation:FlxMergeOperation):String 
+	public static function mergeXmlText(base:String, text:String):String 
 	{
 		FlxG.log.warn("Failed to merge Xml Text, this feature is not yet officially supported");
+		return base;
+	}
+
+	/**
+	 * Merges SRT text into a base SRT string.
+	 * @param base             The original SRT string
+	 * @param text             The SRT text to merge
+	 *
+	 * @return Returns the resulting merged SRT string.
+	 */
+	public static function mergeSrtText(base:String, text:String):String 
+	{
+		FlxG.log.warn("Failed to merge Srt Text, this feature is not yet officially supported");
 		return base;
 	}
 }
