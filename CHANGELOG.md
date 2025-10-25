@@ -14,6 +14,8 @@ Modding support for HTML5 build targets, modpack unzipping, appending/merging st
 - Moved all signals from `FlxModding` to `FlxModding.signals` to make the class more clean
 - Added a comment to the `file` variable in `FlxBaseModpack`
 - Added `getModpackSize` to `FlxBaseModpack` the function grabs the file size of the modpack
+- Added `moddingPackages` to `FlxModding` a variable that stores each registered modding package
+- Added `registerModdingPackage`, `unregisterModdingPackage`, & `getModdingPackage` to `FlxModding`
 - Added the `autoLoadMods` parameter to `FlxModding.init`
 - Added `FlxModding.unzip` which takes the bytes of a .zip file and converts it to a modpack
 - Added `buildAssetSystem` and `buildFileSystem` to `FlxModding`
@@ -21,6 +23,7 @@ Modding support for HTML5 build targets, modpack unzipping, appending/merging st
 
 ### Changed
 - **[WIP]** Reworked how modpacks reload in `FlxModding.reload` to now also load zipped modpacks when found
+- Reworked `FlxModding.create` from creating modpacks via a massive and stupid switch statement to now looking thru the modding packages
 - **[WIP]** Completely reworked `FlxScriptUtil` so now you can execute both scripts and scripted classes without the need of other librarys
 - Moved all signals in `FlxModding` to `FlxModding.signals` as a way to make the class cleaner and easier to manage
 - Fixed `FlxModding.init` to not let `FlxModding.reload` get called twice
