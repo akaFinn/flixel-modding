@@ -30,7 +30,7 @@ class Main extends Sprite
         FlxModding.init();
         addChild(new FlxGame(0, 0, PlayState));
 
-        FlxModding.create("newMod", new FlxMetadataFormat().fromDynamicData({
+        FlxModding.create("newMod", new FlxMetadataFormat().fromDynamic({
 	        name: "New Awesome Mod",
 	        version: "1.2.3",
 	        description: "This is a brand new mod for the world!",

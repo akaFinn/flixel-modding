@@ -14,8 +14,8 @@ Modding support for HTML5 build targets, modpack unzipping, appending/merging st
 - Moved all signals from `FlxModding` to `FlxModding.signals` to make the class more clean
 - Added a comment to the `file` variable in `FlxBaseModpack`
 - Added `getModpackSize` to `FlxBaseModpack` the function grabs the file size of the modpack
-- Added `moddingPackages` to `FlxModding` a variable that stores each registered modding package
-- Added `registerModdingPackage`, `unregisterModdingPackage`, & `getModdingPackage` to `FlxModding`
+- Added `modPackages` to `FlxModding` a variable that stores each registered modding package
+- Added `registerModPackage`, `unregisterModPackage`, & `getModPackage` to `FlxModding`
 - Added the `autoLoadMods` parameter to `FlxModding.init`
 - Added `FlxModding.unzip` which takes the bytes of a .zip file and converts it to a modpack
 - Added `buildAssetSystem` and `buildFileSystem` to `FlxModding`
@@ -39,6 +39,7 @@ Modding support for HTML5 build targets, modpack unzipping, appending/merging st
 
 ### Removed
 - Removed the custom cache system in `FlxAssetSystem`
+- Removed the `type` variable from `FlxBaseModpack`
 
 # [1.5.0] - (Augest 30, 2025)
 

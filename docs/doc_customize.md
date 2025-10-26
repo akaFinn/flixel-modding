@@ -25,16 +25,14 @@ This allows you to define your own metadata structure while still being compatib
 
 ## 3. Initializing flixel-modding with custom classes
 
-When initializing flixel-modding, you can provide your own modpack class, metadata format, file system, asset system, and even custom asset paths.
+When initializing flixel-modding, you can provide your own mod package, file system, and even custom asset/mod paths.
 
 ```haxe
 var customFileSystem:IFileSystem = new CustomFileSystem();
-var customAssetSystem:IAssetSystem = new CustomAssetSystem();
-
 var customAssetPath:String = "assets_folder";
 var customModPath:String = "mods_folder";
 
-FlxModding.init(CustomModpack, CustomMetadataFormat, customFileSystem, customAssetSystem, customAssetPath, customModPath);
+FlxModding.init({name: "custom", cls: CustomModpack, meta: CustomMetadataFormat}, customFileSystem, customAssetPath, customModPath);
 ```
 
 This gives you full control over how mods are loaded, stored, and accessed within your project.

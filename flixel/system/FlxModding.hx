@@ -2,15 +2,13 @@ package flixel.system;
 
 import flixel.FlxG;
 import flixel.group.FlxModpackContainer;
+import flixel.system.FlxAssetSystem;
 import flixel.system.FlxBaseMetadataFormat;
-import flixel.system.FlxBaseModpack.FlxModpackType;
 import flixel.system.FlxBaseModpack;
 import flixel.system.FlxMetadataFormat.FlxLegacyMetadataFormat;
 import flixel.system.FlxMetadataFormat;
 import flixel.system.FlxModpack.FlxLegacyModpack;
 import flixel.system.FlxModpack;
-import flixel.system.backends.FlxAssetSystem;
-import flixel.system.backends.IAssetSystem;
 import flixel.system.debug.log.LogStyle;
 import flixel.system.fileSystems.IFileSystem;
 import flixel.system.fileSystems.JsFileSystem;
@@ -38,6 +36,8 @@ import openfl.text.TextFieldAutoSize;
 import openfl.text.TextFormat;
 import openfl.utils.AssetLibrary;
 import openfl.utils.Future;
+
+//TODO: UPDATE THE DOCS!!!!
 
 
 /**
@@ -104,10 +104,8 @@ class FlxModding
 
     /**
      * Asset system handler for this instance.
-     * Lets you swap between different asset systems (native, virtual, embedded, etc.)
-     * without affecting other instances.
      */
-    public var assets:IAssetSystem;
+    public var assets:FlxAssetSystem;
 
     /**
      * File system handler for this instance.
@@ -155,7 +153,7 @@ class FlxModding
     /**
      * Registry of all available modding packages.
      */
-    private static var moddingPackages:Array<{name:String, cls:Class<FlxBaseModpack<Dynamic>>, meta:Class<FlxBaseMetadataFormat>}> =
+    private static var modPackages:Array<FlxModPackage> =
     [
         {name: "flixel", cls: FlxModpack, meta: FlxMetadataFormat},
         {name: "polymod", cls: PolymodModpack, meta: PolymodMetadataFormat},
@@ -200,7 +198,7 @@ class FlxModding
      * 
      * @return                    The initialized FlxModding system so it can be assigned or used directly.
      */
-	public static function init(?customModpack:Class<FlxBaseModpack<Dynamic>>, ?customFormat:Class<FlxBaseMetadataFormat>, ?fileSystem:IFileSystem, ?assets:IAssetSystem, ?assetDirectory:String, ?modsDirectory:String):FlxModding
+	public static function init(?customModPackages:Array<FlxModPackage>, ?fileSystem:IFileSystem, ?assetDirectory:String, ?modsDirectory:String):FlxModding
     {   
         FlxModding.signals.preInitialization.dispatch();
         FlxModding.log("Attempting to Initialize " + FlxModding.VERSION + "...");
@@ -214,9 +212,16 @@ class FlxModding
         modpacks = new FlxModpackContainer();
         FlxG.signals.preGameReset.add(() -> FlxModding.reload());
 
-        buildAssetSystem(assets);
+        buildAssetSystem();
         buildFileSystem(fileSystem);
-        registerModdingPackage("custom", customModpack, customFormat);
+
+        if (customModPackages != null)
+        {
+            for (entry in customModPackages)
+            {
+                registerModPackage(entry);
+            }
+        }
 
         if (system.fileSystem.exists(FlxModding.modsDirectory + "/"))
 		{
@@ -270,7 +275,7 @@ class FlxModding
                     {
                         if (isZipFile != false) FlxZipUtil.cachedZipFiles.set(modFilePath, FlxZipUtil.unzipFromBytes(system.fileSystem.getFileBytes(modFilePath)));
 
-                        for (entry in moddingPackages)
+                        for (entry in modPackages)
                         {
                             if (FlxModding.system.assets.exists(modFilePath + "/" + Reflect.field(entry.meta, "metaPath")))
                             {
@@ -358,7 +363,7 @@ class FlxModding
             var modpackClass:Class<FlxBaseModpack<Dynamic>> = null;
             var formatClass:Class<FlxBaseMetadataFormat> = null;
 
-            for (entry in moddingPackages)
+            for (entry in modPackages)
             {
                 if (entry.meta == Type.getClass(metadata))
                 {
@@ -508,18 +513,18 @@ class FlxModding
     }
 
     /**
-     * Retrieves a registered modding package by name.
+     * Retrieves a registered mod package by name.
      * 
-     * Searches the internal modding package registry for a matching entry.
+     * Searches the internal mod package registry for a matching entry.
      * If found, returns its data (name, modpack class, and metadata class).
      * 
-     * @param   modpackName   The name of the modding package to retrieve.
+     * @param   modpackName   The name of the mod package to retrieve.
      * 
-     * @return                The registered modding package data, or null if no match was found.
+     * @return                The registered mod package data, or null if no match was found.
      */
-    public static function getModdingPackage(modpackName:String):{name:String, cls:Class<FlxBaseModpack<Dynamic>>, meta:Class<FlxBaseMetadataFormat>}
+    public static function getModPackage(modpackName:String):FlxModPackage
     {
-        for (entry in moddingPackages)
+        for (entry in modPackages)
         {
             if (entry.name == modpackName)
             {
@@ -527,37 +532,35 @@ class FlxModding
             }
         }
 
-        FlxModding.warn("Failed to get modding package, modding package could not be found.");
+        FlxModding.warn("Failed to get mod package, mod package could not be found.");
         return null;
     }
 
     /**
-     * Registers a new modding package into the global modding package registry.
+     * Registers a new mod package into the global mod package registry.
      * 
      * This function allows custom modpack implementations and metadata formats
      * to be integrated into the modding system. Once registered, the package
      * can be used for creation, loading, and other mod-related operations.
      * 
-     * @param   modpackName   The display name of the modding package.
-     * @param   modpackClass  The main class representing the modpack logic and structure.
-     * @param   formatClass   The class defining the metadata format used by the modpack.
+     * @param   modPackage   The mod package that you want to be registered
      */
-    public static function registerModdingPackage(modpackName:String, modpackClass:Class<FlxBaseModpack<Dynamic>>, formatClass:Class<FlxBaseMetadataFormat>):Void
+    public static function registerModPackage(modPackage:FlxModPackage):Void
     {
-        FlxModding.moddingPackages.push({name: modpackName, cls: modpackClass, meta: formatClass});
+        FlxModding.modPackages.push(modPackage);
     }
 
     /**
-     * Unregisters an existing modding package from the global modding package registry.
+     * Unregisters an existing mod package from the global mod package registry.
      * 
      * Removes the specified package so it can no longer be created or accessed.
      * Useful when cleaning up or reloading modding configurations dynamically.
      * 
-     * @param   modpackName   The name of the modding package to remove.
+     * @param   modpackName   The name of the mod package to remove.
      */
-    public static function unregisterModdingPackage(modpackName:String):Void
+    public static function unregisterModPackage(modpackName:String):Void
     {
-        FlxModding.moddingPackages.remove(getModdingPackage(modpackName));
+        FlxModding.modPackages.remove(getModPackage(modpackName));
     }
     
     /**
@@ -769,9 +772,9 @@ class FlxModding
         #end
     }
 
-    static function buildAssetSystem(?assets:IAssetSystem):Void
+    static function buildAssetSystem():Void
     {
-        system.assets = (assets != null) ? assets : new FlxAssetSystem();
+        system.assets = new FlxAssetSystem();
         system.buildModdedAssetLibrarys();
 
         #if (flixel >= "5.9.0")
@@ -804,380 +807,6 @@ class FlxModding
         #if hscript
         system.buildScriptedInstances();
         #end
-    }
-}
-
-/**
- * @author akaFinn
- * @since 1.4.0
- */
-@:access(lime.utils.AssetLibrary)
-@:access(flixel.system.FlxModding)
-private class AssetModLibrary extends AssetLibrary
-{
-    public var defaultLibrary:lime.utils.AssetLibrary;
-
-    public function new(?defaultLibrary:lime.utils.AssetLibrary)
-    {
-        super();
-
-        if (defaultLibrary != null) 
-        {
-            this.defaultLibrary = defaultLibrary;
-
-            for (key in defaultLibrary.classTypes.keys())
-            {
-                if (StringTools.startsWith(key, FlxModding.flixelDirectory))
-                {
-                    this.classTypes.set(key, defaultLibrary.classTypes.get(key));
-                }
-            }
-
-            for (key in defaultLibrary.types.keys())
-            {
-                if (StringTools.startsWith(key, FlxModding.flixelDirectory))
-                {
-                    this.types.set(key, defaultLibrary.types.get(key));       
-                }
-            }
-        }
-    }
-
-    override public function getAsset(id:String, type:String):Dynamic
-    {
-        if (isDefaultAsset(id))
-            return getAssetDefault(id, type);
-        else
-            return getAssetModded(id, type);
-    }
-
-    public function getAssetDefault(id:String, type:String):Dynamic
-    {
-        return super.getAsset(id, type);
-    }
-
-    public function getAssetModded(id:String, type:String):Dynamic
-    {
-        return switch (cast(type, AssetType))
-		{
-			case BINARY: getBytes(id);
-            case TEXT: getText(id);
-			case IMAGE: getImage(id);
-            case FONT: getFont(id);
-			case MUSIC, SOUND: getAudioBuffer(id);
-
-			default: FlxG.log.error("Unknown asset type: " + type); null;
-		}
-    }
-
-    override public function loadAsset(id:String, type:String):Future<Dynamic>
-    {
-        if (isDefaultAsset(id))
-            return loadAssetDefault(id, type);
-        else
-            return loadAssetModded(id, type);
-    }
-
-    public function loadAssetDefault(id:String, type:String):Future<Dynamic>
-    {
-        return super.loadAsset(id, type);
-    }
-
-    public function loadAssetModded(id:String, type:String):Future<Dynamic>
-    {
-        return switch (cast(type, AssetType))
-		{
-			case BINARY: loadBytes(id);
-            case TEXT: loadText(id);
-			case IMAGE: loadImage(id);
-            case FONT: loadFont(id);
-			case MUSIC, SOUND: loadAudioBuffer(id);
-
-			default: FlxG.log.error("Unknown asset type: " + type); null;
-		}
-    }
-
-    override public function exists(id:String, type:String):Bool
-    {
-        if (isDefaultAsset(id))
-            return existsDefault(id, type);
-        else
-            return existsModded(id, type);
-    }
-
-    public function existsDefault(id:String, type:String):Bool
-    {
-        return super.exists(id, type);
-    }
-
-    public function existsModded(id:String, type:String):Bool
-    {
-        return switch (cast(type, AssetType))
-		{
-			case BINARY: FlxModding.system.assets.exists(id, BINARY);
-			case TEXT: FlxModding.system.assets.exists(id, TEXT);
-			case IMAGE: FlxModding.system.assets.exists(id, IMAGE);
-            case FONT: FlxModding.system.assets.exists(id, FONT);
-			case MUSIC, SOUND: FlxModding.system.assets.exists(id, SOUND);
-
-			default: FlxG.log.error("Unknown asset type: " + type); false;
-		}
-    }
-
-    override public function list(type:String):Array<String>
-    {
-        var result:Array<String>;
-
-        if (type != null)
-        {
-            result = switch (cast(type, AssetType))
-		    {
-			    case BINARY: FlxModding.system.assets.list(BINARY);
-			    case TEXT: FlxModding.system.assets.list(TEXT);
-			    case IMAGE: FlxModding.system.assets.list(IMAGE);
-                case FONT: FlxModding.system.assets.list(FONT);
-			    case MUSIC, SOUND: FlxModding.system.assets.list(SOUND);
-
-			    default: FlxG.log.error("Unknown asset type: " + type); [];
-		    }
-        }
-        else
-        {
-            result = FlxModding.system.assets.list();
-        }
-
-        return result;
-    }
-
-    override public function isLocal(id:String, type:String):Bool
-    {
-        if (isDefaultAsset(id))
-            return isLocalDefault(id, type);
-        else
-            return isLocalModded(id, type);
-    }
-
-    public function isLocalDefault(id:String, type:String):Bool
-    {
-        return super.isLocal(id, type);
-    }
-
-    public function isLocalModded(id:String, type:String):Bool
-    {
-        return switch (cast(type, AssetType))
-		{
-			case BINARY: FlxModding.system.assets.isLocal(id, BINARY);
-			case TEXT: FlxModding.system.assets.isLocal(id, TEXT);
-			case IMAGE: FlxModding.system.assets.isLocal(id, IMAGE);
-            case FONT: FlxModding.system.assets.isLocal(id, FONT);
-			case MUSIC, SOUND: FlxModding.system.assets.isLocal(id, SOUND);
-
-			default: FlxG.log.error("Unknown asset type: " + type); false;
-		}
-    }
-
-    override public function getPath(id:String):String
-    {
-        if (isDefaultAsset(id))
-            return getPathDefault(id);
-        else
-            return getPathModded(id);
-    }
-
-    public function getPathDefault(id:String):String
-    {
-        return super.getPath(id);    
-    }
-
-    public function getPathModded(id:String):String
-    {
-        return FlxModding.system.sanitize(id);    
-    }
-
-    override public function getText(id:String):String
-    {
-        if (isDefaultAsset(id))
-            return getTextDefault(id);
-        else
-            return getTextModded(id);
-    }
-
-    public function getTextDefault(id:String):String
-    {
-        return super.getText(id);
-    }
-
-    public function getTextModded(id:String):String
-    {
-        return FlxModding.system.assets.getText(id);    
-    }
-
-    override public function getBytes(id:String):lime.utils.Bytes
-    {
-        if (isDefaultAsset(id))
-            return getBytesDefault(id);
-        else
-            return getBytesModded(id);
-    }
-
-    public function getBytesDefault(id:String):lime.utils.Bytes
-    {
-        return super.getBytes(id);
-    }
-
-    public function getBytesModded(id:String):lime.utils.Bytes
-    {
-        return lime.utils.Bytes.fromBytes(FlxModding.system.assets.getBytes(id));
-    }
-
-    override public function getImage(id:String):lime.graphics.Image
-    {
-        if (isDefaultAsset(id))
-            return getImageDefault(id);
-
-        return lime.graphics.Image.fromBitmapData(FlxModding.system.assets.getBitmapData(id));
-    }
-
-    public function getImageDefault(id:String):lime.graphics.Image
-    {
-        return super.getImage(id);    
-    }
-
-    public function getImageModded(id:String):lime.graphics.Image
-    {
-        return lime.graphics.Image.fromBitmapData(FlxModding.system.assets.getBitmapData(id));
-    }
-
-    override public function getAudioBuffer(id:String):lime.media.AudioBuffer
-    {
-        if (isDefaultAsset(id))
-            return getAudioBufferDefault(id);
-        else
-            return getAudioBufferModded(id);
-    }
-
-    public function getAudioBufferDefault(id:String):lime.media.AudioBuffer
-    {
-        return super.getAudioBuffer(id);
-    }
-
-    public function getAudioBufferModded(id:String):lime.media.AudioBuffer
-    {
-        @:privateAccess
-        return FlxModding.system.assets.getSound(id).__buffer;    
-    }
-
-    override public function getFont(id:String):lime.text.Font
-    {
-        if (isDefaultAsset(id))
-            return getFontDefault(id);
-        else
-            return getFontModded(id);
-    }
-
-    public function getFontDefault(id:String):lime.text.Font
-    {
-        return super.getFont(id);
-    }
-
-    public function getFontModded(id:String):lime.text.Font
-    {
-        return FlxModding.system.assets.getFont(id);
-    }
-
-    override public function loadText(id:String):Future<String>
-    {
-        if (isDefaultAsset(id))
-            return loadTextDefault(id);
-        else
-            return loadTextModded(id);
-    }
-
-    public function loadTextDefault(id:String):Future<String>
-    {
-        return super.loadText(id);    
-    }
-
-    public function loadTextModded(id:String):Future<String>
-    {
-        return Future.withValue(getTextModded(id));
-    }
-
-    override public function loadBytes(id:String):Future<lime.utils.Bytes>
-    {
-        if (isDefaultAsset(id))
-            return loadBytesDefault(id);
-        else
-            return loadBytesModded(id);
-    }
-
-    public function loadBytesDefault(id:String):Future<lime.utils.Bytes>
-    {
-        return super.loadBytes(id);    
-    }
-
-    public function loadBytesModded(id:String):Future<lime.utils.Bytes>
-    {
-        return Future.withValue(getBytesModded(id));
-    }
-
-    override public function loadImage(id:String):Future<lime.graphics.Image>
-    {
-        if (isDefaultAsset(id))
-            return loadImageDefault(id);
-        else
-            return loadImageModded(id);
-    }
-
-    public function loadImageDefault(id:String):Future<lime.graphics.Image>
-    {
-        return super.loadImage(id);
-    }
-
-    public function loadImageModded(id:String):Future<lime.graphics.Image>
-    {
-        return Future.withValue(getImageModded(id));
-    }
-
-    override public function loadAudioBuffer(id:String):Future<lime.media.AudioBuffer>
-    {
-        if (isDefaultAsset(id))
-            return loadAudioBufferDefault(id);
-        else
-            return loadAudioBufferModded(id);
-    }
-
-    public function loadAudioBufferDefault(id:String):Future<lime.media.AudioBuffer>
-    {
-        return super.loadAudioBuffer(id);    
-    }
-
-    public function loadAudioBufferModded(id:String):Future<lime.media.AudioBuffer>
-    {
-        return Future.withValue(getAudioBufferModded(id));
-    }
-
-    override public function loadFont(id:String):Future<lime.text.Font>
-    {
-        if (isDefaultAsset(id))
-            return loadFontDefault(id);
-        else
-            return loadFontModded(id);
-    }
-
-    public function loadFontDefault(id:String):Future<lime.text.Font>
-    {
-        return super.loadFont(id);
-    }
-
-    public function loadFontModded(id:String):Future<lime.text.Font>
-    {
-        return Future.withValue(getFontModded(id));    
-    }
-
-    function isDefaultAsset(id:String):Bool
-    {
-        return StringTools.startsWith(id, FlxModding.flixelDirectory);
     }
 }
 

@@ -63,7 +63,6 @@ class FlxModpack extends FlxBaseModpack<FlxMetadataFormat>
 
 	override public function fromMetadata(metadata:FlxMetadataFormat):FlxBaseModpack<FlxMetadataFormat>
 	{
-        this.type = FLIXEL;
 		this.metadata = metadata;
 
 		this.name = metadata.name;
@@ -120,7 +119,6 @@ class FlxLegacyModpack extends FlxBaseModpack<FlxLegacyMetadataFormat>
 
 	override public function fromMetadata(metadata:FlxLegacyMetadataFormat):FlxBaseModpack<FlxLegacyMetadataFormat>
 	{
-        this.type = LEGACY;
 		this.metadata = metadata;
 
 		this.name = metadata.name;

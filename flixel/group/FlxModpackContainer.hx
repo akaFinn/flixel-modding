@@ -22,7 +22,7 @@ class FlxModpackContainer extends FlxTypedContainer<FlxBaseModpack<FlxBaseMetada
         super();
     }
 
-    public function getModpacks(?status:FlxModpackContainerStatus = ALL, ?type:FlxModpackType = null):Array<FlxBaseModpack<FlxBaseMetadataFormat>>
+    public function getModpacks(?status:FlxModpackContainerStatus = ALL):Array<FlxBaseModpack<FlxBaseMetadataFormat>>
     {
         var result:Array<FlxBaseModpack<FlxBaseMetadataFormat>> = [];
         
@@ -30,9 +30,9 @@ class FlxModpackContainer extends FlxTypedContainer<FlxBaseModpack<FlxBaseMetada
         {
             switch (status)
             {
-                default: if (type == null || modpack.type == type) result.push(modpack);
-                case ACTIVE: if ((type == null || modpack.type == type) && modpack.active != false) result.push(modpack);
-                case INACTIVE: if ((type == null || modpack.type == type) && modpack.active != true) result.push(modpack);
+                default: result.push(modpack);
+                case ACTIVE: if (modpack.active != false) result.push(modpack);
+                case INACTIVE: if (modpack.active != true) result.push(modpack);
             }
         }
 

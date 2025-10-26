@@ -65,7 +65,6 @@ class PolymodModpack extends FlxBaseModpack<PolymodMetadataFormat>
 
 	override public function fromMetadata(metadata:PolymodMetadataFormat):FlxBaseModpack<PolymodMetadataFormat>
 	{
-        this.type = POLYMOD;
 		this.metadata = metadata;
 
 		this.title = metadata.title;

@@ -8,20 +8,17 @@ import flixel.util.helpers.FlxStringHelper;
 import haxe.Ini;
 
 /**
- * Represents the different supported types of modpacks in FlxModding.
+ * Defines a single mod package entry used by the modding system.
  * 
- * Each type corresponds to a distinct system or integration method:
- * - FLIXEL: Standard Flixel-style modpacks using the built-in structure.
- * - POLYMOD: Modpacks using the Polymod library for patching/modifying content.
- * - LEGACY: The legacy version type of Flixel modpacks.
- * - CUSTOM: A user-defined or specialized modpack format outside the defaults.
+ * Each `FlxModPackage` represents a specific modpack configuration,
+ * including its name, the base modpack class it uses, and the metadata
+ * format class associated with it.
  */
-enum FlxModpackType
+typedef FlxModPackage =
 {
-    FLIXEL;
-    POLYMOD;
-	LEGACY;
-    CUSTOM;
+	var name:String; // The unique name identifier for the mod package
+	var cls:Class<FlxBaseModpack<Dynamic>>; // Reference to the core modpack class used to handle loading and functionality
+	var meta:Class<FlxBaseMetadataFormat>; // Reference to the metadata format class that defines how mod info is structured
 }
 
 /**
@@ -37,13 +34,6 @@ enum FlxModpackType
 @:autoBuild(flixel.util.FlxModUtil.buildModpack())
 class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 {
-	/**
-	 * The type of modpack (Flixel, Polymod, Legacy, or Custom).
-	 * Determines how the system treats this mod when loading metadata, assets, or icons.
-	 * You can use this to handle legacy mods or introduce entirely new mod formats.
-	 */
-	public var type:FlxModpackType;
-
 	/**
 	 * The metadata information for this modpack.
 	 * Stores details such as name, version, description, and other fields
@@ -73,16 +63,7 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 	public function new(file:String, metadata:Class<MetaFormat>)
 	{
 		this.file = file;
-
 		this.metadata = Type.createInstance(metadata, []);
-
-		switch (metadata)
-		{
-			case FlxMetadataFormat: this.type = FLIXEL;
-			case PolymodMetadataFormat: this.type = POLYMOD;
-			case FlxLegacyMetadataFormat: this.type = LEGACY;
-			default: this.type = CUSTOM;
-		}
 
 		super();
 
@@ -129,11 +110,8 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 		{
 			return directory() + "/" + Reflect.field(Type.getClass(metadata), "configPath");
 		}
-		else
-		{
-			FlxG.log.warn("Failed to locate config directory, config file path has not been setup via metadata macro.");
-			return "";
-		}
+		
+		return directory() + "/_unknown_config_file_name.ini";
 	}
 
 
@@ -201,10 +179,10 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 
 	override public function destroy():Void
     {
+		file = null;
 		metadata = null;
 
-		type = null;
-		file = null;
+		config = null;
 
         super.destroy();   
     }
