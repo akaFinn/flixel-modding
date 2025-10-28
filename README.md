@@ -1,12 +1,11 @@
-![](assets/images/logo_normal.png?raw=true)
+![](images/logo/normal.png?raw=true)
 ### Design by [l0go](https://github.com/l0go)
 
 [![Haxelib Version](https://badgen.net/haxelib/v/flixel-modding)](https://lib.haxe.org/p/flixel-modding)
 [![Haxelib Downloads](https://badgen.net/haxelib/d/flixel-modding?color=green)](https://lib.haxe.org/p/flixel-modding/versions/)
 [![Haxelib License](https://badgen.net/haxelib/license/flixel-modding?color=red)](LICENSE)
 
-![](assets/images/promo.png?raw=true)
-Art by: [MyKarm](https://x.com/Mykarm09)
+![](images/misc/promo.png?raw=true)
 
 ## About
 **flixel-modding** is a robust and easy-to-use modding system built specifically for **HaxeFlixel**. It is designed to help developers add straightforward mod support to their games. Whether you're looking to allow asset replacement or loading entirely new assets from mods, flixel-modding has you covered.

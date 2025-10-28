@@ -185,11 +185,6 @@ class FlxModding
      *                            handle how files are read. Useful for embedding mods, virtual file systems,
      *                            or advanced loading scenarios beyond the default behavior.
      * 
-     * @param   assets            (Optional) A custom asset system interface (extending `IAssetSystem`)
-     *                            to manage asset grabbing and loading. Use this to hook into alternative
-     *                            asset pipelines, enable hot-reloading, or redirect asset lookups without
-     *                            relying solely on the default OpenFL/Lime systems.
-     * 
      * @param   assetDirectory    (Optional) A path that overrides the default directory for game assets.
      *                            Use this if your mod or project relies on a non-standard asset layout.
      * 
@@ -219,7 +214,7 @@ class FlxModding
         {
             for (entry in customModPackages)
             {
-                registerModPackage(entry);
+                system.registerModPackage(entry);
             }
         }
 
@@ -231,7 +226,7 @@ class FlxModding
         }
         else
         {
-            FlxModding.error("Mod Directory: '" + FlxModding.modsDirectory + "' not found. \nPlease ensure that the directory has a base file located inside of it. \nWithout this, Flixel-Modding will fail to operate as expected.");
+            FlxModding.warn("Mod Directory: '" + FlxModding.modsDirectory + "' not found. Please ensure that the directory has a base file located inside of it. Without this, Flixel-Modding will fail to operate as expected.");
             return null;
         }
     }
@@ -431,7 +426,7 @@ class FlxModding
     public static function unzip(fileName:String, bytes:Bytes):FlxBaseModpack<FlxBaseMetadataFormat>
     {
         FlxModding.log("Attempting to Unzip a modpack...");
-        FlxModding.warn("Failed to Unzip modpack, function is currently non functional.");
+        var zipFile:FlxZipFile = FlxZipUtil.unzipFromBytes(bytes);
 
         return null;
     }
@@ -512,56 +507,6 @@ class FlxModding
         signals.onModRemoved.dispatch(modpack);
     }
 
-    /**
-     * Retrieves a registered mod package by name.
-     * 
-     * Searches the internal mod package registry for a matching entry.
-     * If found, returns its data (name, modpack class, and metadata class).
-     * 
-     * @param   modpackName   The name of the mod package to retrieve.
-     * 
-     * @return                The registered mod package data, or null if no match was found.
-     */
-    public static function getModPackage(modpackName:String):FlxModPackage
-    {
-        for (entry in modPackages)
-        {
-            if (entry.name == modpackName)
-            {
-                return entry;
-            }
-        }
-
-        FlxModding.warn("Failed to get mod package, mod package could not be found.");
-        return null;
-    }
-
-    /**
-     * Registers a new mod package into the global mod package registry.
-     * 
-     * This function allows custom modpack implementations and metadata formats
-     * to be integrated into the modding system. Once registered, the package
-     * can be used for creation, loading, and other mod-related operations.
-     * 
-     * @param   modPackage   The mod package that you want to be registered
-     */
-    public static function registerModPackage(modPackage:FlxModPackage):Void
-    {
-        FlxModding.modPackages.push(modPackage);
-    }
-
-    /**
-     * Unregisters an existing mod package from the global mod package registry.
-     * 
-     * Removes the specified package so it can no longer be created or accessed.
-     * Useful when cleaning up or reloading modding configurations dynamically.
-     * 
-     * @param   modpackName   The name of the mod package to remove.
-     */
-    public static function unregisterModPackage(modpackName:String):Void
-    {
-        FlxModding.modPackages.remove(getModPackage(modpackName));
-    }
     
     /**
      * Creates a new FlxModding instance, setting up the core systems
@@ -606,9 +551,9 @@ class FlxModding
             {
                 var modpackDirectory:String = modpack.directory();
 
-                var appendDirectory:String = modpack.directory() + "/" + FlxStringHelper.DEFAULT_APPEND_PREFIX;
-                var mergeDirectory:String = modpack.directory() + "/" + FlxStringHelper.DEFAULT_MERGE_PREFIX;
-                var sourceDirectory:String = modpack.directory() + "/" + FlxScriptUtil.DEFAULT_SOURCE_PREFIX;
+                var appendDirectory:String = modpackDirectory + "/" + FlxStringHelper.DEFAULT_APPEND_PREFIX;
+                var mergeDirectory:String = modpackDirectory + "/" + FlxStringHelper.DEFAULT_MERGE_PREFIX;
+                var sourceDirectory:String = modpackDirectory + "/" + FlxScriptUtil.DEFAULT_SOURCE_PREFIX;
 
                 for (foundDirectory in [modpackDirectory, sourceDirectory, appendDirectory, mergeDirectory])
                 {
@@ -621,6 +566,57 @@ class FlxModding
         }
 
         return directory + "/" + id;
+    }
+
+    /**
+     * Retrieves a registered mod package by name.
+     * 
+     * Searches the internal mod package registry for a matching entry.
+     * If found, returns its data (name, modpack class, and metadata class).
+     * 
+     * @param   modpackName   The name of the mod package to retrieve.
+     * 
+     * @return                The registered mod package data, or null if no match was found.
+     */
+    public function getModPackage(modpackName:String):FlxModPackage
+    {
+        for (entry in modPackages)
+        {
+            if (entry.name == modpackName)
+            {
+                return entry;
+            }
+        }
+
+        FlxModding.warn("Failed to get mod package, mod package could not be found.");
+        return null;
+    }
+
+    /**
+     * Registers a new mod package into the global mod package registry.
+     * 
+     * This function allows custom modpack implementations and metadata formats
+     * to be integrated into the modding system. Once registered, the package
+     * can be used for creation, loading, and other mod-related operations.
+     * 
+     * @param   modPackage   The mod package that you want to be registered
+     */
+    public function registerModPackage(modPackage:FlxModPackage):Void
+    {
+        FlxModding.modPackages.push(modPackage);
+    }
+
+    /**
+     * Unregisters an existing mod package from the global mod package registry.
+     * 
+     * Removes the specified package so it can no longer be created or accessed.
+     * Useful when cleaning up or reloading modding configurations dynamically.
+     * 
+     * @param   modpackName   The name of the mod package to remove.
+     */
+    public function unregisterModPackage(modpackName:String):Void
+    {
+        FlxModding.modPackages.remove(getModPackage(modpackName));
     }
 
     function getDefaultAssetLibrarys():Array<String>

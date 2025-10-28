@@ -1,6 +1,6 @@
-## Changelog
+![](images/misc/changelog.png?raw=true)
 
-# [1.6.0] *BETA* - (October 24, 2025)
+# [1.6.0] *BETA* - (October 27, 2025)
 
 Modding support for HTML5 build targets, modpack unzipping, appending/merging strings, & reworked scripting
 
@@ -20,12 +20,15 @@ Modding support for HTML5 build targets, modpack unzipping, appending/merging st
 - Added `FlxModding.unzip` which takes the bytes of a .zip file and converts it to a modpack
 - Added `buildAssetSystem` and `buildFileSystem` to `FlxModding`
 - Added support for appended & merged text content in `FlxAssetSystem`
+- Added a `TODO.md` file to the github repo to showcase what I have planned for updates
 
 ### Changed
 - **[WIP]** Reworked how modpacks reload in `FlxModding.reload` to now also load zipped modpacks when found
-- Reworked `FlxModding.create` from creating modpacks via a massive and stupid switch statement to now looking thru the modding packages
+- Reworked `FlxModding.create` from creating modpacks via a massive and stupid switch statement to now looking thru the mod packages
 - **[WIP]** Completely reworked `FlxScriptUtil` so now you can execute both scripts and scripted classes without the need of other librarys
 - Moved all signals in `FlxModding` to `FlxModding.signals` as a way to make the class cleaner and easier to manage
+- Migrated `FlxAssetSystem` from `assetSystems` to `system` due to not needing any other asset systems
+- Moved `AssetModLibrary` from `FlxModding` to `FlxAssetSystem` and made it public
 - Fixed `FlxModding.init` to not let `FlxModding.reload` get called twice
 - Changed the `fromDynamicData` function from the `FlxBaseModpack` class to `fromDynamic`
 - Changed the `toString` function from `FlxBaseModpack` to also give out the file size of the modpack
@@ -34,12 +37,13 @@ Modding support for HTML5 build targets, modpack unzipping, appending/merging st
 - Changed the `iconBitmap` parameter for `FlxModding.create` to only work if it doesnt equal `null`
 - Changed the `sanitize` function to have support for Lime/OpenFL librarys
 - Changed the `redirect` function to have support for appended or merged assets
-- Changed the location of all AssetSystem's from `assetSystem` to `backends`
+- Organized Github images
 - Updated the docs
 
 ### Removed
 - Removed the custom cache system in `FlxAssetSystem`
 - Removed the `type` variable from `FlxBaseModpack`
+- Removed `IAssetSystem` & `assetSystems` folder
 
 # [1.5.0] - (Augest 30, 2025)
 

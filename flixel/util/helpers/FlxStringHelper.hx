@@ -30,7 +30,7 @@ class FlxStringHelper
 	/**
 	 * File extensions for JSON text files
 	 */	
-	public static var JSON_FILE_EXTS:Array<String> = ["json", "jsonc", "webmanifest"];
+	public static var JSON_FILE_EXTS:Array<String> = ["json", "webmanifest"];
 
 	/**
 	 * File extensions for SRT text files

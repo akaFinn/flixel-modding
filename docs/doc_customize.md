@@ -29,10 +29,12 @@ When initializing flixel-modding, you can provide your own mod package, file sys
 
 ```haxe
 var customFileSystem:IFileSystem = new CustomFileSystem();
+var customModPackages:Array<FlxModPackage> = [{name: "custom", cls: CustomModpack, meta: CustomMetadataFormat}];
+
 var customAssetPath:String = "assets_folder";
 var customModPath:String = "mods_folder";
 
-FlxModding.init({name: "custom", cls: CustomModpack, meta: CustomMetadataFormat}, customFileSystem, customAssetPath, customModPath);
+FlxModding.init(customModPackages, customFileSystem, customAssetPath, customModPath);
 ```
 
 This gives you full control over how mods are loaded, stored, and accessed within your project.

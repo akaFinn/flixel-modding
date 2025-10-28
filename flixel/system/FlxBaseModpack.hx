@@ -26,7 +26,7 @@ typedef FlxModPackage =
  * Holds all core metadata, file paths, and other properties
  * used to manage and identify a mod at runtime.
  * 
- * This class serves as the foundation for all modpack types (Flixel, Polymod, Legacy, or custom),
+ * This class serves as the foundation for all modpack types,
  * providing shared variables and basic setup behavior that specialized modpack
  * classes can build upon.
  */
@@ -37,8 +37,8 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 	/**
 	 * The metadata information for this modpack.
 	 * Stores details such as name, version, description, and other fields
-	 * defined by the chosen metadata format (Flixel, Polymod, Legacy, or custom).
-	 * This allows the system to interpret and organize mods consistently
+	 * defined by the chosen metadata format, This allows the 
+	 * system to interpret and organize mods consistently
 	 * across different formats.
 	 */
 	public var metadata:MetaFormat;
@@ -177,6 +177,9 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 		#end
 	}
 
+	/**
+	 * Clears memory
+	 */
 	override public function destroy():Void
     {
 		file = null;
