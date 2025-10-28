@@ -33,9 +33,15 @@ flixel-modding is intended for developers of HaxeFlixel games who want to:
 ### [Haxelib](https://lib.haxe.org/p/flixel-modding/)
 ### [Github](https://github.com/akaFinn/flixel-modding/tree/master)
 
-## Documentation
-[How to Setup flixel-modding](docs/doc_setup.md)
+## Documents
+### Important
 
-[How to Create modpacks flixel-modding](docs/doc_create.md)
+- ### [Changelog](CHANGELOG.md)
+- ### [Todo List](TODO.md)
+- ### [Credits](CREDITS.json)
 
-[How to Customize flixel-modding](docs/doc_customize.md)
+### Tutorials
+
+- [How to Setup flixel-modding](docs/doc_setup.md)
+- [How to Create modpacks flixel-modding](docs/doc_create.md)
+- [How to Customize flixel-modding](docs/doc_customize.md)
