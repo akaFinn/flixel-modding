@@ -69,9 +69,9 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 
 		this.ID = 0;
 		
-		if (FlxG.assets.exists(configDirectory()))
+		if (FlxModding.system.assets.exists(configDirectory()))
 		{
-			this.config = FlxStringHelper.parseIniString(FlxG.assets.getText(configDirectory()));
+			this.config = FlxStringHelper.parseIniString(FlxModding.system.assets.getText(configDirectory()));
 		}
 	}
 

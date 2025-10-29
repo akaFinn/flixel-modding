@@ -63,8 +63,7 @@ class Main extends Sprite
 ```
 
 ## More documentation
-[How to Create modpacks flixel-modding](doc_create.md)
-
-[How to Customize flixel-modding](doc_customize.md)
-
-[Back to Main Page](../README.md)
+- [How to Create modpacks flixel-modding](doc_create.md)
+- [How to Customize flixel-modding](doc_customize.md)
+- [How to Migrate to flixel-modding](doc_migrate.md)
+- [Back to Main Page](../README.md)

@@ -40,8 +40,7 @@ FlxModding.init(customModPackages, customFileSystem, customAssetPath, customModP
 This gives you full control over how mods are loaded, stored, and accessed within your project.
 
 ## More documentation
-[How to Setup flixel-modding](doc_setup.md)
-
-[How to Create modpacks flixel-modding](doc_create.md)
-
-[Back to Main Page](../README.md)
+- [How to Setup flixel-modding](doc_setup.md)
+- [How to Create modpacks flixel-modding](doc_create.md)
+- [How to Migrate to flixel-modding](doc_migrate.md)
+- [Back to Main Page](../README.md)

@@ -410,7 +410,7 @@ class FlxModding
             return null;
         }
 
-        FlxModding.error("Cannot to create modpack due to an unknown error.");
+        FlxModding.error("Cannot to Create modpack due to an unknown error.");
         return null;
     }
 
@@ -419,14 +419,14 @@ class FlxModding
     /**
      * Unzips raw byte data into a usable FlxBaseModpack instance.
      *
-     * @param bytes The raw zip archive data containing the modpack files.
+     * @param   bytes   The raw zip archive data containing the modpack files.
      * 
-     * @return      A new FlxBaseModpack instance built from the extracted data, or null if extraction fails.
+     * @return          A new FlxBaseModpack instance built from the extracted data, or null if extraction fails.
      */
     public static function unzip(fileName:String, bytes:Bytes):FlxBaseModpack<FlxBaseMetadataFormat>
     {
         FlxModding.log("Attempting to Unzip a modpack...");
-        var zipFile:FlxZipFile = FlxZipUtil.unzipFromBytes(bytes);
+        FlxModding.warn("This function is unfinished and currently non functional, sorry!");
 
         return null;
     }
@@ -667,7 +667,7 @@ class FlxModding
                 {
                     if (FlxScriptUtil.SCRIPT_FILE_EXTS.contains(Path.extension(asset)))
                     {
-                        FlxScriptUtil.buildScript(FlxG.assets.getText(asset));
+                        FlxScriptUtil.buildScript(FlxModding.system.assets.getText(asset));
                     }
                 }
             });

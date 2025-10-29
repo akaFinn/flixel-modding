@@ -1,5 +1,4 @@
 ![](images/logo/normal.png?raw=true)
-### Design by [l0go](https://github.com/l0go)
 
 [![Haxelib Version](https://badgen.net/haxelib/v/flixel-modding)](https://lib.haxe.org/p/flixel-modding)
 [![Haxelib Downloads](https://badgen.net/haxelib/d/flixel-modding?color=green)](https://lib.haxe.org/p/flixel-modding/versions/)
@@ -45,3 +44,4 @@ flixel-modding is intended for developers of HaxeFlixel games who want to:
 - [How to Setup flixel-modding](docs/doc_setup.md)
 - [How to Create modpacks flixel-modding](docs/doc_create.md)
 - [How to Customize flixel-modding](docs/doc_customize.md)
+- [How to Migrate to flixel-modding](docs/doc_migrate.md)

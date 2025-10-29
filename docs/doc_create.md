@@ -53,8 +53,7 @@ class Main extends Sprite
 After that, the create function should create the folder for the modpack, and from there you can edit it yourself by adding images, audio, data, you get the idea.
 
 ## More documentation
-[How to Setup flixel-modding](doc_setup.md)
-
-[How to Customize flixel-modding](doc_customize.md)
-
-[Back to Main Page](../README.md)
+- [How to Setup flixel-modding](doc_setup.md)
+- [How to Customize flixel-modding](doc_customize.md)
+- [How to Migrate to flixel-modding](doc_migrate.md)
+- [Back to Main Page](../README.md)
