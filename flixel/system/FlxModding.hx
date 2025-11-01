@@ -39,7 +39,6 @@ import openfl.utils.Future;
 
 //TODO: UPDATE THE DOCS!!!!
 
-
 /**
  * Central utility class for handling mod-related operations in the Flixel-Modding framework.
  * 
@@ -162,8 +161,9 @@ class FlxModding
 
     /**
      * Initializes Flixel-Modding to enable support for loading and reloading modded assets at runtime.
-     * This function sets up internal directories, formats, and systems needed to ensure mods function
-     * correctly, including file presence checks and signal hookups for automatic reloads on game reset.
+     * This function sets up internal directories, mod packages, and systems needed to ensure mods
+     * function correctly, including file presence checks and signal hookups for automatic reloads on
+     * game reset.
      * 
      * It is highly recommended that you call this method BEFORE instantiating `new FlxGame();`
      * or performing any asset-related operations to avoid misconfiguration issues.
@@ -171,27 +171,24 @@ class FlxModding
      * This setup is only available on native targets (like Windows, Mac, or Linux). 
      * It will not function in JS/HTML5 & Flash builds due to file system access restrictions.
      * 
-     * // TODO: Fix these comments
+     * @param   customModPackages  (Optional) A list of `FlxModPackage` definitions to use instead of
+     *                             the default set. Each entry defines a modpack class and metadata
+     *                             format to initialize during setup.
      * 
-     * @param   customModpack     (Optional) A pre-defined modpack class (extending `FlxBaseModpack`)
-     *                            to use instead of automatically generating one. This allows you to
-     *                            plug in a fully customized modpack.
+     * @param   fileSystem         (Optional) A custom file system interface (implementing `IFileSystem`)
+     *                             that controls how assets and mod files are accessed. Useful for
+     *                             implementing virtual file systems or custom loaders.
      * 
-     * @param   customFormat      (Optional) A metadata format class (extending `FlxBaseMetadataFormat`)
-     *                            to override the default. Use this if you want mods to load with a
-     *                            different metadata schema (e.g. custom JSON structure).
+     * @param   assetDirectory     (Optional) A path that overrides the default directory for base
+     *                             game assets. Use this if your project uses a non-standard asset
+     *                             structure or externalized data layout.
      * 
-     * @param   fileSystem        (Optional) A custom file system interface (extending `IFileSystem`) to
-     *                            handle how files are read. Useful for embedding mods, virtual file systems,
-     *                            or advanced loading scenarios beyond the default behavior.
+     * @param   modsDirectory      (Optional) A path that overrides the default mods folder used by
+     *                             Flixel-Modding. This is where all mods and related data will be
+     *                             located.
      * 
-     * @param   assetDirectory    (Optional) A path that overrides the default directory for game assets.
-     *                            Use this if your mod or project relies on a non-standard asset layout.
-     * 
-     * @param   modsDirectory     (Optional) A path that overrides the default directory used to store mods.
-     *                            This folder is where all mods and associated data should reside.
-     * 
-     * @return                    The initialized FlxModding system so it can be assigned or used directly.
+     * @return                     The initialized `FlxModding` instance, allowing for direct reference
+     *                             or reassignment in your project.
      */
 	public static function init(?customModPackages:Array<FlxModPackage>, ?fileSystem:IFileSystem, ?assetDirectory:String, ?modsDirectory:String):FlxModding
     {   
@@ -393,6 +390,11 @@ class FlxModding
 
                     system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/", Reflect.field(formatClass, "iconPath"), iconData);
                 }
+
+				if (Reflect.hasField(formatClass, "configPath"))
+                {
+					system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/", Reflect.field(formatClass, "configPath"), "");
+				}
 
                 add(cast modpack);
                 FlxModding.log("Modpack Created!");

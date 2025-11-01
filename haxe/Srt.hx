@@ -166,9 +166,15 @@ class Srt
 	}
 }
 
+/**
+ * Represents a single subtitle entry within an `.srt` (SubRip Subtitle) file.
+ * Each `SrtEntry` defines one subtitle line, containing the text that appears
+ * on screen and its timing information in seconds. This structure is typically
+ * used for parsing, displaying, or manipulating subtitles in timed media.
+ */
 typedef SrtEntry =
 {
-    var text:String;
-    var start:Float;
-    var end:Float;
+	var text:String; // The subtitle text to be displayed on screen
+	var start:Float; // The start time (in seconds) when the subtitle appears
+	var end:Float;   // The end time (in seconds) when the subtitle disappears
 }

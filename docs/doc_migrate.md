@@ -10,13 +10,13 @@ flixel-modding was built with full **Polymod compatibility**, meaning you don’
 
 First, remove Polymod from your project to avoid conflicts.
 
-### 1.1 Uninstall Polymod
+### Uninstall Polymod
 
 ```sh
 haxelib remove polymod
 ```
 
-### 1.2 Clean up your `project.xml`
+### Clean up your `project.xml`
 
 Find and remove the following line:
 

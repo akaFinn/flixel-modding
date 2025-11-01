@@ -11,7 +11,6 @@ import openfl.text.Font;
 import openfl.utils.AssetLibrary;
 import openfl.utils.AssetType;
 import openfl.utils.Assets;
-import openfl.utils.ByteArray;
 import openfl.utils.Future;
 
 #if (flixel >= "5.9.0")
@@ -59,23 +58,22 @@ class FlxAssetSystem
         {
             var santizedPathway:String = FlxModding.system.sanitize(id);
 
+            var hasMergePathway:Bool = StringTools.contains(santizedPathway, "/" + FlxStringHelper.DEFAULT_MERGE_PREFIX + "/");
+            var hasAppendPathway:Bool = StringTools.contains(santizedPathway, "/" + FlxStringHelper.DEFAULT_APPEND_PREFIX + "/");
+            var hasSourcePathway:Bool = StringTools.contains(santizedPathway, "/" + FlxScriptUtil.DEFAULT_SOURCE_PREFIX + "/");
+
             var textContent:String = FlxModding.system.fileSystem.getFileContent(santizedPathway);
             var binaryContent:Bytes = FlxModding.system.fileSystem.getFileBytes(santizedPathway);
 
             switch (type)
 		    {
                 case TEXT:
-                    var hasMergePathway:Bool = StringTools.contains(santizedPathway, "/" + FlxStringHelper.DEFAULT_MERGE_PREFIX + "/");
-                    var hasAppendPathway:Bool = StringTools.contains(santizedPathway, "/" + FlxStringHelper.DEFAULT_APPEND_PREFIX + "/");
-                    var hasSourcePathway:Bool = StringTools.contains(santizedPathway, "/" + FlxScriptUtil.DEFAULT_SOURCE_PREFIX + "/");
-
                     if (hasMergePathway || hasAppendPathway || hasSourcePathway)
                     {
                         var defaultTextContent:String = FlxModding.system.fileSystem.getFileContent(id);
 
                         if (hasMergePathway)
                         {
-
                             if (FlxStringHelper.XML_FILE_EXTS.contains(Path.extension(santizedPathway)))
                             {
                                 return FlxStringHelper.mergeXmlText(defaultTextContent, textContent);
@@ -146,17 +144,17 @@ class FlxAssetSystem
 				    return Assets.cache.getFont(santizedPathway);
 			
 			    case IMAGE:
-				    var bitmap = BitmapData.fromBytes(ByteArray.fromBytes(binaryContent));
+				    var bitmap = BitmapData.fromFile(santizedPathway);
 				    if (useCache != false) Assets.cache.setBitmapData(santizedPathway, bitmap);
 
 				    return bitmap;
 			    case SOUND:
-				    var sound = Sound.fromAudioBuffer(AudioBuffer.fromBytes(binaryContent));
+				    var sound = Sound.fromFile(santizedPathway);
 				    if (useCache != false) Assets.cache.setSound(santizedPathway, sound);
 
 				    return sound;
 			    case FONT:
-				    var font = Font.fromBytes(ByteArray.fromBytes(binaryContent));
+				    var font = Font.fromFile(santizedPathway);
 				    if (useCache != false) Assets.cache.setFont(santizedPathway, font);
 
 				    return font;

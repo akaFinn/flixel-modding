@@ -23,7 +23,7 @@ Modding support for HTML5 build targets, modpack unzipping, appending/merging st
 - Added a `TODO.md` file to the github repo to showcase what I have planned for updates
 
 ### Changed
-- **[WIP]** Reworked how modpacks reload in `FlxModding.reload` to now also load zipped modpacks when found
+- Reworked how modpacks reload in `FlxModding.reload` to now also load zipped modpacks when found
 - Reworked `FlxModding.create` from creating modpacks via a massive and stupid switch statement to now looking thru the mod packages
 - **[WIP]** Completely reworked `FlxScriptUtil` so now you can execute both scripts and scripted classes without the need of other librarys
 - Moved all signals in `FlxModding` to `FlxModding.signals` as a way to make the class cleaner and easier to manage
