@@ -17,7 +17,7 @@ class FlxVersion extends FlxBaseVersion
 	 * e.g. HaxeFlixel 3.0.4.
 	 * If this is a dev version, the git sha is included.
 	 */
-	public function toString():String
+	override public function toString():String
 	{
 		var sha = FlxVersion.sha;
 		if (sha != "")

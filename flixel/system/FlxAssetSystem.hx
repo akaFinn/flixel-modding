@@ -196,7 +196,8 @@ class FlxAssetSystem
 		}
 
 		@:privateAccess
-        addFiles(FlxModding.assetDirectory);
+        addFiles(FlxModding.ASSETS_DIRECTORY);
+
 		return list;
 	}
 
@@ -236,7 +237,7 @@ class FlxAssetSystem
     function isOpenFLAsset(id:String):Bool
     {
         @:privateAccess
-        return StringTools.startsWith(id, FlxModding.flixelDirectory) || StringTools.contains(id, ":");
+        return StringTools.startsWith(id, FlxModding.FLIXEL_DIRECTORY) || StringTools.contains(id, ":");
     }
 
     function getOpenFLAsset(id:String, type:FlxAssetType, useCache:Bool = true):Null<Any>
@@ -271,22 +272,16 @@ class AssetModLibrary extends AssetLibrary
             this.defaultLibrary = defaultLibrary;
 
             for (key in defaultLibrary.classTypes.keys())
-            {
-                if (StringTools.startsWith(key, FlxModding.flixelDirectory))
-                {
-                    this.classTypes.set(key, defaultLibrary.classTypes.get(key));
-                }
-            }
+			{
+				this.classTypes.set(key, defaultLibrary.classTypes.get(key));
+			}
 
             for (key in defaultLibrary.types.keys())
-            {
-                if (StringTools.startsWith(key, FlxModding.flixelDirectory))
-                {
-                    this.types.set(key, defaultLibrary.types.get(key));       
-                }
-            }
-        }
-    }
+			{
+				this.types.set(key, defaultLibrary.types.get(key));
+			}
+		}
+	}
 
     override public function getAsset(id:String, type:String):Dynamic
     {
@@ -357,6 +352,8 @@ class AssetModLibrary extends AssetLibrary
 
     public function existsModded(id:String, type:String):Bool
     {
+		trace(id, type);
+
         return switch (cast(type, AssetType))
 		{
 			case BINARY: FlxModding.system.assets.exists(id, BINARY);
@@ -365,7 +362,7 @@ class AssetModLibrary extends AssetLibrary
             case FONT: FlxModding.system.assets.exists(id, FONT);
 			case MUSIC, SOUND: FlxModding.system.assets.exists(id, SOUND);
 
-			default: FlxG.log.error("Unknown asset type: " + type); false;
+			default: FlxModding.system.fileSystem.exists(FlxModding.system.sanitize(id));
 		}
     }
 
@@ -397,28 +394,20 @@ class AssetModLibrary extends AssetLibrary
     override public function isLocal(id:String, type:String):Bool
     {
         if (isDefaultAsset(id))
-            return isLocalDefault(id, type);
+			return isLocalDefault(id, type);
         else
             return isLocalModded(id, type);
     }
 
     public function isLocalDefault(id:String, type:String):Bool
     {
+		trace("Attemping to check if id is local as default: " + id);
         return super.isLocal(id, type);
     }
 
     public function isLocalModded(id:String, type:String):Bool
     {
-        return switch (cast(type, AssetType))
-		{
-			case BINARY: FlxModding.system.assets.isLocal(id, BINARY);
-			case TEXT: FlxModding.system.assets.isLocal(id, TEXT);
-			case IMAGE: FlxModding.system.assets.isLocal(id, IMAGE);
-            case FONT: FlxModding.system.assets.isLocal(id, FONT);
-			case MUSIC, SOUND: FlxModding.system.assets.isLocal(id, SOUND);
-
-			default: FlxG.log.error("Unknown asset type: " + type); false;
-		}
+		return true;
     }
 
     override public function getPath(id:String):String
@@ -658,6 +647,6 @@ class AssetModLibrary extends AssetLibrary
 
     function isDefaultAsset(id:String):Bool
     {
-        return StringTools.startsWith(id, FlxModding.flixelDirectory);
+        return StringTools.startsWith(id, FlxModding.FLIXEL_DIRECTORY);
     }
 }

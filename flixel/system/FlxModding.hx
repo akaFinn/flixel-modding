@@ -65,7 +65,7 @@ class FlxModding
 	/**
 	 * The Base Flixel-Modding version, in semantic versioning syntax.
 	 */
-	public static var VERSION:FlxBaseVersion = new FlxModVersion(1, 6, 0, BETA);
+	public static var VERSION:FlxBaseVersion = new FlxModVersion(1, 6, 0);
 
     /**
      * Whether Flixel-Modding should print debug info about loading/reloading.
@@ -80,8 +80,7 @@ class FlxModding
 	public static var enabled:Bool = true;
 
 	/**
-	 * Used for grabbing, loading, or listing assets.
-	 * Acts as an alternative to `FlxG.assets`, with support for modded assets.
+	 * Current running instance of FlxModding.
 	 */
 	public static var system:FlxModding;
 
@@ -133,21 +132,26 @@ class FlxModding
     /**
      * PRIVATE API
      */
-
-    /**
-     * Default asset folder used by the system.
-     */
-    private static var assetDirectory:String = "assets";
-
-    /**
-     * Directory where all installed mods are stored.
-     */
-    private static var modsDirectory:String = "mods";
-
+    
     /**
      * Flixel-specific assets directory.
      */
-    private static inline var flixelDirectory:String = "flixel";
+    private static inline var FLIXEL_DIRECTORY:String = "flixel";
+
+    /**
+     * Directory that contain assets.
+     */
+    private static var ASSETS_DIRECTORY:String = "assets";
+
+    /**
+     * Directory that contain installed mods.
+     */
+    private static var MODS_DIRECTORY:String = "mods";
+
+    /**
+     * Blacklisted directorys that will not be affected by modpacks.
+     */
+    private static var BLACKLISTED_DIRECTORYS:Array<String> = [];
 
     /**
      * Registry of all available modding packages.
@@ -190,15 +194,17 @@ class FlxModding
      * @return                     The initialized `FlxModding` instance, allowing for direct reference
      *                             or reassignment in your project.
      */
-	public static function init(?customModPackages:Array<FlxModPackage>, ?fileSystem:IFileSystem, ?assetDirectory:String, ?modsDirectory:String):FlxModding
+	public static function init(?customModPackages:Array<FlxModPackage>, ?blacklist:Array<String>, ?fileSystem:IFileSystem, ?assetDirectory:String, ?modsDirectory:String):FlxModding
     {   
         FlxModding.signals.preInitialization.dispatch();
         FlxModding.log("Attempting to Initialize " + FlxModding.VERSION + "...");
 
         if (FlxModding.debug != false) FlxModding.log("Attempting to Initialize in prerelease mode...");
 
-        flixel.system.FlxModding.assetDirectory = assetDirectory != null ? assetDirectory : flixel.system.FlxModding.assetDirectory;
-        flixel.system.FlxModding.modsDirectory = modsDirectory != null ? modsDirectory : flixel.system.FlxModding.modsDirectory;
+        #if (!html5 && !flash)
+        FlxModding.ASSETS_DIRECTORY = assetDirectory != null ? assetDirectory : FlxModding.ASSETS_DIRECTORY;
+        FlxModding.MODS_DIRECTORY = modsDirectory != null ? modsDirectory : FlxModding.MODS_DIRECTORY;
+        if (blacklist != null) FlxModding.BLACKLISTED_DIRECTORYS = blacklist;
 
         system = new FlxModding();
         modpacks = new FlxModpackContainer();
@@ -207,7 +213,7 @@ class FlxModding
         buildAssetSystem();
         buildFileSystem(fileSystem);
 
-        if (customModPackages != null)
+        if (customModPackages != null && customModPackages.length != 0)
         {
             for (entry in customModPackages)
             {
@@ -215,7 +221,7 @@ class FlxModding
             }
         }
 
-        if (system.fileSystem.exists(FlxModding.modsDirectory + "/"))
+        if (system.fileSystem.exists(FlxModding.MODS_DIRECTORY + "/"))
 		{
             FlxModding.log("FlxModding Initialized!");
             FlxModding.signals.postInitialization.dispatch();
@@ -223,9 +229,13 @@ class FlxModding
         }
         else
         {
-            FlxModding.warn("Mod Directory: '" + FlxModding.modsDirectory + "' not found. Please ensure that the directory has a base file located inside of it. Without this, Flixel-Modding will fail to operate as expected.");
+            FlxModding.warn("Mod Directory: '" + FlxModding.MODS_DIRECTORY + "' not found. Please ensure that the directory has a base file located inside of it. Without this, Flixel-Modding will fail to operate as expected.");
             return null;
         }
+        #else
+        FlxModding.error(FlxModding.VERSION + " is running on an unsupported build target, and cannot continue initializing.");
+        return null;
+        #end
     }
 
     /**
@@ -258,9 +268,9 @@ class FlxModding
 
             if (enabled != false)
             {
-                for (modFile in system.fileSystem.readFolder(FlxModding.modsDirectory + "/"))
+                for (modFile in system.fileSystem.readFolder(FlxModding.MODS_DIRECTORY + "/"))
                 {
-                    var modFilePath:String = FlxModding.modsDirectory + "/" + modFile;
+                    var modFilePath:String = FlxModding.MODS_DIRECTORY + "/" + modFile;
                     var isZipFile:Bool = StringTools.endsWith(modFilePath, FlxZipUtil.ZIP_PREFIX);
 
                     if (system.fileSystem.isFolder(modFilePath) != false || isZipFile != false)
@@ -350,7 +360,7 @@ class FlxModding
     {
         FlxModding.log("Attempting to Create a modpack...");
         
-        if (!system.fileSystem.exists(FlxModding.modsDirectory + "/" + fileName))
+        if (!system.fileSystem.exists(FlxModding.MODS_DIRECTORY + "/" + fileName))
         {
             var modpackClass:Class<FlxBaseModpack<Dynamic>> = null;
             var formatClass:Class<FlxBaseMetadataFormat> = null;
@@ -369,15 +379,15 @@ class FlxModding
                 var modpack = Type.createInstance(modpackClass, [fileName]);
                 modpack.fromMetadata(cast metadata);
 
-                system.fileSystem.createFolder(FlxModding.modsDirectory + "/", fileName);
-                system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/", Reflect.field(formatClass, "metaPath"), metadata.toJsonString());
+                system.fileSystem.createFolder(FlxModding.MODS_DIRECTORY + "/", fileName);
+                system.fileSystem.createFile(FlxModding.MODS_DIRECTORY + "/" + fileName + "/", Reflect.field(formatClass, "metaPath"), metadata.toJsonString());
 
                 if (makeAssetFolders)
                 {
-                    for (asset in system.fileSystem.readFolder(FlxModding.assetDirectory))
+                    for (asset in system.fileSystem.readFolder(FlxModding.ASSETS_DIRECTORY))
                     {
-                        system.fileSystem.createFolder(FlxModding.modsDirectory + "/" + fileName + "/", asset);
-                        system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/" + asset + "/", "content-goes-here.txt", "");
+                        system.fileSystem.createFolder(FlxModding.MODS_DIRECTORY + "/" + fileName + "/", asset);
+                        system.fileSystem.createFile(FlxModding.MODS_DIRECTORY + "/" + fileName + "/" + asset + "/", "content-goes-here.txt", "");
                     }
                 }
 
@@ -388,12 +398,12 @@ class FlxModding
                     encodedBytes.position = 0;
                     encodedBytes.readBytes(iconData, 0, encodedBytes.length);
 
-                    system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/", Reflect.field(formatClass, "iconPath"), iconData);
+                    system.fileSystem.createFile(FlxModding.MODS_DIRECTORY + "/" + fileName + "/", Reflect.field(formatClass, "iconPath"), iconData);
                 }
 
 				if (Reflect.hasField(formatClass, "configPath"))
                 {
-					system.fileSystem.createFile(FlxModding.modsDirectory + "/" + fileName + "/", Reflect.field(formatClass, "configPath"), "");
+					system.fileSystem.createFile(FlxModding.MODS_DIRECTORY + "/" + fileName + "/", Reflect.field(formatClass, "configPath"), "");
 				}
 
                 add(cast modpack);
@@ -520,15 +530,29 @@ class FlxModding
         this.initialized = true;
     }
 
+    /**
+     * Resolves and sanitizes an asset identifier to ensure it points to a valid,
+     * loadable path within the Flixel-Modding system.
+     * 
+     * This method performs several checks and transformations to determine
+     * where an asset should be loaded from
+     * 
+     * This function helps ensure that assets can be dynamically resolved from
+     * both the base game and any enabled modpacks without requiring manual path handling.
+     * 
+     * @param   id   The raw asset identifier or relative file path to sanitize.
+     * 
+     * @return   A valid, fully-resolved file path or asset ID ready for loading.
+     */
     public function sanitize(id:String):String
     {
-        if (StringTools.startsWith(id, FlxModding.modsDirectory + "/") || StringTools.startsWith(id, FlxModding.flixelDirectory + "/"))
+        if (StringTools.startsWith(id, FlxModding.MODS_DIRECTORY + "/") || hasBlacklistedDirectory(id))
         {
             return id;
         }
-        else if (StringTools.startsWith(id, FlxModding.assetDirectory + "/"))
+        else if (StringTools.startsWith(id, FlxModding.ASSETS_DIRECTORY + "/"))
         {
-            return redirect(id.substr(Std.string(FlxModding.assetDirectory + "/").length));
+            return redirect(id.substr(Std.string(FlxModding.ASSETS_DIRECTORY + "/").length));
         }
         else if (StringTools.contains(id, ":"))
         {
@@ -543,9 +567,26 @@ class FlxModding
         }
     }
 
+    /**
+     * Redirects an asset identifier to the correct directory based on currently
+     * active modpacks. This allows Flixel-Modding to dynamically resolve assets
+     * from multiple sources without requiring explicit directory management.
+     * 
+     * The method iterates through each active and existing modpack (when modding
+     * is enabled) and searches several subdirectories for a matching file
+     * 
+     * If the asset exists in any of these locations, the directory is updated
+     * accordingly so that the final returned path correctly reflects the file’s
+     * real location on disk.
+     * 
+     * @param   id   The relative asset path or identifier to redirect.
+     * 
+     * @return   A full file path pointing to the asset’s actual location, either
+     *           within a modpack directory or the default asset directory.
+     */
     public function redirect(id:String):String
     {
-        var directory:String = FlxModding.assetDirectory;
+        var directory:String = FlxModding.ASSETS_DIRECTORY;
 
         for (modpack in FlxModding.modpacks)
         {
@@ -568,6 +609,21 @@ class FlxModding
         }
 
         return directory + "/" + id;
+    }
+
+    /**
+     *  TODO: Give this function a proper comment
+     * 
+     * @return Whether or not the provided ID is blacklisted
+     */
+    public function hasBlacklistedDirectory(id:String):Bool
+    {
+        for (directory in BLACKLISTED_DIRECTORYS)
+        {
+            return StringTools.startsWith(id, directory);
+        }
+
+        return StringTools.startsWith(id, FlxModding.FLIXEL_DIRECTORY);
     }
 
     /**
@@ -660,8 +716,8 @@ class FlxModding
                 }
             }
 
-            addFiles(FlxModding.assetDirectory, FlxModding.assetDirectory + "/");
-            addFiles(FlxModding.modsDirectory, FlxModding.modsDirectory + "/");
+            addFiles(FlxModding.ASSETS_DIRECTORY, FlxModding.ASSETS_DIRECTORY + "/");
+            addFiles(FlxModding.MODS_DIRECTORY, FlxModding.MODS_DIRECTORY + "/");
 
             FlxModding.signals.postModsReload.add(() ->
             {
@@ -693,6 +749,7 @@ class FlxModding
         FlxG.signals.postGameStart.addOnce(() -> 
         {
             FlxG.debugger.addButton(LEFT, null, () -> FlxG.openURL("https://lib.haxe.org/p/flixel-modding/")).addChild(label);
+			FlxG.console.registerClass(FlxModding);
 
             FlxG.console.registerFunction("listMods", () -> 
             {
@@ -702,17 +759,6 @@ class FlxModding
                 {
                     FlxG.log.add(modpack.toString());
                 }
-            });
-
-            FlxG.console.registerFunction("reloadMods", () -> 
-            {
-                FlxModding.reload();
-                FlxG.resetState();
-            });
-
-            FlxG.console.registerFunction("sortsMods", () -> 
-            {
-                FlxModding.sort();
             });
 
             FlxG.console.registerFunction("toggleModding", () -> 
@@ -793,7 +839,7 @@ class FlxModding
         }
         else
         {
-            #if (js && html5)
+            #if (js || html5)
             system.fileSystem = new JsFileSystem();
             #elseif sys
             system.fileSystem = new SysZipFileSystem();

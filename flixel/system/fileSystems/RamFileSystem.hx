@@ -90,7 +90,7 @@ class RamFileSystem implements IFileSystem
     public function setFolder(path:String):Void
     {
         @:privateAccess
-        folders.set(path, StringTools.startsWith(path, FlxModding.modsDirectory));
+        folders.set(path, StringTools.startsWith(path, FlxModding.MODS_DIRECTORY));
     }
 
     public function getFolder(path:String):Bool

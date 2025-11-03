@@ -50,8 +50,7 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 	public var config:Ini;
 
 	/**
-	 * The file path to the modpack archive or directory.
-	 * Used internally for locating and loading the modpack’s data.
+	 * The file name to the modpack archive or directory.
 	 */
 	var file:String;
 
@@ -81,7 +80,7 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 	 */
 	public function directory():String
 	{
-		return FlxModding.modsDirectory + "/" + file;
+		return FlxModding.MODS_DIRECTORY + "/" + file;
 	}
 
 	/**

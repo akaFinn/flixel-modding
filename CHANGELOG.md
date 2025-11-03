@@ -1,6 +1,6 @@
 ![](images/misc/changelog.png?raw=true)
 
-# [1.6.0] *BETA* - (October 27, 2025)
+# [1.6.0] *BETA* - (November 2, 2025)
 
 Modding support for HTML5 build targets, modpack unzipping, appending/merging strings, & reworked scripting
 
@@ -19,6 +19,9 @@ Modding support for HTML5 build targets, modpack unzipping, appending/merging st
 - Added the `autoLoadMods` parameter to `FlxModding.init`
 - Added `FlxModding.unzip` which takes the bytes of a .zip file and converts it to a modpack
 - Added `buildAssetSystem` and `buildFileSystem` to `FlxModding`
+- Added the `blacklist` parameter to the `FlxModding.init` function
+- Added `BLACKLISTED_DIRECTORYS` to `FlxModding` as a method of storing all blacklisted directorys that wont be affected by modpacks
+- Added `hasBlacklistedDirectory` that acts as a method to check if an id/path to an asset has a blacklisted directory
 - Added support for appended & merged text content in `FlxAssetSystem`
 - Added a `TODO.md` file to the github repo to showcase what I have planned for updates
 
@@ -37,6 +40,9 @@ Modding support for HTML5 build targets, modpack unzipping, appending/merging st
 - Changed the `iconBitmap` parameter for `FlxModding.create` to only work if it doesnt equal `null`
 - Changed the `sanitize` function to have support for Lime/OpenFL librarys
 - Changed the `redirect` function to have support for appended or merged assets
+- Changed the `assetDirectory` variable to `ASSETS_DIRECTORY`
+- Changed the `modsDirectory` variable to `MODS_DIRECTORY`
+- Changed the `flixelDirectory` variable to `FLIXEL_DIRECTORY`
 - Organized Github images
 - Updated the docs
 
