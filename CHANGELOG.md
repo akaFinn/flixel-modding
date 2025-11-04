@@ -1,6 +1,6 @@
 ![](images/misc/changelog.png?raw=true)
 
-# [1.6.0] *BETA* - (November 2, 2025)
+# [1.6.0] *BETA* - (November 3, 2025)
 
 Modding support for HTML5 build targets, modpack unzipping, appending/merging strings, & reworked scripting
 
@@ -22,7 +22,7 @@ Modding support for HTML5 build targets, modpack unzipping, appending/merging st
 - Added the `blacklist` parameter to the `FlxModding.init` function
 - Added `BLACKLISTED_DIRECTORYS` to `FlxModding` as a method of storing all blacklisted directorys that wont be affected by modpacks
 - Added `hasBlacklistedDirectory` that acts as a method to check if an id/path to an asset has a blacklisted directory
-- Added support for appended & merged text content in `FlxAssetSystem`
+- Added support for appended & merged text content in for asset systems
 - Added a `TODO.md` file to the github repo to showcase what I have planned for updates
 
 ### Changed
@@ -30,8 +30,7 @@ Modding support for HTML5 build targets, modpack unzipping, appending/merging st
 - Reworked `FlxModding.create` from creating modpacks via a massive and stupid switch statement to now looking thru the mod packages
 - **[WIP]** Completely reworked `FlxScriptUtil` so now you can execute both scripts and scripted classes without the need of other librarys
 - Moved all signals in `FlxModding` to `FlxModding.signals` as a way to make the class cleaner and easier to manage
-- Migrated `FlxAssetSystem` from `assetSystems` to `system` due to not needing any other asset systems
-- Moved `AssetModLibrary` from `FlxModding` to `FlxAssetSystem` and made it public
+- Moved `AssetModLibrary` from `FlxModding` to `lime.utils.ModdedAssetLibrary` and made it public
 - Fixed `FlxModding.init` to not let `FlxModding.reload` get called twice
 - Changed the `fromDynamicData` function from the `FlxBaseModpack` class to `fromDynamic`
 - Changed the `toString` function from `FlxBaseModpack` to also give out the file size of the modpack
@@ -47,7 +46,8 @@ Modding support for HTML5 build targets, modpack unzipping, appending/merging st
 - Updated the docs
 
 ### Removed
-- Removed the custom cache system in `FlxAssetSystem`
+- Removed the `FlxAssetSystem` class
+- Removed `FlxModding.system.assets` just use FlxG.assets, OpenFL's `Assets` class or Lime's `Assets` class 
 - Removed the `type` variable from `FlxBaseModpack`
 - Removed `IAssetSystem` & `assetSystems` folder
 

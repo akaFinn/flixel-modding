@@ -1,5 +1,6 @@
 package flixel.system;
 
+import openfl.utils.Assets;
 import flixel.system.FlxMetadataFormat.FlxLegacyMetadataFormat;
 import flixel.system.polymod.PolymodMetadataFormat;
 import flixel.util.FlxStringUtil;
@@ -68,9 +69,9 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 
 		this.ID = 0;
 		
-		if (FlxModding.system.assets.exists(configDirectory()))
+		if (Assets.exists(configDirectory()))
 		{
-			this.config = FlxStringHelper.parseIniString(FlxModding.system.assets.getText(configDirectory()));
+			this.config = FlxStringHelper.parseIniString(Assets.getText(configDirectory()));
 		}
 	}
 

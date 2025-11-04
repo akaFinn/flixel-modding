@@ -2,7 +2,6 @@ package flixel.system;
 
 import flixel.FlxG;
 import flixel.group.FlxModpackContainer;
-import flixel.system.FlxAssetSystem;
 import flixel.system.FlxBaseMetadataFormat;
 import flixel.system.FlxBaseModpack;
 import flixel.system.FlxMetadataFormat.FlxLegacyMetadataFormat;
@@ -10,6 +9,7 @@ import flixel.system.FlxMetadataFormat;
 import flixel.system.FlxModpack.FlxLegacyModpack;
 import flixel.system.FlxModpack;
 import flixel.system.debug.log.LogStyle;
+import flixel.system.frontEnds.AssetFrontEnd;
 import flixel.system.fileSystems.IFileSystem;
 import flixel.system.fileSystems.JsFileSystem;
 import flixel.system.fileSystems.RamFileSystem;
@@ -24,20 +24,18 @@ import flixel.util.FlxSort;
 import flixel.util.FlxZipUtil;
 import flixel.util.helpers.FlxStringHelper;
 import haxe.io.Bytes;
-import haxe.io.BytesInput;
 import haxe.io.Path;
-import haxe.zip.Reader;
-import lime.utils.AssetType;
 import lime.utils.Assets;
+import lime.utils.ModdedAssetLibrary;
 import openfl.display.BitmapData;
 import openfl.display.PNGEncoderOptions;
 import openfl.text.TextField;
 import openfl.text.TextFieldAutoSize;
 import openfl.text.TextFormat;
-import openfl.utils.AssetLibrary;
-import openfl.utils.Future;
 
-//TODO: UPDATE THE DOCS!!!!
+// TODO: UPDATE THE DOCS!!!!
+// TODO: Add proper support for js/html5
+// TODO: Make flash targets not crash on runtime
 
 /**
  * Central utility class for handling mod-related operations in the Flixel-Modding framework.
@@ -101,11 +99,6 @@ class FlxModding
      */
 
     /**
-     * Asset system handler for this instance.
-     */
-    public var assets:FlxAssetSystem;
-
-    /**
      * File system handler for this instance.
      * Lets you swap between different file systems (native, virtual, embedded, etc.)
      * without affecting other instances.
@@ -139,6 +132,11 @@ class FlxModding
     private static inline var FLIXEL_DIRECTORY:String = "flixel";
 
     /**
+     * Blacklisted directorys that will not be affected by modpacks.
+     */
+    private static var BLACKLISTED_DIRECTORYS:Array<String> = [];
+
+    /**
      * Directory that contain assets.
      */
     private static var ASSETS_DIRECTORY:String = "assets";
@@ -147,11 +145,6 @@ class FlxModding
      * Directory that contain installed mods.
      */
     private static var MODS_DIRECTORY:String = "mods";
-
-    /**
-     * Blacklisted directorys that will not be affected by modpacks.
-     */
-    private static var BLACKLISTED_DIRECTORYS:Array<String> = [];
 
     /**
      * Registry of all available modding packages.
@@ -164,6 +157,8 @@ class FlxModding
     ];
 
     /**
+     * TODO: Update comment to feature blacklist parameter
+     * 
      * Initializes Flixel-Modding to enable support for loading and reloading modded assets at runtime.
      * This function sets up internal directories, mod packages, and systems needed to ensure mods
      * function correctly, including file presence checks and signal hookups for automatic reloads on
@@ -213,7 +208,7 @@ class FlxModding
         buildAssetSystem();
         buildFileSystem(fileSystem);
 
-        if (customModPackages != null && customModPackages.length != 0)
+        if (customModPackages != null)
         {
             for (entry in customModPackages)
             {
@@ -279,10 +274,10 @@ class FlxModding
 
                         for (entry in modPackages)
                         {
-                            if (FlxModding.system.assets.exists(modFilePath + "/" + Reflect.field(entry.meta, "metaPath")))
+                            if (Assets.exists(modFilePath + "/" + Reflect.field(entry.meta, "metaPath")))
                             {
                                 var modpack = Type.createInstance(entry.cls, [modFile]);
-                                modpack.fromMetadata(modpack.metadata.fromDynamic(FlxStringHelper.parseJsonString(FlxModding.system.assets.getText(modpack.metaDirectory()))));
+                                modpack.fromMetadata(modpack.metadata.fromDynamic(FlxStringHelper.parseJsonString(Assets.getText(modpack.metaDirectory()))));
                                 add(cast modpack);
 
                                 continue;
@@ -677,6 +672,15 @@ class FlxModding
         FlxModding.modPackages.remove(getModPackage(modpackName));
     }
 
+    // TODO: Make everything under this line look more `professional` 
+    // because what the actual shit is this code
+    // looking like something right out of pysch engine
+
+    /**
+     * Grabs an array of the names for a default asset library
+     * 
+     * @return The names of the default asset librarys
+     */
     function getDefaultAssetLibrarys():Array<String>
     {
         var result:Array<String> = [];
@@ -690,11 +694,14 @@ class FlxModding
         return result;
     }
 
+    /**
+     * Registers each default asset library as a modded one
+     */
     function buildModdedAssetLibrarys():Void
     {   
         for (libraryName in getDefaultAssetLibrarys())
         {
-            Assets.registerLibrary(libraryName, new AssetModLibrary(Assets.getLibrary(libraryName)));
+            Assets.registerLibrary(libraryName, new ModdedAssetLibrary(Assets.getLibrary(libraryName)));
         }
     }
 
@@ -725,7 +732,7 @@ class FlxModding
                 {
                     if (FlxScriptUtil.SCRIPT_FILE_EXTS.contains(Path.extension(asset)))
                     {
-                        FlxScriptUtil.buildScript(FlxModding.system.assets.getText(asset));
+                        FlxScriptUtil.buildScript(Assets.getText(asset));
                     }
                 }
             });
@@ -818,17 +825,10 @@ class FlxModding
 
     static function buildAssetSystem():Void
     {
-        system.assets = new FlxAssetSystem();
+        // TODO: Make the asset have support for `FlxG.assets`
+        // when the user is building with the `-DFLX_CUSTOM_ASSETS_DIRECTORY="assets"` flag
+
         system.buildModdedAssetLibrarys();
-
-        #if (flixel >= "5.9.0")
-        FlxG.assets.getAssetUnsafe = system.assets.getAsset;
-        FlxG.assets.loadAsset = system.assets.loadAsset;
-        FlxG.assets.exists = system.assets.exists;
-
-        FlxG.assets.list = system.assets.list;
-        FlxG.assets.isLocal = system.assets.isLocal;
-        #end
     }
 
     static function buildFileSystem(?fileSystem:IFileSystem):Void

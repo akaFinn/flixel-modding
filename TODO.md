@@ -1,6 +1,6 @@
 ![](images/misc/todo.png?raw=true)
 
-# [1.6.0] *BETA* - (October 27, 2025)
+# [1.6.0] *BETA* - (November 3, 2025)
 
 Core improvements, extended file system support, and scripting rework for next-gen modding targets.
 
@@ -19,13 +19,14 @@ Core improvements, extended file system support, and scripting rework for next-g
 - [ ] Refactor `FlxScriptUtil` to improve execution flow between scripts and scriptables  
 - [x] Optimize `FlxModding.reload` to streamline modpack loading between zipped and unpacked formats  
 - [ ] Update internal handling of modpacks for JS/HTML5 targets to match sys-level file systems
-- [ ] Make Flash build targets not crash on runtime due to non flash target variables
+- [ ] Merge all file systems into one class instead of seperate classes
 
 ---
 
 ### Planned Removals
 - [x] Remove legacy or redundant scripting wrappers used before rework  
-- [x] Deprecate temporary file handling functions in favor of the new ZIP-based system  
+- [x] Deprecate temporary file handling functions in favor of the new ZIP-based system
+- [x] Deprecate asset system found in `FlxModding` due to it being stupid
 
 ---
 
