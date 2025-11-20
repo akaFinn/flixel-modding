@@ -46,23 +46,6 @@ class PolymodModpack extends FlxBaseModpack<PolymodMetadataFormat>
 		FlxG.openURL(homepage);	
 	}
 
-	override public function updateMetadata(?saveToDisk:Bool = true):Void
-	{
-		metadata.title = title;
-		metadata.description = description;
-		metadata.homepage = homepage;
-
-		metadata.contributors = contributors;
-
-		metadata.mod_version = version;
-		metadata.license = license;
-
-		if (saveToDisk != false)
-		{
-			FlxModding.system.fileSystem.setFileContent(metaDirectory(), metadata.toJsonString());
-		}
-	}
-
 	override public function fromMetadata(metadata:PolymodMetadataFormat):FlxBaseModpack<PolymodMetadataFormat>
 	{
 		this.metadata = metadata;

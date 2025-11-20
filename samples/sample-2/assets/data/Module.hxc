@@ -1,0 +1,33 @@
+package assets.data;
+
+class TestClass1
+{
+    public static var text:String = "Hello World!";
+
+    private static var size:Float = 64;
+
+    public static function main():Void
+    {
+        trace(text);
+        trace(size);
+
+        trace(TestClass2.text);
+        trace(TestClass2.getCoolText());
+        trace(TestClass3.text);
+    }
+}
+
+class TestClass2
+{
+    public static var text:String = "Hello Other World!";
+
+    public static function getCoolText():String
+    {
+        return "Hello Cool World!";
+    }
+}
+
+class TestClass3
+{
+    public static var text:String = "Hello Other Other World!";
+}

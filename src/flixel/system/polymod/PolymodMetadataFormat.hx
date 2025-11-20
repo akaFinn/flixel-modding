@@ -46,21 +46,6 @@ class PolymodMetadataFormat extends FlxBaseMetadataFormat
 
         return buf.toString();
 	}
-
-	override public function fromDynamic(data:Dynamic):PolymodMetadataFormat
-    {
-		this.title = data.title;
-        this.description = data.description;
-		this.homepage = data.homepage;
-
-        this.contributors = data.contributors;
-
-		this.api_version = data.api_version;
-		this.mod_version = data.mod_version;
-		this.license = data.license;
-
-        return this;
-    }
 }
 
 typedef PolymodCreditFormat = 

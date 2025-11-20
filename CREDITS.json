@@ -1,7 +1,7 @@
 [
     {
         "name": "akaFinn_",
-        "role": "Main Programmer",
+        "role": "Lead Programmer",
         "link": "https://x.com/akaFinn_"
     },
 
@@ -21,5 +21,23 @@
         "name": "Mykarm09",
         "role": "Additional Artist",
         "link": "https://x.com/Mykarm09"
+    },
+
+    {
+        "name": "MarkedAman",
+        "role": "Teaser Musician",
+        "link": "https://x.com/markedaman"
+    },
+
+    {
+        "name": "Funkin Crew' Inc.",
+        "role": "Teaser's Additional Assets",
+        "link": "https://x.com/FNF_Developers"
+    },
+
+    {
+        "name": "Polymod",
+        "role": "Inspiration",
+        "link": "https://polymod.io/"
     }
 ]

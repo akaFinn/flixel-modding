@@ -30,22 +30,26 @@ class Main extends Sprite
         FlxModding.init();
         addChild(new FlxGame(0, 0, PlayState));
 
-        FlxModding.create("newMod", new FlxMetadataFormat().fromDynamic({
-	        name: "New Awesome Mod",
-	        version: "1.2.3",
-	        description: "This is a brand new mod for the world!",
+		FlxModding.create("newMod", new FlxMetadataFormat().fromDynamic({
+			name: "My Mod!",
+			prefix: "newMod",
 
-	        credits: [
-		        {
-			        name: "your_name",
-			        title: "What role you took in making the mod",
-			        socials: "https://your-website.com"
-		        }
-	        ],
+			tags: ["new", "modding", "flixel"],
+			description: "Brand new mod for new and awesome things",
+			version: "1.2.3",
 
-	        priority: 1,
-	        active: true,
-        }), new BitmapData(128, 128));
+			credits: [
+				{
+					name: "John Doe",
+					role: "Creator",
+					links: [{title: "X", url: "https://x.com/X"}],
+				}
+			],
+
+			priority: 1,
+			enabled: true,
+			links: [{title: "HaxeFlixel", url: "https://haxeflixel.com/"}],
+		}));
     }
 }
 ```

@@ -116,13 +116,12 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 
 
 	/**
-	 * Saves the modpack’s runtime data back to the metadata.
-	 * Function is designed and made to be overridden.
-	 * 
-	 * @param   saveToDisk (Optional) Takes the runtime metadata
-	 * 	                   and saves it to the metadata file located on the disk.
+	 * Saves the modpack’s runtime data back to the metadata file.
 	 */
-	public function updateMetadata(?saveToDisk:Bool = true):Void {}
+	public function updateMetadata():Void
+	{
+		FlxModding.system.fileSystem.setFileContent(metaDirectory(), metadata.toJsonString());
+	}
 
 	/**
 	 * Loads this modpack's values from a loaded metadata format.

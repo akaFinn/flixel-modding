@@ -1,0 +1,6 @@
+package assets.data;
+
+class ImportModule
+{
+    public static var importText:String = "Hello Imported World!";
+}

@@ -12,7 +12,6 @@ import lime.app.Future;
 
 /**
  * TODO: Add comments to EVERYTHINGG!!!!
- * 
  * @author akaFinn
  * 
  * @since 1.6.0
@@ -189,6 +188,7 @@ class ModdedAssetLibrary extends AssetLibrary
     public function getTextModded(id:String):String
     {
         var santizedPathway:String = getPathModded(id);
+        var santizedExtension:String = Path.extension(santizedPathway);
         var moddedTextContent:String = FlxModding.system.fileSystem.getFileContent(santizedPathway);
         var defaultTextContent:String = FlxModding.system.fileSystem.getFileContent(id);
 
@@ -200,19 +200,19 @@ class ModdedAssetLibrary extends AssetLibrary
         {
             if (hasMergePathway)
             {
-                if (FlxStringHelper.XML_FILE_EXTS.contains(Path.extension(santizedPathway)))
+                if (FlxStringHelper.XML_FILE_EXTS.contains(santizedExtension))
                 {
                     return FlxStringHelper.mergeXmlText(defaultTextContent, moddedTextContent);
                 }
-                else if (FlxStringHelper.JSON_FILE_EXTS.contains(Path.extension(santizedPathway)))
+                else if (FlxStringHelper.JSON_FILE_EXTS.contains(santizedExtension))
                 {
                     return FlxStringHelper.mergeJsonText(defaultTextContent, moddedTextContent);
                 }
-                else if (FlxStringHelper.SRT_FILE_EXTS.contains(Path.extension(santizedPathway)))
+                else if (FlxStringHelper.SRT_FILE_EXTS.contains(santizedExtension))
                 {
                     return FlxStringHelper.mergeSrtText(defaultTextContent, moddedTextContent);
                 }
-                else if (FlxStringHelper.TEXT_FILE_EXTS.contains(Path.extension(santizedPathway)))
+                else if (FlxStringHelper.TEXT_FILE_EXTS.contains(santizedExtension))
                 {
                     return FlxStringHelper.mergePlainText(defaultTextContent, moddedTextContent);
                 }
@@ -225,19 +225,19 @@ class ModdedAssetLibrary extends AssetLibrary
 
             if (hasAppendPathway)
             {
-                if (FlxStringHelper.XML_FILE_EXTS.contains(Path.extension(santizedPathway)))
+                if (FlxStringHelper.XML_FILE_EXTS.contains(santizedExtension))
                 {
                     return FlxStringHelper.appendXmlText(defaultTextContent, moddedTextContent);
                 }
-                else if (FlxStringHelper.JSON_FILE_EXTS.contains(Path.extension(santizedPathway)))
+                else if (FlxStringHelper.JSON_FILE_EXTS.contains(santizedExtension))
                 {
                     return FlxStringHelper.appendJsonText(defaultTextContent, moddedTextContent);
                 }
-                else if (FlxStringHelper.SRT_FILE_EXTS.contains(Path.extension(santizedPathway)))
+                else if (FlxStringHelper.SRT_FILE_EXTS.contains(santizedExtension))
                 {
                     return FlxStringHelper.appendSrtText(defaultTextContent, moddedTextContent);
                 }
-                else if (FlxStringHelper.TEXT_FILE_EXTS.contains(Path.extension(santizedPathway)))
+                else if (FlxStringHelper.TEXT_FILE_EXTS.contains(santizedExtension))
                 {
                     return FlxStringHelper.appendPlainText(defaultTextContent, moddedTextContent);
                 }

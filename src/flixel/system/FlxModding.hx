@@ -57,19 +57,38 @@ import openfl.text.TextFormat;
 class FlxModding
 {
     /**
-     * PUBLIC API
+     * CONSTANT API
      */
 
-	/**
+    /**
+	 * The title of the library
+	 */
+	public static inline var LIBRARY_TITLE:String = "flixel-modding";
+
+    /**
+     * Linked for flixel-modding's haxelib page
+     */
+    public static inline var HAXELIB_LINK:String = "https://lib.haxe.org/p/flixel-modding/";
+
+    /**
+     * Linked for flixel-modding's github page
+     */
+    public static inline var GITHUB_LINK:String = "https://github.com/akaFinn/flixel-modding";
+
+    /**
 	 * The Base Flixel-Modding version, in semantic versioning syntax.
 	 */
-	public static var VERSION:FlxBaseVersion = new FlxModVersion(1, 6, 0);
+	public static inline var VERSION:String = "1.6.0-beta";
+
+    /**
+     * PUBLIC API
+     */
 
     /**
      * Whether Flixel-Modding should print debug info about loading/reloading.
      * Useful for development and troubleshooting mod issues.
      */
-    public static var debug:Bool = (FlxModding.VERSION.branch != NONE && FlxModding.VERSION.branch != null);
+    public static var debug:Bool = FlxModding.VERSION.split("-")[1] != null;
 
 	/**
 	 * Use this to toggle Flixel-Modding between on and off.
@@ -125,11 +144,6 @@ class FlxModding
     /**
      * PRIVATE API
      */
-    
-    /**
-     * Flixel-specific assets directory.
-     */
-    private static inline var FLIXEL_DIRECTORY:String = "flixel";
 
     /**
      * Blacklisted directorys that will not be affected by modpacks.
@@ -145,6 +159,11 @@ class FlxModding
      * Directory that contain installed mods.
      */
     private static var MODS_DIRECTORY:String = "mods";
+
+    /**
+     * Flixel-specific assets directory.
+     */
+    private static var FLIXEL_DIRECTORY:String = "flixel";
 
     /**
      * Registry of all available modding packages.
@@ -192,7 +211,7 @@ class FlxModding
 	public static function init(?customModPackages:Array<FlxModPackage>, ?blacklist:Array<String>, ?fileSystem:IFileSystem, ?assetDirectory:String, ?modsDirectory:String):FlxModding
     {   
         FlxModding.signals.preInitialization.dispatch();
-        FlxModding.log("Attempting to Initialize " + FlxModding.VERSION + "...");
+        FlxModding.log("Attempting to Initialize FlxModding " + FlxModding.VERSION + "...");
 
         if (FlxModding.debug != false) FlxModding.log("Attempting to Initialize in prerelease mode...");
 
@@ -228,7 +247,7 @@ class FlxModding
             return null;
         }
         #else
-        FlxModding.error(FlxModding.VERSION + " is running on an unsupported build target, and cannot continue initializing.");
+        FlxModding.error("FlxModding is running on an unsupported build target, and cannot continue initializing.");
         return null;
         #end
     }
@@ -672,16 +691,12 @@ class FlxModding
         FlxModding.modPackages.remove(getModPackage(modpackName));
     }
 
-    // TODO: Make everything under this line look more `professional` 
-    // because what the actual shit is this code
-    // looking like something right out of pysch engine
-
     /**
      * Grabs an array of the names for a default asset library
      * 
      * @return The names of the default asset librarys
      */
-    function getDefaultAssetLibrarys():Array<String>
+    private function getDefaultAssetLibrarys():Array<String>
     {
         var result:Array<String> = [];
 
@@ -697,7 +712,7 @@ class FlxModding
     /**
      * Registers each default asset library as a modded one
      */
-    function buildModdedAssetLibrarys():Void
+    private function buildModdedAssetLibrarys():Void
     {   
         for (libraryName in getDefaultAssetLibrarys())
         {
@@ -706,39 +721,51 @@ class FlxModding
     }
 
     #if hscript
-    function buildScriptedInstances():Void
+    /**
+     * Builds every single script/scripted class found within the project
+     * by sorting through each asset and checking the file extension
+     */
+    private function buildScriptedInstances():Void
     {
-        if (FlxModUtil.getDefinedBool("FLX_SCRIPTING", true))
-        {
-            var list:Array<String> = [];
+        var list:Array<String> = [];
 
-            function addFiles(directory:String, prefix = "")
+        function addFiles(directory:String, prefix = "")
+        {
+            for (path in fileSystem.readFolder(directory))
             {
-                for (path in fileSystem.readFolder(directory))
+                if (fileSystem.isFolder(directory + "/" + path))
+                    addFiles(directory + "/" + path, prefix + path + "/");
+                else
+                    list.push(prefix + path);
+            }
+        }
+
+        addFiles(FlxModding.ASSETS_DIRECTORY, FlxModding.ASSETS_DIRECTORY + "/");
+        addFiles(FlxModding.MODS_DIRECTORY, FlxModding.MODS_DIRECTORY + "/");
+
+        FlxModding.signals.postModsReload.add(() ->
+        {
+            for (path in list)
+            {
+                var santizedPath:String = FlxModding.system.sanitize(path);
+                var santizedExt:String = Path.extension(santizedPath);
+
+                if (FlxScriptUtil.SCRIPT_FILE_EXTS.contains(santizedExt))
                 {
-                    if (fileSystem.isFolder(directory + "/" + path))
-                        addFiles(directory + "/" + path, prefix + path + "/");
-                    else
-                        list.push(prefix + path);
+                    FlxScriptUtil.buildScript(santizedPath, Assets.getText(santizedPath));
+                }
+                if (FlxScriptUtil.HAXE_FILE_EXTS.contains(santizedExt) || FlxScriptUtil.MODULE_FILE_EXTS.contains(santizedExt))
+                {
+                    FlxScriptUtil.buildScriptModule(santizedPath, Assets.getText(santizedPath));
                 }
             }
-
-            addFiles(FlxModding.ASSETS_DIRECTORY, FlxModding.ASSETS_DIRECTORY + "/");
-            addFiles(FlxModding.MODS_DIRECTORY, FlxModding.MODS_DIRECTORY + "/");
-
-            FlxModding.signals.postModsReload.add(() ->
-            {
-                for (asset in list)
-                {
-                    if (FlxScriptUtil.SCRIPT_FILE_EXTS.contains(Path.extension(asset)))
-                    {
-                        FlxScriptUtil.buildScript(Assets.getText(asset));
-                    }
-                }
-            });
-        }    
+        }); 
     }
     #end
+
+    // TODO: Make everything under this line look more `professional` 
+    // because what the actual shit is this code
+    // looking like something right out of pysch engine
 
     function buildDebuggerTools():Void
     {
@@ -751,11 +778,11 @@ class FlxModding
 		label.embedFonts = true;
 		label.defaultTextFormat = new TextFormat(FlxAssets.FONT_DEBUGGER, 12, 0xffffff);
 		label.autoSize = TextFieldAutoSize.LEFT;
-		label.text = Std.string(FlxModding.VERSION);
+		label.text = Std.string("FlxModding " + FlxModding.VERSION);
 
         FlxG.signals.postGameStart.addOnce(() -> 
         {
-            FlxG.debugger.addButton(LEFT, null, () -> FlxG.openURL("https://lib.haxe.org/p/flixel-modding/")).addChild(label);
+            FlxG.debugger.addButton(LEFT, null, () -> FlxG.openURL(FlxModding.GITHUB_LINK)).addChild(label);
 			FlxG.console.registerClass(FlxModding);
 
             FlxG.console.registerFunction("listMods", () -> 

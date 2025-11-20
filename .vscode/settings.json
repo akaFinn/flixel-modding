@@ -1,0 +1,15 @@
+{
+    "lime.projectFile": "samples/sample-2/Project.xml",
+    
+    "files.associations":
+    {
+        "*.hxp": "haxe",
+        "*.hscript": "haxe",
+        "*.hclass": "haxe",
+        "*.hmodule": "haxe",
+        "*.haxe": "haxe",
+        "*.hxs": "haxe",
+        "*.hxc": "haxe",
+        "*.hxm": "haxe"
+    },
+}

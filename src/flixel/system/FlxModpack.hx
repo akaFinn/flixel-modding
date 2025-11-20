@@ -1,6 +1,6 @@
 package flixel.system;
 
-import flixel.system.FlxMetadataFormat.CreditFormat;
+import flixel.system.FlxMetadataFormat.FlxCreditFormat;
 import flixel.system.FlxMetadataFormat.FlxLegacyMetadataFormat;
 import flixel.system.FlxMetadataFormat;
 import flixel.util.FlxStringUtil;
@@ -19,6 +19,11 @@ class FlxModpack extends FlxBaseModpack<FlxMetadataFormat>
 	public var name:String;
 
 	/**
+	 * The display prefix of the modpack.
+	 */
+	public var prefix:String;
+
+	/**
 	 * The version string for the modpack.
 	 */
 	public var version:String;
@@ -29,26 +34,24 @@ class FlxModpack extends FlxBaseModpack<FlxMetadataFormat>
 	public var description:String;
 
 	/**
+	 * The version string for the modpack.
+	 */
+	public var api:String;
+
+	/**
 	 * An array of credit entries tied to the modpack.
 	 */
-	public var credits:Array<CreditFormat>;
+	public var credits:Array<FlxCreditFormat>;
 
-	override public function updateMetadata(?saveToDisk:Bool = true):Void
-	{
-		metadata.name = name;
-		metadata.version = version;
-		metadata.description = description;
+	/**
+	 * An array of tags tied to the modpack.
+	 */
+	public var tags:Array<String>;
 
-		metadata.credits = credits;
-
-		metadata.active = active;
-		metadata.priority = ID;
-
-		if (saveToDisk != false)
-		{
-			FlxModding.system.fileSystem.setFileContent(metaDirectory(), metadata.toJsonString());
-		}
-	}
+	/**
+	 * An array of link entries tied to the modpack.
+	 */
+	public var links:Array<FlxLinkInstance>;
 
     override public function destroy():Void
     {
@@ -66,13 +69,18 @@ class FlxModpack extends FlxBaseModpack<FlxMetadataFormat>
 		this.metadata = metadata;
 
 		this.name = metadata.name;
-		this.version = metadata.version;
+		this.prefix = metadata.prefix;
+
+		this.api = metadata.api;
+		this.tags = metadata.tags;
 		this.description = metadata.description;
+		this.version = metadata.version;
 
 		this.credits = metadata.credits;
 
-		this.active = metadata.active;
 		this.ID = metadata.priority;
+		this.active = metadata.enabled;
+		this.links = metadata.links;
 
 		return this;
 	}
@@ -87,24 +95,7 @@ class FlxLegacyModpack extends FlxBaseModpack<FlxLegacyMetadataFormat>
 
 	public var description:String;
 
-	public var credits:Array<CreditFormat>;
-
-	override public function updateMetadata(?saveToDisk:Bool = true):Void
-	{
-		metadata.name = name;
-		metadata.version = version;
-		metadata.description = description;
-
-		metadata.credits = credits;
-
-		metadata.active = active;
-		metadata.priority = ID;
-
-		if (saveToDisk != false)
-		{
-			FlxModding.system.fileSystem.setFileContent(metaDirectory(), metadata.toJsonString());
-		}
-	}
+	public var credits:Array<FlxLegacyCreditFormat>;
 
     override public function destroy():Void
     {

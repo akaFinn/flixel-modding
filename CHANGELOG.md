@@ -1,18 +1,32 @@
 ![](images/misc/changelog.png?raw=true)
 
-# [1.6.0] *BETA* - (November 3, 2025)
+# [1.6.0] *BETA* - (November 19, 2025)
 
 Modding support for HTML5 build targets, modpack unzipping, appending/merging strings, & reworked scripting
 
 ### Added
-- Created `haxe.Srt` a class designed for .srt files
 - Created `flixel.group.FlxModpackContainer` a container designed for modpacks only
+- Created `haxe.Srt`, `haxe.Ini`, & `haxe.Csv` all classes for their respective file types
 - **[WIP]** Created `flixel.system.fileSystems.JsFileSystem` a file system built and made for Js/HTML5 targets
 - Created `flixel.system.fileSystems.SysZipFileSystem` a file system made for grabbing & setting data for zip files when using sys
 - Created `flixel.utils.FlxZipUtil` as a way to manage and handle zip files of any kind in terms of unzipping
 - Created `flixel.utils.helpers.FlxStringHelper` as a string manager for appending, merging, ect.
+- Added some new classes designed for scripting:
+  - `flixel.system.hscript.FlxScript` a class designed for easy access to executing hscript's fast
+  - `flixel.system.hscript.FlxScriptClass` a class made for scripted classes found in scripted modules
+  - `flixel.system.hscript.FlxScriptModule` a master class made for storing imports, classes, typedefs, and package path's
+  - `flixel.system.hscript.FlxScriptTypeDef` a class designed for scripted typedefs found in scripted modules
+- Made `cachedScripts` & `cachedScriptModules` in `FlxScriptUtil` as a way to cache/store built scripts & script modules
+- Made `FlxScriptUtil.buildInterp()` & `FlxScriptUtil.buildParser()` as a quick and easy way to create hscript parsers & interps
+- Created `defaultImports` to `FlxScriptUtil` an array of `FlxModuleImport`'s that get used when building an interpreter using `buildInterp`
+- Created `buildScript` & `buildScriptModule` as a way to create scripts and script modules using just the contents of a script or module
 - Moved all signals from `FlxModding` to `FlxModding.signals` to make the class more clean
 - Added a comment to the `file` variable in `FlxBaseModpack`
+- Added `filePathToPackagePath` to `FlxScriptUtil` as a way to turn a file path into a package path
+- Added `packagePathToFilePath` to `FlxScriptUtil` as a way to turn a package path into a file path
+- Added `grabEveryFileExtension` to `FlxScriptUtil` a function that returns an array of every single file extension for scripts/modules
+- Added `parseString` & `parseModule` to `FlxScriptUtil` as simple ways to parse the contents of scripts & modules
+- Added `interp` & `parser` to `FlxScriptUtil` as static methods to hscript's `Interp` & `Parser` classes
 - Added `getModpackSize` to `FlxBaseModpack` the function grabs the file size of the modpack
 - Added `modPackages` to `FlxModding` a variable that stores each registered modding package
 - Added `registerModPackage`, `unregisterModPackage`, & `getModPackage` to `FlxModding`
@@ -24,11 +38,12 @@ Modding support for HTML5 build targets, modpack unzipping, appending/merging st
 - Added `hasBlacklistedDirectory` that acts as a method to check if an id/path to an asset has a blacklisted directory
 - Added support for appended & merged text content in for asset systems
 - Added a `TODO.md` file to the github repo to showcase what I have planned for updates
+- Added a samples folder along with some samples that I use when testing FlxModding
 
 ### Changed
 - Reworked how modpacks reload in `FlxModding.reload` to now also load zipped modpacks when found
 - Reworked `FlxModding.create` from creating modpacks via a massive and stupid switch statement to now looking thru the mod packages
-- **[WIP]** Completely reworked `FlxScriptUtil` so now you can execute both scripts and scripted classes without the need of other librarys
+- Completely reworked `FlxScriptUtil` so now you can execute both scripts and scripted classes without the need of other librarys
 - Moved all signals in `FlxModding` to `FlxModding.signals` as a way to make the class cleaner and easier to manage
 - Moved `AssetModLibrary` from `FlxModding` to `lime.utils.ModdedAssetLibrary` and made it public
 - Fixed `FlxModding.init` to not let `FlxModding.reload` get called twice

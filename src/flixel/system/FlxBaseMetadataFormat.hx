@@ -27,6 +27,14 @@ class FlxBaseMetadataFormat
 	*/
     public function fromDynamic(data:Dynamic):FlxBaseMetadataFormat
     {
+        for (field in Reflect.fields(this))
+        {
+            if (Reflect.hasField(data, field))
+            {
+                Reflect.setField(this, field, Reflect.field(data, field));
+            }
+        }
+
         return this;
     }
 }

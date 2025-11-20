@@ -1,0 +1,27 @@
+{
+	"name": "Pico Mod",
+    "prefix": "pico",
+
+	"api": "1.6.0-beta",
+    "tags": ["pico", "fnf", "asset"],
+	"description": "Replaces BF with PICO",
+    "version": "1.0.0",
+
+	"credits": [
+		{
+			"name": "akaFinn_",
+			"role": "Creator",
+			"links": [{"title": "X", "url": "https://x.com/akaFinn_"}]
+		},
+
+		{
+			"name": "PhantomArcade",
+			"role": "Artist",
+			"links": [{"title": "X", "url": "https://x.com/PhantomArcade3K"}]
+		}
+	],
+
+	"priority": 1,
+	"enabled": true,
+    "links": [{"title": "HaxeFlixel", "url": "https://haxeflixel.com/"}]
+}
