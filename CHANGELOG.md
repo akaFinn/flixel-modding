@@ -1,14 +1,14 @@
 ![](images/misc/changelog.png?raw=true)
 
-# [1.6.0] *BETA* - (November 19, 2025)
+# [1.6.0] *BETA* - (December 8, 2025)
 
 Modding support for HTML5 build targets, modpack unzipping, appending/merging strings, & reworked scripting
 
 ### Added
 - Created `flixel.group.FlxModpackContainer` a container designed for modpacks only
+- Created `haxe.semver.Version` an abstract module make for the semantic versioning syntax
 - Created `haxe.Srt`, `haxe.Ini`, & `haxe.Csv` all classes for their respective file types
-- **[WIP]** Created `flixel.system.fileSystems.JsFileSystem` a file system built and made for Js/HTML5 targets
-- Created `flixel.system.fileSystems.SysZipFileSystem` a file system made for grabbing & setting data for zip files when using sys
+- Created `flixel.system.FlxFileSystem` a file system built and made for all native build targets
 - Created `flixel.utils.FlxZipUtil` as a way to manage and handle zip files of any kind in terms of unzipping
 - Created `flixel.utils.helpers.FlxStringHelper` as a string manager for appending, merging, ect.
 - Added some new classes designed for scripting:
@@ -25,7 +25,6 @@ Modding support for HTML5 build targets, modpack unzipping, appending/merging st
 - Added `filePathToPackagePath` to `FlxScriptUtil` as a way to turn a file path into a package path
 - Added `packagePathToFilePath` to `FlxScriptUtil` as a way to turn a package path into a file path
 - Added `grabEveryFileExtension` to `FlxScriptUtil` a function that returns an array of every single file extension for scripts/modules
-- Added `parseString` & `parseModule` to `FlxScriptUtil` as simple ways to parse the contents of scripts & modules
 - Added `interp` & `parser` to `FlxScriptUtil` as static methods to hscript's `Interp` & `Parser` classes
 - Added `getModpackSize` to `FlxBaseModpack` the function grabs the file size of the modpack
 - Added `modPackages` to `FlxModding` a variable that stores each registered modding package
@@ -52,7 +51,7 @@ Modding support for HTML5 build targets, modpack unzipping, appending/merging st
 - Changed the `fileSystem` folder to `fileSystems` I know amazing
 - Changed the `assetSystem` variable's name to `assets` in `FlxModding.system`
 - Changed the `iconBitmap` parameter for `FlxModding.create` to only work if it doesnt equal `null`
-- Changed the `sanitize` function to have support for Lime/OpenFL librarys
+- Changed the `sanitize` function to have support for Lime/OpenFl librarys
 - Changed the `redirect` function to have support for appended or merged assets
 - Changed the `assetDirectory` variable to `ASSETS_DIRECTORY`
 - Changed the `modsDirectory` variable to `MODS_DIRECTORY`
@@ -65,6 +64,11 @@ Modding support for HTML5 build targets, modpack unzipping, appending/merging st
 - Removed `FlxModding.system.assets` just use FlxG.assets, OpenFL's `Assets` class or Lime's `Assets` class 
 - Removed the `type` variable from `FlxBaseModpack`
 - Removed `IAssetSystem` & `assetSystems` folder
+- Removed the fileSystems folder
+- Removed `IFileSystem`
+- Removed `JsFileSystem`
+- Removed `RamFileSystem`
+- Removed `SysFileSystem`
 
 # [1.5.0] - (Augest 30, 2025)
 

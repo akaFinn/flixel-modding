@@ -41,7 +41,7 @@ Polymod usually had something like this:
 ```haxe
 Polymod.init({
     modRoot: "mods",
-    dirs: ["example_mod"],
+    dirs: Polymod.scan(),
     framework: PolymodFramework.FLIXEL
 });
 ```

@@ -1,21 +1,17 @@
 package lime.utils;
 
 import flixel.FlxG;
-import haxe.io.Path;
 import flixel.util.FlxScriptUtil;
 import flixel.util.helpers.FlxStringHelper;
+import flixel.system.FlxModding;
 import lime.text.Font;
 import lime.media.AudioBuffer;
 import lime.graphics.Image;
-import flixel.system.FlxModding;
 import lime.app.Future;
+import openfl.text.Font as OpenFlFont;
+import haxe.io.Bytes as HaxeBytes;
+import haxe.io.Path;
 
-/**
- * TODO: Add comments to EVERYTHINGG!!!!
- * @author akaFinn
- * 
- * @since 1.6.0
- */
 @:access(flixel.system.FlxModding)
 class ModdedAssetLibrary extends AssetLibrary
 {
@@ -145,7 +141,6 @@ class ModdedAssetLibrary extends AssetLibrary
 
     public function isLocalDefault(id:String, type:String):Bool
     {
-		trace("Checking if id is local as default: " + id);
         return super.isLocal(id, type);
     }
 
@@ -295,11 +290,23 @@ class ModdedAssetLibrary extends AssetLibrary
 
     public function getImageModded(id:String):Image
     {
-        if (Assets.cache.image.exists(getPathModded(id)))
-            return Assets.cache.image.get(getPathModded(id));
+        var path:String = getPathModded(id);
+        var image:Image = null;
 
-        var image:Image = Image.fromFile(getPathModded(id));
-        Assets.cache.image.set(getPathModded(id), image);
+        if (Assets.cache.image.exists(path))
+            return Assets.cache.image.get(path);
+
+        #if sys
+        image = Image.fromBytes(FlxModding.system.fileSystem.getFileBytes(path));
+        #else
+        switch (Type.getClass(FlxModding.system.fileSystem.getFileEntry(path).data))
+        {
+            default: image = FlxModding.system.fileSystem.getFileEntry(path).data;
+            case HaxeBytes: image = Image.fromBytes(FlxModding.system.fileSystem.getFileBytes(path));
+        }
+        #end
+
+        Assets.cache.image.set(path, image);
         return image;
     }
 
@@ -318,11 +325,23 @@ class ModdedAssetLibrary extends AssetLibrary
 
     public function getAudioBufferModded(id:String):AudioBuffer
     {
-        if (Assets.cache.audio.exists(getPathModded(id)))
-            return Assets.cache.audio.get(getPathModded(id));
+        var path:String = getPathModded(id);
+        var audio:AudioBuffer = null;
 
-        var audio:AudioBuffer = AudioBuffer.fromFile(getPathModded(id));
-        Assets.cache.audio.set(getPathModded(id), audio);
+        if (Assets.cache.audio.exists(path))
+            return Assets.cache.audio.get(path);
+
+        #if sys
+        audio = AudioBuffer.fromBytes(FlxModding.system.fileSystem.getFileBytes(path));
+        #else
+        switch (Type.getClass(FlxModding.system.fileSystem.getFileEntry(path).data))
+        {
+            default: audio = FlxModding.system.fileSystem.getFileEntry(path).data;
+            case HaxeBytes: audio = AudioBuffer.fromBytes(FlxModding.system.fileSystem.getFileBytes(path));
+        }
+        #end
+
+        Assets.cache.audio.set(path, audio);
         return audio;
     }
 
@@ -341,11 +360,24 @@ class ModdedAssetLibrary extends AssetLibrary
 
     public function getFontModded(id:String):Font
     {
-        if (Assets.cache.font.exists(getPathModded(id)))
-            return Assets.cache.font.get(getPathModded(id));
+        var path:String = getPathModded(id);
+        var font:OpenFlFont = null;
 
-        var font:Font = Font.fromFile(getPathModded(id));
-        Assets.cache.font.set(getPathModded(id), font);
+        if (Assets.cache.font.exists(path))
+            return Assets.cache.font.get(path);
+
+        #if sys
+        font = OpenFlFont.fromBytes(FlxModding.system.fileSystem.getFileBytes(path));
+        #else
+        switch (Type.getClass(FlxModding.system.fileSystem.getFileEntry(path).data))
+        {
+            default: font = FlxModding.system.fileSystem.getFileEntry(path).data;
+            case HaxeBytes: font = OpenFlFont.fromBytes(FlxModding.system.fileSystem.getFileBytes(path));
+        }
+        #end
+
+        Assets.cache.font.set(path, font);
+        OpenFlFont.registerFont(font);
         return font;
     }
 

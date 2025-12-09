@@ -1,0 +1,5 @@
+package assets.data;
+
+import flixel.FlxSprite;
+
+class ScriptSprite extends FlxSprite {}

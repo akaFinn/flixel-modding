@@ -11,13 +11,16 @@ class FlxScript extends FlxBasic
 {   
     public var expr:Expr;
 
-    private var interp:Interp;
+    var origin:String;
 
     var imports:Array<FlxModuleImport>;
 
-    public function new(expr:Expr, imports:Array<FlxModuleImport>)
+    private var interp:Interp;
+
+    public function new(origin:String, expr:Expr, imports:Array<FlxModuleImport>)
     {
         this.expr = expr;
+        this.origin = origin;
 
         this.interp = FlxScriptUtil.buildInterp();
         this.imports = imports;

@@ -11,6 +11,21 @@ import haxe.macro.Expr.Field;
 class FlxModUtil
 {
     /**
+     * Default macro prefix for metadata
+     */
+    public static inline var DEFAULT_META_MACRO_PREFIX:String = "metaPrefix";
+
+    /**
+     * Default macro prefix for icons
+     */
+    public static inline var DEFAULT_ICON_MACRO_PREFIX:String = "iconPrefix";
+
+    /**
+     * Default macro prefix for configs
+     */
+    public static inline var DEFAULT_CONFIG_MACRO_PREFIX:String = "configPrefix";
+
+    /**
      * Main build macro entry point.
      * 
      * This scans the current class for the `@:buildMetadata` metadata.
@@ -37,7 +52,7 @@ class FlxModUtil
 
                     fields.push(
                     {
-                        name: "metaPath",
+                        name: FlxModUtil.DEFAULT_META_MACRO_PREFIX,
                         doc: null,
                         meta: [],
                         access: [Access.APublic, Access.AStatic],
@@ -47,7 +62,7 @@ class FlxModUtil
 
                     fields.push(
                     {
-                        name: "iconPath",
+                        name: FlxModUtil.DEFAULT_ICON_MACRO_PREFIX,
                         doc: null,
                         meta: [],
                         access: [Access.APublic, Access.AStatic],
@@ -61,7 +76,7 @@ class FlxModUtil
 
                         fields.push(
                         {
-                            name: "configPath",
+                            name: FlxModUtil.DEFAULT_CONFIG_MACRO_PREFIX,
                             doc: null,
                             meta: [],
                             access: [Access.APublic, Access.AStatic],
@@ -88,7 +103,7 @@ class FlxModUtil
                 } 
                 else 
                 {
-                    Context.error("@:buildPaths requires atleast 2 arguments (metaPath, iconPath)", cls.pos);
+                    Context.error("@:buildMetadata requires atleast 2 arguments (metaPath, iconPath)", cls.pos);
                 }
             }
         }
@@ -143,27 +158,4 @@ class FlxModUtil
 
         return fields;
     }
-
-    #if macro
-    public static function getDefinedStringRaw(value:String, defaultValue:String = ""):String
-	{
-        return Context.definedValue(value) ?? defaultValue;
-    }
-
-	public static function getDefinedBoolRaw(value:String, defaultValue:Bool = true):Bool
-	{
-		var val = getDefinedStringRaw(value);
-		return val == "" ? defaultValue : (val == 'true');
-	}
-    #end
-
-	public static macro function getDefinedString(val:String, defaultVal:String = ""):haxe.macro.Expr
-	{
-		return macro $v{getDefinedStringRaw(val, defaultVal)};
-	}
-
-	public static macro function getDefinedBool(val:String, defaultVal:Bool = true):haxe.macro.Expr
-	{
-		return macro $v{getDefinedBoolRaw(val, defaultVal)};
-	} 
 }

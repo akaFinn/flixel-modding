@@ -1,17 +1,71 @@
 package;
 
+import animate.FlxAnimate;
+import animate.FlxAnimateFrames;
+import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxState;
 import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.group.FlxGroup;
+import flixel.tweens.FlxEase;
+import flixel.tweens.FlxTween;
+import openfl.filters.ShaderFilter;
 
 class ModsState extends FlxState
 {
+	var blueFade:BlueFade = new BlueFade();
+
     override function create()
     {
         super.create();
+		FlxG.cameras.reset();
+		FlxG.camera.scroll.set(550, 200);
+		FlxG.camera.filters = [new ShaderFilter(blueFade)];
+
         buildStage();
-    }
+		buildBoyfriend();
+
+		FlxG.sound.playMusic("assets/music/stayFunky.ogg", 0, true);
+		FlxG.sound.music.pitch = 0;
+
+		blueFade.fade(0, 1, 0.5, {ease: FlxEase.quadIn});
+		FlxTween.tween(FlxG.camera.scroll, {x: 450}, 2, {ease: FlxEase.quartOut});
+		FlxTween.tween(FlxG.sound.music, {pitch: 1, volume: 1}, 1, {ease: FlxEase.quartOut});
+	}
+
+	override function update(elapsed:Float)
+	{
+		super.update(elapsed);
+
+		#if DEBUG_CONTROLS
+		if (FlxG.keys.anyPressed([A, LEFT]))
+			FlxG.camera.scroll.x -= 10;
+
+		if (FlxG.keys.anyPressed([D, RIGHT]))
+			FlxG.camera.scroll.x += 10;
+
+		if (FlxG.keys.anyPressed([W, UP]))
+			FlxG.camera.scroll.y -= 10;
+
+		if (FlxG.keys.anyPressed([S, DOWN]))
+			FlxG.camera.scroll.y += 10;
+
+		if (FlxG.keys.justPressed.R)
+			FlxG.resetState();
+		#end
+	}
+
+	function buildBoyfriend():Void
+	{
+		var bf = new FlxAnimate();
+		bf.frames = FlxAnimateFrames.fromAnimate("assets/images/bfChill");
+		bf.anim.addBySymbol("idle", "bf cs idle", 24, true);
+		bf.anim.play("idle");
+		bf.scale.set(1.4, 1.4);
+		bf.scrollFactor.set(2.6, 0.6);
+		bf.setPosition(2000, 450);
+		add(bf);
+	}
 
     function buildStage():Void
 	{

@@ -1,15 +1,17 @@
 package flixel.system;
 
-@:buildMetadata("_metadata.json", "_picture.png", "_config.ini")
+import haxe.semver.Version;
+
+@:buildMetadata("_metadata.json", "_icon.png", "_config.ini")
 class FlxMetadataFormat extends FlxBaseMetadataFormat
 {
     public var name:String;
     public var prefix:String;
 
-    public var api:String;
+    public var api:Version;
     public var tags:Array<String>;
     public var description:String;
-    public var version:String;
+    public var version:Version;
 
     public var credits:Array<FlxCreditFormat>;
 

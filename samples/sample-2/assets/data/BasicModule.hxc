@@ -1,0 +1,23 @@
+package assets.data;
+
+class BasicClass
+{
+    public var text:String;
+
+    public function new(newText:String)
+    {
+        text = newText;
+    }
+
+    public function traceText():Void
+    {
+        trace(text);
+    }
+
+    public static function buildClass():BasicClass
+    {
+        var builtClass = new BasicClass("Hello Built World!");
+        trace(buildClass.text);
+        return builtClass;
+    }
+}

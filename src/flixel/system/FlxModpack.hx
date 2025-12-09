@@ -1,5 +1,6 @@
 package flixel.system;
 
+import haxe.semver.Version;
 import flixel.system.FlxMetadataFormat.FlxCreditFormat;
 import flixel.system.FlxMetadataFormat.FlxLegacyMetadataFormat;
 import flixel.system.FlxMetadataFormat;
@@ -24,9 +25,9 @@ class FlxModpack extends FlxBaseModpack<FlxMetadataFormat>
 	public var prefix:String;
 
 	/**
-	 * The version string for the modpack.
+	 * The version for the modpack.
 	 */
-	public var version:String;
+	public var version:Version;
 
 	/**
 	 * A short description of the modpack, usually one or two sentences.
@@ -34,9 +35,9 @@ class FlxModpack extends FlxBaseModpack<FlxMetadataFormat>
 	public var description:String;
 
 	/**
-	 * The version string for the modpack.
+	 * The version for the modpack api.
 	 */
-	public var api:String;
+	public var api:Version;
 
 	/**
 	 * An array of credit entries tied to the modpack.
@@ -53,6 +54,9 @@ class FlxModpack extends FlxBaseModpack<FlxMetadataFormat>
 	 */
 	public var links:Array<FlxLinkInstance>;
 
+    /**
+     * Clears cache
+     */
     override public function destroy():Void
     {
 		name = null;

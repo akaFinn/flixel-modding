@@ -15,10 +15,14 @@ Or install **flixel-modding** using [git](https://git-scm.com/downloads)
 haxelib git flixel-modding https://github.com/akaFinn/flixel-modding.git
 ```
 
-Add the library to your `project.xml`.
+Add the library to your `project.xml` or `project.hxp`.
 
 ```xml
 <haxelib name="flixel-modding" />
+```
+
+```haxe
+this.haxelibs.push(new Haxelib("flixel-modding"));
 ```
 
 ## 2. Creating folders

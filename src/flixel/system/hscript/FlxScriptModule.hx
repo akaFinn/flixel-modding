@@ -1,14 +1,12 @@
 package flixel.system.hscript;
 
 #if hscript
+import flixel.util.FlxStringUtil;
 import flixel.util.FlxScriptUtil;
 import hscript.Interp;
-import hscript.Expr;
-import hscript.Expr.VarDecl;
-import hscript.Expr.FunctionDecl;
-import hscript.Expr.FieldDecl;
-import flixel.util.FlxScriptUtil.FlxClassDecl;
-import flixel.util.FlxScriptUtil.FlxTypeDecl;
+import hscript.Parser;
+import hscript.Expr.ClassDecl;
+import hscript.Expr.TypeDecl;
 
 /**
  * A class designed for scripted modules
@@ -26,6 +24,18 @@ class FlxScriptModule extends FlxBasic
 	var pkgPath:Array<String> = [];
 
 	/**
+	 * A map containing two interpreters:
+	 * one used for static access and one used for instance access.
+	 * Keys are `true` and `false` (as strings).
+	 */
+    var interp:Map<String, Interp>;
+
+	/**
+	 * Origin of the script
+	 */
+	var origin:String;
+
+	/**
 	 * Every scripted class parsed from the module.
 	 * The key is the class name, and the value is its runtime wrapper.
 	 */
@@ -35,39 +45,44 @@ class FlxScriptModule extends FlxBasic
 	 * Every typedef parsed from the module.
 	 * Stored as runtime-friendly wrappers for lookup and execution.
 	 */
-	public var typedefs:Map<String, FlxScriptTypeDef>;
+	public var typedefs:Map<String, FlxScriptTypedef>;
 
 	/**
-	 * A map containing two interpreters:
-	 * one used for static access and one used for instance access.
-	 * Keys are `true` and `false` (as strings).
+	 * Every import added from the module.
+	 * Stores the class/enum, package path, and name.
 	 */
-    private var interp:Map<String, Interp>;
+	public var imports:Map<String, FlxModuleImport> = [];
 
 	/**
 	 * Constructs a new script module from parsed class & typedef declarations.
 	 * 
-	 * @param classDecls   All parsed class declarations
-	 * @param typeDecls    All parsed typedef declarations
-	 * @param pkg          (Optional) The module's package path
+	 * @param   scriptOrigin    The origin of the script
+	 * 
+	 * @param   classDecls      All parsed class declarations
+	 * @param   typeDecls       All parsed typedef declarations
+	 * 
+	 * @param   moduleImports   All parsed module imports
+	 * @param   pkg             The module's package path
 	 */
-    public function new(classDecls:Map<String, FlxClassDecl>, typeDecls:Map<String, FlxTypeDecl>, ?pkg:Array<String> = null)
+    public function new(scriptOrigin:String, classDecls:Map<String, ClassDecl>, typeDecls:Map<String, TypeDecl>, moduleImports:Map<String, FlxModuleImport>, pkg:Array<String>)
     {
+		pkgPath = pkg;
+		origin = scriptOrigin;
+
 		interp = new Map<String, Interp>();
 		interp.set("true", FlxScriptUtil.buildInterp());
 		interp.set("false", FlxScriptUtil.buildInterp());
 
-		pkgPath = pkg;
+		imports = moduleImports;
 		classes = new Map<String, FlxScriptClass>();
-		typedefs = new Map<String, FlxScriptTypeDef>();
+		typedefs = new Map<String, FlxScriptTypedef>();
 
         super();
 
-		for (classDecl in classDecls)
-		{
-			var scriptClass = new FlxScriptClass(classDecl, this);
-			classes.set(classDecl.name, scriptClass);
-		}
+		for (moduleImport in moduleImports) addImport(moduleImport);
+
+		for (classDecl in classDecls) classes.set(classDecl.name, new FlxScriptClass(classDecl, this));
+		for (typeDecl in typeDecls) typedefs.set(typeDecl.name, new FlxScriptTypedef(typeDecl, this));
     }
 
 	/**
@@ -107,6 +122,62 @@ class FlxScriptModule extends FlxBasic
 	}
 
 	/**
+	 * Gets a script variable by name,
+	 * preserving previous interpreter values, and restoring afterwards.
+	 * 
+	 * @param   clsName     The class name to get the variable
+	 * @param   varName     The name of the variable you're getting
+	 * @param   varStatic   (Optional) Whether or not the variable is static
+	 * 
+	 * @return The variable that gets returned
+	 */
+	public function getVariable(clsName:String, varName:String, ?varStatic:Bool = true):Dynamic
+	{
+		var scriptClass:FlxScriptClass = classes[clsName];
+
+		if (scriptClass != null)
+		{
+			if (clsName != prevClsName)
+				scriptClass.reloadFields();
+
+			prevClsName = clsName;
+			return scriptClass.getVariable(varName, varStatic);
+		}
+		else
+		{
+			FlxG.log.warn('Cannot access class: "$clsName" as the class does not exist.');
+		}
+
+		return null;
+	}
+
+	/**
+	 * Sets a scruot variable by a name and value
+	 * 
+	 * @param   clsName     The class name to set the variable
+	 * @param   varName     The name of the variable you're setting
+	 * @param   varValue    The value of the variable that you're importing
+	 * @param   varStatic   (Optional) Whether or not you want the variable to be static
+	 */
+	public function setVariable(clsName:String, varName:String, varValue:Dynamic, ?varStatic:Bool = true):Void
+	{
+		var scriptClass:FlxScriptClass = classes[clsName];
+
+		if (scriptClass != null)
+		{
+			if (clsName != prevClsName)
+				scriptClass.reloadFields();
+
+			prevClsName = clsName;
+			scriptClass.setVariable(varName, varValue, varStatic);
+		}
+		else
+		{
+			FlxG.log.warn('Cannot access class: "$clsName" as the class does not exist.');
+		}
+	}
+
+	/**
 	 * Registers an imported class or enum into both interpreters.
 	 * 
 	 * @param imprt   The import information from the parsed module
@@ -124,6 +195,12 @@ class FlxScriptModule extends FlxBasic
 			getInterp(true).variables.set(imprt.name, imprt.enm);
 			getInterp(false).variables.set(imprt.name, imprt.enm);
 		}
+
+		if (imprt.dyn != null)
+		{
+			getInterp(true).variables.set(imprt.name, imprt.dyn);
+			getInterp(false).variables.set(imprt.name, imprt.dyn);
+		}
 	}
 
 	/**
@@ -139,54 +216,17 @@ class FlxScriptModule extends FlxBasic
 	}
 
 	/**
-	 * Gets the correct function declaration (static or instance)
-	 * from the given instance data and field declaration.
+	 * Converts a FlxScriptModule to a string
+	 * 
+	 * @return String
 	 */
-	public static function getFunctionDecl(instance:FlxInstanceData, fieldDecl:FieldDecl):FunctionDecl
+	override public function toString():String
 	{
-		return if (fieldDecl.access.contains(FieldAccess.AStatic)) instance.static_functionDecls[fieldDecl.name] else instance.default_functionDecls[fieldDecl.name];
+		return FlxStringUtil.getDebugString([
+			LabelValuePair.weak("path", pkgPath.join(".")),
+			LabelValuePair.weak("classes", classes),
+			LabelValuePair.weak("typedefs", typedefs),
+		]);
 	}
-
-	/**
-	 * Gets the correct variable declaration (static or instance)
-	 * from the given instance data and field declaration.
-	 */
-	public static function getVarDecl(instance:FlxInstanceData, fieldDecl:FieldDecl):VarDecl
-	{
-		return if (fieldDecl.access.contains(FieldAccess.AStatic)) instance.static_varDecls[fieldDecl.name] else instance.default_varDecls[fieldDecl.name];
-	}
-
-	/**
-	 * Determines which interpreter a field should use based on access.
-	 * Static fields use the static interpreter, everything else
-	 * falls back to the instance interpreter.
-	 */
-	private function fieldToInterp(fieldDecl:FieldDecl):Interp
-	{
-		if (fieldDecl.access.contains(FieldAccess.AStatic) || fieldDecl == null)
-		{
-			return getInterp(true);
-		}
-		else 
-		{
-			return getInterp(false);
-		}
-	}
-}
-
-/**
- * Holds all relevant information for a script class instance.
- * Includes separated maps for static and instance function/var declarations,
- * allowing for clean resolution at runtime.
- */
-typedef FlxInstanceData = 
-{
-	var fieldDecls:Map<String, FieldDecl>;
-	
-    var default_functionDecls:Map<String, FunctionDecl>;
-	var default_varDecls:Map<String, VarDecl>;
-
-	var static_functionDecls:Map<String, FunctionDecl>;
-	var static_varDecls:Map<String, VarDecl>;
 }
 #end

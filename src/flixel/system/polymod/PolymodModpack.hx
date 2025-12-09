@@ -1,7 +1,6 @@
 package flixel.system.polymod;
 
 import flixel.system.polymod.PolymodMetadataFormat.PolymodCreditFormat;
-import flixel.util.FlxStringUtil;
 
 /**
  * A specialized modpack class designed to work with the Polymod system.
@@ -41,6 +40,9 @@ class PolymodModpack extends FlxBaseModpack<PolymodMetadataFormat>
 	 */
 	public var license:String;
 
+	/**
+	 * Opens the homepage for the modpack
+	 */
 	public function openHomepage():Void
 	{
 		FlxG.openURL(homepage);	

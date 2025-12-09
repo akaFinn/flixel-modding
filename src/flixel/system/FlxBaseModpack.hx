@@ -1,5 +1,6 @@
 package flixel.system;
 
+import flixel.util.FlxModUtil;
 import openfl.utils.Assets;
 import flixel.system.FlxMetadataFormat.FlxLegacyMetadataFormat;
 import flixel.system.polymod.PolymodMetadataFormat;
@@ -69,9 +70,9 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 
 		this.ID = 0;
 		
-		if (Assets.exists(configDirectory()))
+		if (Assets.exists(getConfigDirectory()))
 		{
-			this.config = FlxStringHelper.parseIniString(Assets.getText(configDirectory()));
+			this.config = FlxStringHelper.parseIniString(Assets.getText(getConfigDirectory()));
 		}
 	}
 
@@ -79,7 +80,7 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 	 * Returns the full directory path of this modpack.
 	 * Combines the global mods directory with this mod’s folder name.
 	 */
-	public function directory():String
+	public function getDirectory():String
 	{
 		return FlxModding.MODS_DIRECTORY + "/" + file;
 	}
@@ -87,31 +88,31 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 	/**
 	 * Returns the directory path where this modpack's metadata is stored.
 	 */
-	public function metaDirectory():String
+	public function getMetaDirectory():String
 	{
-		return directory() + "/" + Reflect.field(Type.getClass(metadata), "metaPath");
+		return getDirectory() + "/" + Reflect.field(Type.getClass(metadata), FlxModUtil.DEFAULT_META_MACRO_PREFIX);
 	}
 
 	/**
 	 * Returns the directory path where the modpack's icon is located.
 	 */
-	public function iconDirectory():String
+	public function getIconDirectory():String
 	{
-		return directory() + "/" + Reflect.field(Type.getClass(metadata), "iconPath");
+		return getDirectory() + "/" + Reflect.field(Type.getClass(metadata), FlxModUtil.DEFAULT_ICON_MACRO_PREFIX);
 	}
 
 	/**
 	 * Returns the directory path where the modpack's config file is located.
 	 * Only returns a valid directory if the config file path is setup via macro.
 	 */
-	public function configDirectory():String
+	public function getConfigDirectory():String
 	{
 		if (Reflect.hasField(Type.getClass(metadata), "configPath"))
 		{
-			return directory() + "/" + Reflect.field(Type.getClass(metadata), "configPath");
+			return getDirectory() + "/" + Reflect.field(Type.getClass(metadata), FlxModUtil.DEFAULT_CONFIG_MACRO_PREFIX);
 		}
 		
-		return directory() + "/_unknown_config_file_name.ini";
+		return getDirectory() + "/_unknown_config_file_name.ini";
 	}
 
 
@@ -120,7 +121,7 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 	 */
 	public function updateMetadata():Void
 	{
-		FlxModding.system.fileSystem.setFileContent(metaDirectory(), metadata.toJsonString());
+		FlxModding.system.fileSystem.setFileContent(getDirectory(), metadata.toJsonString());
 	}
 
 	/**
@@ -170,7 +171,7 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 			return total;
 		}
 
-		return getSysFolderSize(directory());
+		return getSysFolderSize(getDirectory());
 		#else
 		return 0;
 		#end
@@ -189,11 +190,16 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
         super.destroy();   
     }
 
+    /**
+     * Turns a `FlxBaseModpack` to a debug string
+	 * 
+     * @return Converted debug string
+     */
     override public function toString():String
     {
         return FlxStringUtil.getDebugString([
 			LabelValuePair.weak("class", Type.getClassName(Type.getClass(this))),
-			LabelValuePair.weak("path", directory()),
+			LabelValuePair.weak("path", getDirectory()),
 			LabelValuePair.weak("active", active),
 			LabelValuePair.weak("size", FlxStringUtil.formatBytes(getModpackSize()))
 		]);

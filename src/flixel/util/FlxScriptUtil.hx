@@ -2,10 +2,11 @@ package flixel.util;
 
 #if hscript
 import haxe.io.Path;
+import flixel.system.hscript.FlxScriptTypedef;
+import flixel.system.hscript.FlxScriptClass;
 import flixel.system.hscript.FlxScriptModule;
 import flixel.system.hscript.FlxScript;
 import hscript.Interp;
-import hscript.Tools;
 import hscript.Parser;
 import hscript.Printer;
 import hscript.Expr;
@@ -73,8 +74,7 @@ class FlxScriptUtil
 	 * The default imports that get added to the interpreter
 	 * when one is built using `FlxScriptUtil.buildInterp()`
 	 */
-	private static var defaultImports:Array<FlxModuleImport> = [];
-
+	public static var defaultImports:Array<FlxModuleImport> = [];
 
 	// TODO: Add a comment for this function
     public static function buildScript(origin:String, content:String, ?cache:Bool = true, ?key:String = ""):FlxScript
@@ -85,7 +85,9 @@ class FlxScriptUtil
         if (cachedScripts == null)
 			cachedScripts = new Map<String, FlxScript>();
 
-		script = new FlxScript(FlxScriptUtil.parseString(content, origin), imports);
+		var expr:Expr = FlxScriptUtil.buildParser().parseString(content, origin);
+
+		script = new FlxScript(origin, expr, imports);
 
 		if (cache != false)
 		{
@@ -114,30 +116,29 @@ class FlxScriptUtil
 	 */
 	public static function buildScriptModule(origin:String, content:String, ?cache:Bool = true, ?key:String = ""):FlxScriptModule
 	{
-		var packagePath:Array<String> = null;
+		var packagePath:Array<String> = FlxScriptUtil.filePathToPackagePath(origin);
 		var scriptModule:FlxScriptModule = null;
 
 		var imports:Map<String, FlxModuleImport> = [];
-		var typedefs:Map<String, FlxTypeDecl> = [];
-		var classes:Map<String, FlxClassDecl> = [];
+		var typedefs:Map<String, TypeDecl> = [];
+		var classes:Map<String, ClassDecl> = [];
 
 		if (cachedScriptModules == null)
 			cachedScriptModules = new Map<String, FlxScriptModule>();
 
-		var module:Array<ModuleDecl> = FlxScriptUtil.parseModule(content, origin);
+		var module:Array<ModuleDecl> = FlxScriptUtil.buildParser().parseModule(content, origin);
 
 		for (decl in module)
 		{
 			switch (decl)
 			{
 				case DPackage(path):
-					packagePath = path;
+					var newPath:Array<String> = path;
+					newPath.push(packagePath[packagePath.length - 1]);
+
+					packagePath = newPath;
 
 				case DImport(path, everything):
-					// TODO: Add support for importing scripted modules, 
-					// should it check if the scripted one exists first? 
-					// Yeah sure that works
-
 					var clsName:String = path[path.length - 1];
 					var clsPath:String = path.join(".");
 
@@ -148,140 +149,189 @@ class FlxScriptUtil
 						name: clsName,
 						path: clsPath,
 						pkg: clsPkg,
+
 						cls: null,
 						enm: null,
+						
+						dyn: null,
 					};
 
-					var builtClass:Class<Dynamic> = Type.resolveClass(clsPath);
-					var builtEnum:Enum<Dynamic> = Type.resolveEnum(clsPath);
+					// TODO: Add support for also grabbing scripted classes and not just the module
+					// TODO: Add support for grabbing every module found within a path via that `everything` parameter
 
-					if (builtClass != null) importedModule.cls = builtClass;
-					if (builtEnum != null) importedModule.enm = builtEnum;
-
-					if (builtClass == null && builtEnum == null)
+					switch (everything)
 					{
-						trace(clsPath);
+						case true:
+							// TODO: Yeah get this working
+
+						case false:
+							if (FlxScriptUtil.cachedScriptModules.exists(clsPath))
+							{
+								var module:FlxScriptModule = cachedScriptModules.get(clsPath);
+
+								var scriptClass:FlxScriptClass = module.classes.get(clsName);
+								var scriptTypedef:FlxScriptTypedef = module.typedefs.get(clsName);
+
+								if (scriptClass != null && !scriptClass.decl.isPrivate)
+								{
+									var staticScriptClass:Dynamic = {};
+
+									for (field in scriptClass.decl.fields)
+									{
+										if (field.access.contains(FieldAccess.AStatic) && field.access.contains(FieldAccess.APublic))
+										{
+											Reflect.setField(staticScriptClass, field.name, scriptClass.convertFieldDecl(field));
+										}
+									}
+
+									importedModule.dyn = staticScriptClass;
+								}
+								else if (scriptTypedef != null && !scriptTypedef.decl.isPrivate)
+								{
+									// TODO: Finish this
+								}
+								else
+								{
+									FlxG.log.warn("Failed to import script module, could not find class nor typedef.");
+								}
+							}
+							else
+							{
+								var builtClass:Class<Dynamic> = Type.resolveClass(clsPath);
+								var builtEnum:Enum<Dynamic> = Type.resolveEnum(clsPath);
+
+								if (builtClass != null) importedModule.cls = builtClass;
+								if (builtEnum != null) importedModule.enm = builtEnum;
+							} 
 					}
 
 					imports.set(clsName, importedModule);
 
 				case DClass(c):
-					var superClass:Null<CType> = c.extend;
-
-					if (superClass != null)
-					{
-						var superClassPath:Array<String> = new Printer().typeToString(superClass).split(".");
-						var superClassName:String = superClassPath[superClassPath.length - 1];
-
-						if (imports.exists(superClassName))
-						{
-							var superClassImport = imports.get(superClassName);
-
-							if (superClassImport.cls == null)
-							{
-								FlxG.log.warn("Could not import super class due to it not being imported before hand");
-							}
-							
-							switch (superClass)
-							{
-								case CTPath(path, params):
-									superClass = CTPath(superClassPath, params);
-								default:
-									// TODO: Add more support?
-							}
-						}
-					}
-
-					var classDecl:FlxClassDecl =
-					{
-						name: c.name,
-						meta: c.meta,
-						fields: c.fields,
-						params: c.params,
-						extend: c.extend,
-						isPrivate: c.isPrivate,
-						isExtern: c.isExtern,
-						implement: c.implement,
-						imports: imports,
-						pkg: packagePath,
-					}
-
-					classes.set(classDecl.name, classDecl);
+					classes.set(c.name, c);
 
 				case DTypedef(c):
-					var typeDecl:FlxTypeDecl = 
-					{
-						t: c.t,
-						name: c.name,
-						meta: c.meta,
-						params: c.params,
-						isPrivate: c.isPrivate,
-						imports: imports,
-						pkg: packagePath,
-					}
-
-					typedefs.set(typeDecl.name, typeDecl);
+					typedefs.set(c.name, c);
 			}
 		}
 
-		scriptModule = new FlxScriptModule(classes, typedefs, packagePath);
+		scriptModule = new FlxScriptModule(origin, classes, typedefs, imports, packagePath);
 		
 		if (cache != false)
 		{
 			if (key == null || key == "")
-				key = origin;
+				key = packagePath.join(".");
 
-			cachedScriptModules.set(FlxScriptUtil.filePathToPackagePath(key).join("."), scriptModule);
+			cachedScriptModules.set(key, scriptModule);
 		}
 
 		return scriptModule;
 	}
 
 	/**
-	 * Parses the contents of a script and converts it into an `Expr`
+	 * Calls a function inside a scripted module's class.
 	 * 
-	 * @param   content   The content that will get parsed
-	 * @param   origin    (Optional) the origin of the content
+	 * @param   moduleKey    The name/key of the module that was cached
+	 * @param   clsName    The class inside the module where the function exists
 	 * 
-	 * @return  The converted `Expr`
+	 * @param   funcName   The name of the function being called
+	 * @param   funcArgs   (Optional) Arguments that will be passed to the function
+	 * 
+	 * @return  The returned value from the scripted function, or null if the module does not exist
 	 */
-	public static function parseString(content:String, ?origin:String = FlxScriptUtil.DEFAULT_SCRIPT_ORIGIN):Expr
+	public static function callFunction(moduleKey:String, clsName:String, funcName:String, ?funcArgs:Array<Dynamic> = null):Dynamic
 	{
-		return FlxScriptUtil.parser.parseString(content, origin);
+		if (cachedScriptModules.exists(moduleKey))
+		{
+			return cachedScriptModules[moduleKey].callFunction(clsName, funcName, funcArgs);
+		}
+		else
+		{
+			FlxG.log.warn('Cannot access module: "$moduleKey" as the module does not exist.');
+		}
+		
+		return null;
 	}
 
 	/**
-	 * Parses the contents of a script module and converts it into an array of `ModuleDecl`'s
+	 * Retrieves a variable from a scripted module's class.
 	 * 
-	 * @param   content   The content that will get parsed
-	 * @param   origin    (Optional) the origin of the content
+	 * @param   moduleKey     The name/key of the module that was cached
+	 * @param   clsName     The class inside the module where the variable exists
 	 * 
-	 * @return  The converted array of `ModuleDecl`'s
+	 * @param   varName     The variable name being retrieved
+	 * @param   varStatic   (Optional) If true, grabs a static variable; otherwise grabs an instance variable
+	 * 
+	 * @return  The variable's value, or null if the module does not exist
 	 */
-	public static function parseModule(content:String, ?origin:String = FlxScriptUtil.DEFAULT_SCRIPT_ORIGIN):Array<ModuleDecl>
+	public static function getVariable(moduleKey:String, clsName:String, varName:String, ?varStatic:Bool = true):Dynamic
 	{
-		return FlxScriptUtil.parser.parseModule(content, origin);
+		if (cachedScriptModules.exists(moduleKey))
+		{
+			return cachedScriptModules[moduleKey].getVariable(clsName, varName, varStatic);
+		}
+		else
+		{
+			FlxG.log.warn('Cannot access module: "$moduleKey" as the module does not exist.');
+		}
+		
+		return null;
 	}
 
 	/**
-	 * Adds a default `FlxModuleImport` to the default imports variable,
-	 * which can then be used when building an interpreter
+	 * Sets a variable inside a scripted module's class.
 	 * 
-	 * @param   value   The `FlxModuleImport` that your adding
+	 * @param   moduleKey     The name/key of the module that was cached
+	 * @param   clsName     The class inside the module where the variable exists
+	 * 
+	 * @param   varName     The variable name being modified
+	 * @param   varValue    The new value to assign to the variable
+	 * @param   varStatic   (Optional) If true, modifies a static variable; otherwise an instance variable
 	 */
-	public static function addDefaultImport(value:FlxModuleImport):Void
+	public static function setVariable(moduleKey:String, clsName:String, varName:String, varValue:Dynamic, ?varStatic:Bool = true):Void
 	{
-		FlxScriptUtil.defaultImports.push(value);
+		if (cachedScriptModules.exists(moduleKey))
+		{
+			cachedScriptModules[moduleKey].setVariable(clsName, varName, varValue, varStatic);
+		}
+		else
+		{
+			FlxG.log.warn('Cannot access module: "$moduleKey" as the module does not exist.');
+		}
 	}
 
 	/**
-	 * Removes a `FlxModuleImport` from the default imports variable
+	 * Grabs every scripted class across all cached modules that directly
+	 * extends the given Haxe class.
 	 * 
-	 * @param   value   The `FlxModuleImport` that your removing
+	 * @param   cls   The class type being checked against scripted classes
+	 * 
+	 * @return  An array of `FlxScriptClass` entries whose superclass matches `cls`
 	 */
-	public static function removeDefaultImport(value:FlxModuleImport):Void
+	public static function getClassesExtending(cls:Class<Dynamic>):Array<FlxScriptClass>
 	{
-		FlxScriptUtil.defaultImports.remove(value);
+		var result:Array<FlxScriptClass> = [];
+		
+		for (scriptModule in cachedScriptModules)
+		{
+			for (scriptClass in scriptModule.classes)
+			{
+				if (scriptClass.superClass == cls)
+				{
+					result.push(scriptClass);
+				}
+			}
+		}
+
+		return result;
+	}
+
+	public static function reloadScript(key:String):Void
+	{
+		if (FlxScriptUtil.cachedScripts.exists(key))
+		{
+			
+		}
 	}
 
     /**
@@ -316,21 +366,29 @@ class FlxScriptUtil
 		interp.variables.set("Reflect", Reflect);
 		interp.variables.set("StringTools", StringTools);
 		interp.variables.set("DateTools", DateTools);
+		interp.variables.set("Lambda", Lambda);
 
 		#if sys
 		interp.variables.set("Sys", Sys);
 		#end
 
-		for (defaultImport in defaultImports)
+		if (defaultImports != null)
 		{
-			var builtClass:Class<Dynamic> = defaultImport.cls;
-			var builtEnum:Enum<Dynamic> = defaultImport.enm;
+			for (defaultImport in defaultImports)
+			{
+				var builtClass:Class<Dynamic> = defaultImport.cls;
+				var builtEnum:Enum<Dynamic> = defaultImport.enm;
+				var buildDynamic:Dynamic = defaultImport.dyn;
 
-			if (builtClass != null) 
-				interp.variables.set(defaultImport.name, builtClass);
-			
-			if (builtEnum != null) 
-				interp.variables.set(defaultImport.name, builtEnum);
+				if (builtClass != null) 
+					interp.variables.set(defaultImport.name, builtClass);
+
+				if (builtEnum != null) 
+					interp.variables.set(defaultImport.name, builtEnum);
+
+				if (buildDynamic != null) 
+					interp.variables.set(defaultImport.name, buildDynamic);
+			}
 		}
 
         return interp;
@@ -374,26 +432,6 @@ class FlxScriptUtil
 	 */
 	private static function grabEveryFileExtension():Array<String>
 	{
-		/*
-			Why don't you help them, you double-dealing manipulator?
-
-			What's in it for me?
-			I don't work for free
-			You want help, well, you know the fee
-
-			I will not reward a snake like you
-
-			You'll watch them die unless you do
-
-			Liar, you wouldn't dare
-
-			Quid pro quo, it's only fair
-
-			You really are a demon, pet
-
-			You knew my game the day we met
-		*/
-
 		return HAXE_FILE_EXTS.concat(MODULE_FILE_EXTS).concat(SCRIPT_FILE_EXTS);
 	}
 }
@@ -408,37 +446,11 @@ typedef FlxModuleImport =
 {
     var name:String;
     var path:String;
-	@:optional var pkg:Array<String>;
+	var pkg:Array<String>;
+
 	@:optional var cls:Class<Dynamic>;
 	@:optional var enm:Enum<Dynamic>;
-}
 
-/**
- * Represents a typedef declaration parsed from a script module.
- * 
- * Stores the base hscript `TypeDecl` data along with any extra
- * metadata, parameters, imports, and the typedef's package path.
- */
-typedef FlxTypeDecl = 
-{
-    > TypeDecl,
-
-    @:optional var pkg:Array<String>;
-    @:optional var imports:Map<String, FlxModuleImport>;
-}
-
-/**
- * Represents a full class declaration parsed from a script module.
- * 
- * Contains all the information needed to recreate or register a
- * scripted class: fields, params, metadata, inheritance, imports,
- * and the class's package path.
- */
-typedef FlxClassDecl = 
-{
-    > ClassDecl,
-
-    @:optional var pkg:Array<String>;
-    @:optional var imports:Map<String, FlxModuleImport>;
+	@:optional var dyn:Dynamic;
 }
 #end

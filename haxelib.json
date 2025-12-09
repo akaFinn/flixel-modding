@@ -11,5 +11,5 @@
 	"contributors": ["akaFinn", "therealjake_12"],
 
 	"classPath": "src",
-	"dependencies": {"flixel": "", "hscript": "2.6.0"}
+	"dependencies": {"flixel": "", "hscript": ""}
 }

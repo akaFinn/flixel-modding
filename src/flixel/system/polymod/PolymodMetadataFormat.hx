@@ -1,6 +1,10 @@
 package flixel.system.polymod;
 
+#if !polymod
 @:buildMetadata("_polymod_meta.json", "_polymod_icon.png")
+#else
+@:buildMetadata(polymod.PolymodConfig.modMetadataFile, polymod.PolymodConfig.modIconFile)
+#end
 class PolymodMetadataFormat extends FlxBaseMetadataFormat
 {
     public var title:String;

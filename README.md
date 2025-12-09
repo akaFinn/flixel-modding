@@ -17,10 +17,7 @@
 
 ## Requirements
 - HaxeFlixel
-- (Optional) HScript 2.6.0+
-
-## Limitations
-- You cannot use flixel-modding for JavaScript/HTML5 or Flash targets.
+- HScript
 
 ## Intended Usage
 flixel-modding is intended for developers of HaxeFlixel games who want to:

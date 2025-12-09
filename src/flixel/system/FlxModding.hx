@@ -1,5 +1,7 @@
 package flixel.system;
 
+import flixel.system.FlxFileSystem;
+import flixel.util.FlxModUtil;
 import flixel.FlxG;
 import flixel.group.FlxModpackContainer;
 import flixel.system.FlxBaseMetadataFormat;
@@ -10,14 +12,8 @@ import flixel.system.FlxModpack.FlxLegacyModpack;
 import flixel.system.FlxModpack;
 import flixel.system.debug.log.LogStyle;
 import flixel.system.frontEnds.AssetFrontEnd;
-import flixel.system.fileSystems.IFileSystem;
-import flixel.system.fileSystems.JsFileSystem;
-import flixel.system.fileSystems.RamFileSystem;
-import flixel.system.fileSystems.SysFileSystem;
-import flixel.system.fileSystems.SysZipFileSystem;
 import flixel.system.polymod.PolymodMetadataFormat;
 import flixel.system.polymod.PolymodModpack;
-import flixel.util.FlxModUtil;
 import flixel.util.FlxScriptUtil;
 import flixel.util.FlxSignal;
 import flixel.util.FlxSort;
@@ -25,6 +21,7 @@ import flixel.util.FlxZipUtil;
 import flixel.util.helpers.FlxStringHelper;
 import haxe.io.Bytes;
 import haxe.io.Path;
+import haxe.semver.Version;
 import lime.utils.Assets;
 import lime.utils.ModdedAssetLibrary;
 import openfl.display.BitmapData;
@@ -61,6 +58,11 @@ class FlxModding
      */
 
     /**
+	 * The Base Flixel-Modding version, in semantic versioning syntax.
+	 */
+	public static final VERSION:Version = "1.6.0-beta.17";
+
+    /**
 	 * The title of the library
 	 */
 	public static inline var LIBRARY_TITLE:String = "flixel-modding";
@@ -76,11 +78,6 @@ class FlxModding
     public static inline var GITHUB_LINK:String = "https://github.com/akaFinn/flixel-modding";
 
     /**
-	 * The Base Flixel-Modding version, in semantic versioning syntax.
-	 */
-	public static inline var VERSION:String = "1.6.0-beta";
-
-    /**
      * PUBLIC API
      */
 
@@ -88,7 +85,7 @@ class FlxModding
      * Whether Flixel-Modding should print debug info about loading/reloading.
      * Useful for development and troubleshooting mod issues.
      */
-    public static var debug:Bool = FlxModding.VERSION.split("-")[1] != null;
+    public static var debug:Bool = Version.isDevelopment(FlxModding.VERSION);
 
 	/**
 	 * Use this to toggle Flixel-Modding between on and off.
@@ -119,10 +116,8 @@ class FlxModding
 
     /**
      * File system handler for this instance.
-     * Lets you swap between different file systems (native, virtual, embedded, etc.)
-     * without affecting other instances.
      */
-    public var fileSystem:IFileSystem;
+    public var fileSystem:FlxFileSystem;
 
     /**
      * Tracks whether this instance has been initialized.
@@ -140,6 +135,16 @@ class FlxModding
      * Timestamp of the last reload for this instance.
      */
     public var lastReload:Float = -1;
+    
+    /**
+     * Registry of all available modding packages.
+     */
+    private var modPackages:Array<FlxModPackage> =
+    [
+        {name: "flixel", cls: FlxModpack, meta: FlxMetadataFormat},
+        {name: "polymod", cls: PolymodModpack, meta: PolymodMetadataFormat},
+        {name: "legacy", cls: FlxLegacyModpack, meta: FlxLegacyMetadataFormat},
+    ];
 
     /**
      * PRIVATE API
@@ -166,16 +171,6 @@ class FlxModding
     private static var FLIXEL_DIRECTORY:String = "flixel";
 
     /**
-     * Registry of all available modding packages.
-     */
-    private static var modPackages:Array<FlxModPackage> =
-    [
-        {name: "flixel", cls: FlxModpack, meta: FlxMetadataFormat},
-        {name: "polymod", cls: PolymodModpack, meta: PolymodMetadataFormat},
-        {name: "legacy", cls: FlxLegacyModpack, meta: FlxLegacyMetadataFormat},
-    ];
-
-    /**
      * TODO: Update comment to feature blacklist parameter
      * 
      * Initializes Flixel-Modding to enable support for loading and reloading modded assets at runtime.
@@ -193,8 +188,8 @@ class FlxModding
      *                             the default set. Each entry defines a modpack class and metadata
      *                             format to initialize during setup.
      * 
-     * @param   fileSystem         (Optional) A custom file system interface (implementing `IFileSystem`)
-     *                             that controls how assets and mod files are accessed. Useful for
+     * @param   fileSystem         (Optional) A custom file system class that
+     *                             controls how assetsand mod files are accessed. Useful for
      *                             implementing virtual file systems or custom loaders.
      * 
      * @param   assetDirectory     (Optional) A path that overrides the default directory for base
@@ -208,14 +203,13 @@ class FlxModding
      * @return                     The initialized `FlxModding` instance, allowing for direct reference
      *                             or reassignment in your project.
      */
-	public static function init(?customModPackages:Array<FlxModPackage>, ?blacklist:Array<String>, ?fileSystem:IFileSystem, ?assetDirectory:String, ?modsDirectory:String):FlxModding
+	public static function init(?customModPackages:Array<FlxModPackage>, ?blacklist:Array<String>, ?fileSystem:FlxFileSystem, ?assetDirectory:String, ?modsDirectory:String):FlxModding
     {   
         FlxModding.signals.preInitialization.dispatch();
         FlxModding.log("Attempting to Initialize FlxModding " + FlxModding.VERSION + "...");
 
         if (FlxModding.debug != false) FlxModding.log("Attempting to Initialize in prerelease mode...");
 
-        #if (!html5 && !flash)
         FlxModding.ASSETS_DIRECTORY = assetDirectory != null ? assetDirectory : FlxModding.ASSETS_DIRECTORY;
         FlxModding.MODS_DIRECTORY = modsDirectory != null ? modsDirectory : FlxModding.MODS_DIRECTORY;
         if (blacklist != null) FlxModding.BLACKLISTED_DIRECTORYS = blacklist;
@@ -224,8 +218,8 @@ class FlxModding
         modpacks = new FlxModpackContainer();
         FlxG.signals.preGameReset.add(() -> FlxModding.reload());
 
-        buildAssetSystem();
         buildFileSystem(fileSystem);
+        buildAssetSystem();
 
         if (customModPackages != null)
         {
@@ -235,10 +229,21 @@ class FlxModding
             }
         }
 
+        #if polymod
+        FlxModding.log("Attemping to Configure with Polymod...");
+
+        FlxModding.BLACKLISTED_DIRECTORYS = FlxModding.BLACKLISTED_DIRECTORYS.concat(polymod.PolymodConfig.modIgnoreFiles);
+        if (!FlxScriptUtil.SCRIPT_FILE_EXTS.contains(polymod.PolymodConfig.scriptExt)) FlxScriptUtil.SCRIPT_FILE_EXTS.push(polymod.PolymodConfig.scriptExt);
+        if (!FlxScriptUtil.MODULE_FILE_EXTS.contains(polymod.PolymodConfig.scriptClassExt)) FlxScriptUtil.SCRIPT_FILE_EXTS.push(polymod.PolymodConfig.scriptClassExt);
+
+        FlxModding.log("Polymod Configured!");
+        #end
+
         if (system.fileSystem.exists(FlxModding.MODS_DIRECTORY + "/"))
 		{
             FlxModding.log("FlxModding Initialized!");
             FlxModding.signals.postInitialization.dispatch();
+
             return system;
         }
         else
@@ -246,10 +251,6 @@ class FlxModding
             FlxModding.warn("Mod Directory: '" + FlxModding.MODS_DIRECTORY + "' not found. Please ensure that the directory has a base file located inside of it. Without this, Flixel-Modding will fail to operate as expected.");
             return null;
         }
-        #else
-        FlxModding.error("FlxModding is running on an unsupported build target, and cannot continue initializing.");
-        return null;
-        #end
     }
 
     /**
@@ -285,18 +286,21 @@ class FlxModding
                 for (modFile in system.fileSystem.readFolder(FlxModding.MODS_DIRECTORY + "/"))
                 {
                     var modFilePath:String = FlxModding.MODS_DIRECTORY + "/" + modFile;
-                    var isZipFile:Bool = StringTools.endsWith(modFilePath, FlxZipUtil.ZIP_PREFIX);
+                    var isZipFile:Bool = false;
+
+                    if (Path.extension(modFilePath) != null)
+                        isZipFile = FlxZipUtil.ZIP_FILE_EXTS.contains(Path.extension(modFilePath));
 
                     if (system.fileSystem.isFolder(modFilePath) != false || isZipFile != false)
                     {
                         if (isZipFile != false) FlxZipUtil.cachedZipFiles.set(modFilePath, FlxZipUtil.unzipFromBytes(system.fileSystem.getFileBytes(modFilePath)));
 
-                        for (entry in modPackages)
+                        for (entry in system.modPackages)
                         {
-                            if (Assets.exists(modFilePath + "/" + Reflect.field(entry.meta, "metaPath")))
+                            if (Assets.exists(modFilePath + "/" + Reflect.field(entry.meta, FlxModUtil.DEFAULT_META_MACRO_PREFIX)))
                             {
                                 var modpack = Type.createInstance(entry.cls, [modFile]);
-                                modpack.fromMetadata(modpack.metadata.fromDynamic(FlxStringHelper.parseJsonString(Assets.getText(modpack.metaDirectory()))));
+                                modpack.fromMetadata(modpack.metadata.fromDynamic(FlxStringHelper.parseJsonString(Assets.getText(modpack.getMetaDirectory()))));
                                 add(cast modpack);
 
                                 continue;
@@ -379,7 +383,7 @@ class FlxModding
             var modpackClass:Class<FlxBaseModpack<Dynamic>> = null;
             var formatClass:Class<FlxBaseMetadataFormat> = null;
 
-            for (entry in modPackages)
+            for (entry in system.modPackages)
             {
                 if (entry.meta == Type.getClass(metadata))
                 {
@@ -393,15 +397,15 @@ class FlxModding
                 var modpack = Type.createInstance(modpackClass, [fileName]);
                 modpack.fromMetadata(cast metadata);
 
-                system.fileSystem.createFolder(FlxModding.MODS_DIRECTORY + "/", fileName);
-                system.fileSystem.createFile(FlxModding.MODS_DIRECTORY + "/" + fileName + "/", Reflect.field(formatClass, "metaPath"), metadata.toJsonString());
+                system.fileSystem.createFolder(FlxModding.MODS_DIRECTORY + "/" + fileName);
+                system.fileSystem.createFile(FlxModding.MODS_DIRECTORY + "/" + fileName + "/" + Reflect.field(formatClass, FlxModUtil.DEFAULT_META_MACRO_PREFIX), metadata.toJsonString());
 
                 if (makeAssetFolders)
                 {
                     for (asset in system.fileSystem.readFolder(FlxModding.ASSETS_DIRECTORY))
                     {
-                        system.fileSystem.createFolder(FlxModding.MODS_DIRECTORY + "/" + fileName + "/", asset);
-                        system.fileSystem.createFile(FlxModding.MODS_DIRECTORY + "/" + fileName + "/" + asset + "/", "content-goes-here.txt", "");
+                        system.fileSystem.createFolder(FlxModding.MODS_DIRECTORY + "/" + fileName + "/" + asset);
+                        system.fileSystem.createFile(FlxModding.MODS_DIRECTORY + "/" + fileName + "/" + asset + "/content-goes-here.txt", "");
                     }
                 }
 
@@ -412,12 +416,12 @@ class FlxModding
                     encodedBytes.position = 0;
                     encodedBytes.readBytes(iconData, 0, encodedBytes.length);
 
-                    system.fileSystem.createFile(FlxModding.MODS_DIRECTORY + "/" + fileName + "/", Reflect.field(formatClass, "iconPath"), iconData);
+                    system.fileSystem.createFile(FlxModding.MODS_DIRECTORY + "/" + fileName + "/" + Reflect.field(formatClass, FlxModUtil.DEFAULT_ICON_MACRO_PREFIX), iconData);
                 }
 
-				if (Reflect.hasField(formatClass, "configPath"))
+				if (Reflect.hasField(formatClass, FlxModUtil.DEFAULT_CONFIG_MACRO_PREFIX))
                 {
-					system.fileSystem.createFile(FlxModding.MODS_DIRECTORY + "/" + fileName + "/", Reflect.field(formatClass, "configPath"), "");
+					system.fileSystem.createFile(FlxModding.MODS_DIRECTORY + "/" + fileName + "/" + Reflect.field(formatClass, FlxModUtil.DEFAULT_CONFIG_MACRO_PREFIX), "");
 				}
 
                 add(cast modpack);
@@ -513,7 +517,7 @@ class FlxModding
      */
     public static function add(modpack:FlxBaseModpack<FlxBaseMetadataFormat>):Void
     {
-        FlxModding.log("Added Modpack: " + modpack.directory());
+        FlxModding.log("Added Modpack: " + modpack.getDirectory());
 
         modpacks.add(modpack);
         signals.onModAdded.dispatch(modpack);
@@ -527,7 +531,7 @@ class FlxModding
      */
     public static function remove(modpack:FlxBaseModpack<FlxBaseMetadataFormat>):Void
     {
-        FlxModding.log("Removed Modpack: " + modpack.directory());
+        FlxModding.log("Removed Modpack: " + modpack.getDirectory());
 
         modpacks.remove(modpack);
         signals.onModRemoved.dispatch(modpack);
@@ -606,7 +610,7 @@ class FlxModding
         {
             if ((modpack.active && modpack.alive && modpack.exists) && FlxModding.enabled)
             {
-                var modpackDirectory:String = modpack.directory();
+                var modpackDirectory:String = modpack.getDirectory();
 
                 var appendDirectory:String = modpackDirectory + "/" + FlxStringHelper.DEFAULT_APPEND_PREFIX;
                 var mergeDirectory:String = modpackDirectory + "/" + FlxStringHelper.DEFAULT_MERGE_PREFIX;
@@ -646,15 +650,15 @@ class FlxModding
      * Searches the internal mod package registry for a matching entry.
      * If found, returns its data (name, modpack class, and metadata class).
      * 
-     * @param   modpackName   The name of the mod package to retrieve.
+     * @param   packageName   The name of the mod package to retrieve.
      * 
      * @return                The registered mod package data, or null if no match was found.
      */
-    public function getModPackage(modpackName:String):FlxModPackage
+    public function getModPackage(packageName:String):FlxModPackage
     {
         for (entry in modPackages)
         {
-            if (entry.name == modpackName)
+            if (entry.name == packageName)
             {
                 return entry;
             }
@@ -675,7 +679,7 @@ class FlxModding
      */
     public function registerModPackage(modPackage:FlxModPackage):Void
     {
-        FlxModding.modPackages.push(modPackage);
+        this.modPackages.push(modPackage);
     }
 
     /**
@@ -688,7 +692,7 @@ class FlxModding
      */
     public function unregisterModPackage(modpackName:String):Void
     {
-        FlxModding.modPackages.remove(getModPackage(modpackName));
+        this.modPackages.remove(getModPackage(modpackName));
     }
 
     /**
@@ -858,7 +862,7 @@ class FlxModding
         system.buildModdedAssetLibrarys();
     }
 
-    static function buildFileSystem(?fileSystem:IFileSystem):Void
+    static function buildFileSystem(?fileSystem:FlxFileSystem):Void
     {
         if (fileSystem != null)
         {
@@ -866,16 +870,10 @@ class FlxModding
         }
         else
         {
-            #if (js || html5)
-            system.fileSystem = new JsFileSystem();
-            #elseif sys
-            system.fileSystem = new SysZipFileSystem();
-            #else
-            system.fileSystem = new RamFileSystem();
-            #end
+            system.fileSystem = new FlxFileSystem();
         }
 
-        #if hscript
+        #if (FLX_BUILD_SCRIPTS && hscript)
         system.buildScriptedInstances();
         #end
     }

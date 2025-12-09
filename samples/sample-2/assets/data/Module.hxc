@@ -1,5 +1,7 @@
 package assets.data;
 
+import assets.data.ImportModule;
+
 class TestClass1
 {
     public static var text:String = "Hello World!";
@@ -9,11 +11,24 @@ class TestClass1
     public static function main():Void
     {
         trace(text);
+    }
+
+    public static function mega(text:String):Void
+    {
+        trace(text);
         trace(size);
 
         trace(TestClass2.text);
         trace(TestClass2.getCoolText());
         trace(TestClass3.text);
+
+        trace(ImportModule.importText);
+        trace(ImportModule.getCoolerText());
+    }
+
+    static function toString():String
+    {
+        return "TestClass1 is Awesome";
     }
 }
 

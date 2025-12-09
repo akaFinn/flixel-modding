@@ -14,15 +14,14 @@ import sys.io.File;
 
 class FlxZipUtil
 {
-    public static inline var ZIP_PREFIX:String = ".zip";
+    /**
+	 * File extensions for Zip files
+	 */	
+	public static var ZIP_FILE_EXTS:Array<String> = ["zip", "7z", "rar"];
 
-    public static inline var SEVENZIP_PREFIX:String = ".7z";
-    
-    public static inline var WINRAR_PREFIX:String = ".rar";
+    public static var cachedZipFiles:Map<String, FlxZipEntry> = new Map<String, FlxZipEntry>();
 
-    public static var cachedZipFiles:Map<String, FlxZipFile> = new Map<String, FlxZipFile>();
-
-    public static function unzipFromBytes(bytes:Bytes):FlxZipFile
+    public static function unzipFromBytes(bytes:Bytes):FlxZipEntry
     {
         var input = new BytesInput(bytes);
         var reader = new Reader(input);
@@ -32,13 +31,13 @@ class FlxZipUtil
         return FlxZipUtil.unzipFromEntries(entries);
     }
 
-    public static function unzipFromEntries(entries:List<Entry>):FlxZipFile
+    public static function unzipFromEntries(entries:List<Entry>):FlxZipEntry
     {
-        return new FlxZipFile(entries);
+        return new FlxZipEntry(entries);
     }
 
     #if sys
-    public static function unzipFromPath(path:String):FlxZipFile
+    public static function unzipFromPath(path:String):FlxZipEntry
     {
         if (FileSystem.exists(path))
         {
@@ -54,7 +53,7 @@ class FlxZipUtil
     #end
 }
 
-class FlxZipFile
+class FlxZipEntry
 {
     public var contents:Map<String, Bytes>;
     
@@ -67,29 +66,5 @@ class FlxZipFile
             var data = Reader.unzip(entry);
             contents.set(entry.fileName, data);
         }
-    }
-
-    public static function filterContentKeys(keys:Iterator<String>):Array<String>
-    {
-        var result:Array<String> = [];
-
-	    var dirs:Array<String> = [];
-	    var files:Array<String> = [];
-
-	    for (key in keys)
-	    {
-		    if (StringTools.endsWith(key, "/"))
-		    {
-			    dirs.push(key);
-		    }
-		    else
-		    {
-			    files.push(key);
-		    }
-	    }
-
-	    result = dirs.concat(files);
-
-        return result;
     }
 }

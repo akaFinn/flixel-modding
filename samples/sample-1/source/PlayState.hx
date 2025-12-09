@@ -70,13 +70,36 @@ class PlayState extends FlxState
 		buildHud();
 
 		FlxG.camera.target = boyfriend;
-		FlxG.camera.targetOffset.set(-170, -140);
+		FlxG.camera.targetOffset.set(-370, -140);
 		FlxG.camera.zoom = 0.85;
 
-		FlxG.sound.playMusic("assets/music/Inst.ogg", 1, false);
+		FlxG.sound.playMusic("assets/music/Inst.ogg", 0, false);
+		FlxG.sound.music.pitch = 0;
+
+		FlxTween.tween(FlxG.sound.music, {pitch: 1, volume: 1}, 0.5, {ease: FlxEase.quartIn});
+
+		hudCamera.scroll.subtract(250, 0);
+
+		blueFade.fade(0, 1, 0.5, {ease: FlxEase.quartOut});
+		FlxTween.tween(FlxG.camera.targetOffset, {x: FlxG.camera.targetOffset.x + 200}, 0.5, {ease: FlxEase.quartOut});
+		FlxTween.tween(hudCamera.scroll, {x: hudCamera.scroll.x + 250}, 0.5, {ease: FlxEase.quartOut});
 
 		dadVocals.play();
 		bfVocals.play();
+		FlxG.signals.focusLost.add(() ->
+		{
+			dadVocals.pause();
+			bfVocals.pause();
+		});
+
+		FlxG.signals.focusGained.add(() ->
+		{
+			dadVocals.time = FlxG.sound.music.time;
+			bfVocals.time = FlxG.sound.music.time;
+
+			dadVocals.resume();
+			bfVocals.resume();
+		});
 	}
 
 	var lastMousePos:FlxPoint = FlxPoint.get();
@@ -101,6 +124,7 @@ class PlayState extends FlxState
 		else
 			boyfriendIcon.animation.curAnim.curFrame = 0;
 
+		#if DEBUG_CONTROLS
 		if (FlxG.mouse.wheel != 0)
 		{
 			var zoomStep:Float = 0.05;
@@ -114,6 +138,27 @@ class PlayState extends FlxState
 			FlxG.camera.zoom = Math.max(0.1, Math.min(FlxG.camera.zoom, 3));
 		}
 
+		if (FlxG.keys.anyPressed([A, LEFT]))
+			FlxG.camera.scroll.x -= 10;
+
+		if (FlxG.keys.anyPressed([D, RIGHT]))
+			FlxG.camera.scroll.x += 10;
+
+		if (FlxG.keys.anyPressed([W, UP]))
+			FlxG.camera.scroll.y -= 10;
+
+		if (FlxG.keys.anyPressed([S, DOWN]))
+			FlxG.camera.scroll.y += 10;
+
+		if (FlxG.keys.justPressed.R)
+		{
+			dadVocals.stop();
+			bfVocals.stop();
+
+			FlxG.resetState();
+		}
+		#end
+
 		if (FlxG.keys.justPressed.ENTER && switchingState != true)
 		{
 			switchingState = true;
@@ -126,8 +171,13 @@ class PlayState extends FlxState
 			FlxTimer.wait(0.5, () -> 
 			{
 				blueFade.fade(1.0, 0.0, 1, {ease: FlxEase.quadIn});
-				FlxTween.tween(stageCamera.scroll, {y: stageCamera.scroll.y - 400}, 1, {ease: FlxEase.quadIn});
-				FlxTween.tween(hudCamera.scroll, {y: hudCamera.scroll.y - 150}, 1, {ease: FlxEase.quadIn});
+				FlxTween.tween(FlxG.camera.targetOffset, {x: FlxG.camera.targetOffset.x - 200}, 1, {ease: FlxEase.quadIn});
+				FlxTween.tween(hudCamera.scroll, {x: hudCamera.scroll.x - 250}, 1, {ease: FlxEase.quadIn});
+			});
+
+			FlxTimer.wait(3, () ->
+			{
+				FlxG.switchState(() -> new ModsState());
 			});
 		}
 	}
@@ -145,7 +195,6 @@ class PlayState extends FlxState
 	function buildStage():Void
 	{
 		stage = new FlxGroup();
-		stage.cameras = [stageCamera];
 
 		var brightLightSmall = new FlxSprite();
 		brightLightSmall.loadGraphic("assets/images/stage/brightLightSmall.png");
