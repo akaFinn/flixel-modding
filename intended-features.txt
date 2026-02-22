@@ -1,0 +1,9 @@
+> Modpacks will can load without the need of a metadata file
+> Remove support for metadata file formats
+> Modpacks will load from .zip files and be turned into actually viewable files
+> Scripting will be much more dynamic and interactable
+> Much much more optimization
+> There would've been a flixel asset library class
+> A file system that interacts with both Native & HTML5 builds
+> Proper zip file support
+> More crosswork with polymod
