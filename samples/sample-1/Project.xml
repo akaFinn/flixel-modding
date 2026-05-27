@@ -55,12 +55,16 @@
 
 	<haxelib name="flixel-animate" />
 
+	<haxelib name="polymod" />
+
 	<!-- ______________________________ Haxedefines _____________________________ -->
 
 	<!--Remove the legacy health system-->
 	<haxedef name="FLX_NO_HEALTH" />
 
 	<haxedef name="DEBUG_CONTROLS" if="debug" />
+
+	<haxedef name="FLX_MODDING_DEBUG" if="debug" />
 	
 	<!--Enable the Flixel core recording system-->
 	<!--<haxedef name="FLX_RECORD" />-->

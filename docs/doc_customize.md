@@ -7,34 +7,20 @@ You can define your own modpack class by extending the base modpack and applying
 This tells flixel-modding how to build your modpack at compile-time.
 
 ```haxe
-@:buildModpack(CustomMetadataFormat)
-class CustomModpack extends flixel.system.FlxBaseModpack<CustomMetadataFormat> {}
+@:buildModpack("metadata_file.json", "icon_file.png")
+class CustomModpack extends flixel.system.FlxBaseModpack {}
 ```
 
-## 2. Creating a custom metadata format
-
-Just like modpacks, metadata formats can also be customized.  
-You can use the `@:buildMetadata` metadata to point to your metadata file and icon.
-
-```haxe
-@:buildMetadata("metadata_file.json", "icon_file.png")
-class CustomMetadataFormat extends flixel.system.FlxBaseMetadataFormat {}
-```
-
-This allows you to define your own metadata structure while still being compatible with flixel-modding.
-
-## 3. Initializing flixel-modding with custom classes
+## 2. Initializing flixel-modding with custom classes
 
 When initializing flixel-modding, you can provide your own mod package, file system, and even custom asset/mod paths.
 
 ```haxe
-var customFileSystem:IFileSystem = new CustomFileSystem();
-var customModPackages:Array<FlxModPackage> = [{name: "custom", cls: CustomModpack, meta: CustomMetadataFormat}];
-
 var customAssetPath:String = "assets_folder";
 var customModPath:String = "mods_folder";
 
-FlxModding.init(customModPackages, customFileSystem, customAssetPath, customModPath);
+FlxModding.init(customAssetPath, customModPath);
+FlxModding.system.registerModpackClass(CustomModpack);
 ```
 
 This gives you full control over how mods are loaded, stored, and accessed within your project.

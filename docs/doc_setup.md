@@ -9,7 +9,7 @@ Install **flixel-modding** using haxelib.
 haxelib install flixel-modding
 ```
 
-Or install **flixel-modding** using [git](https://git-scm.com/downloads)
+Or install **flixel-modding** using **[git](https://git-scm.com/downloads)**
 
 ```sh
 haxelib git flixel-modding https://github.com/akaFinn/flixel-modding.git
@@ -67,7 +67,7 @@ class Main extends Sprite
 ```
 
 ## More documentation
-- [How to Create modpacks flixel-modding](doc_create.md)
+- [How to Create modpacks with flixel-modding](doc_create.md)
 - [How to Customize flixel-modding](doc_customize.md)
 - [How to Migrate to flixel-modding](doc_migrate.md)
 - [Back to Main Page](../README.md)

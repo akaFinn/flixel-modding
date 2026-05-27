@@ -1,1 +1,11 @@
 export/
+dump/
+
+secrets/
+versions/
+sample-3/
+
+funkin/
+funkin-legacy/
+
+project.json

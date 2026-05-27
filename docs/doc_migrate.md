@@ -56,8 +56,6 @@ FlxModding.init();
 
 That’s it. flixel-modding will automatically detect any existing Polymod-style modpacks in your `mods` directory and load them using its built-in Polymod adapter.
 
-> **Note:** Always call `FlxModding.init()` *before* creating your `FlxGame` instance, or your mods won’t load properly.
-
 Example:
 
 ```haxe
@@ -114,6 +112,6 @@ If you need to toggle mods on or off, you can just adjust their metadata or use 
 ## More documentation
 
 - [How to Setup flixel-modding](doc_setup.md)
-- [How to Create modpacks flixel-modding](doc_create.md)
+- [How to Create modpacks with flixel-modding](doc_create.md)
 - [How to Customize flixel-modding](doc_customize.md)
 - [Back to Main Page](../README.md)

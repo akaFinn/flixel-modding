@@ -1,12 +1,26 @@
 {
-    "lime.projectFile": "samples/sample-1/Project.xml",
+    "lime.projectFile": "samples/sample-2/Project.xml",
+
+    "[haxe]": 
+    {
+        "editor.tabSize": 4,
+    },
+
+    "[haxe-script]": 
+    {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 4,
+        "editor.detectIndentation": false,
+    },
     
     "files.associations":
     {
         "*.hxp": "haxe",
+
         "*.hscript": "haxe",
         "*.hclass": "haxe",
         "*.hmodule": "haxe",
+        
         "*.haxe": "haxe",
         "*.hxs": "haxe",
         "*.hxc": "haxe",

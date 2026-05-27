@@ -30,7 +30,8 @@ class Main extends Sprite
         FlxModding.init();
         addChild(new FlxGame(0, 0, PlayState));
 
-		FlxModding.create("newMod", new FlxMetadataFormat().fromDynamic({
+		FlxModding.create("newMod", flixel.system.FlxModpack,
+		{
 			name: "My Mod!",
 			prefix: "newMod",
 
@@ -49,7 +50,7 @@ class Main extends Sprite
 			priority: 1,
 			enabled: true,
 			links: [{title: "HaxeFlixel", url: "https://haxeflixel.com/"}],
-		}));
+		});
     }
 }
 ```

@@ -7,9 +7,9 @@
 	"description": "A robust modding system for HaxeFlixel.",
 
 	"version": "1.6.0-beta",
-	"releasenote": "Modding support for HTML5 build targets, modpack unzipping, appending/merging strings, & reworked scripting",
+	"releasenote": "Full HTML5 support, modpack unzipping, powerful new scripting system, string/file format helpers, massive internal cleanup, and improved architecture.",
 	"contributors": ["akaFinn", "therealjake_12"],
 
 	"classPath": "src",
-	"dependencies": {"flixel": "", "hscript": ""}
+	"dependencies": {"flixel": ""}
 }

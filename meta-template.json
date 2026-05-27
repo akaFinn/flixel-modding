@@ -1,8 +1,10 @@
 {
+	"$schema": ".vscode/schema/flixel.schema.json",
+
 	"name": "Pico Mod",
     "prefix": "pico",
 
-	"api": "1.6.0-beta",
+	"api": "1.6.0",
     "tags": ["pico", "fnf", "asset"],
 	"description": "Replaces BF with PICO",
     "version": "1.0.0",
@@ -23,5 +25,7 @@
 
 	"priority": 1,
 	"enabled": true,
-    "links": [{"title": "HaxeFlixel", "url": "https://haxeflixel.com/"}]
+    "links": [{"title": "HaxeFlixel", "url": "https://haxeflixel.com/"}],
+
+	"license": "Apache license 2.0"
 }

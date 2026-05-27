@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+
+  "title": "Flixel Modpack Metadata",
+  "description": "Schema for Flixel mod metadata JSON files.",
+
+  "type": "object",
+
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The display name of the mod."
+    },
+
+    "prefix": {
+      "type": "string",
+      "description": "Short identifier prefix used for namespacing assets or content."
+    },
+
+    "api": {
+      "type": "string",
+      "description": "Semantic version of the FlxModding API required by this mod."
+    },
+
+    "tags": {
+      "type": "array",
+      "description": "Optional descriptive tags for categorization.",
+      "items": {
+        "type": "string"
+      }
+    },
+
+    "description": {
+      "type": "string",
+      "description": "A human-readable description of the mod."
+    },
+
+    "version": {
+      "type": "string",
+      "description": "Semantic version of the mod itself."
+    },
+
+    "credits": {
+      "type": "array",
+      "description": "List of contributors and their roles.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Contributor's name."
+          },
+          "role": {
+            "type": "string",
+            "description": "Contributor's role in the project."
+          },
+          "links": {
+            "type": "array",
+            "description": "Optional links related to the contributor (socials, portfolio, etc.).",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "description": "Title of the link."
+                },
+                "url": {
+                  "type": "string",
+                  "format": "uri",
+                  "description": "URL for the link."
+                }
+              },
+              "required": ["title", "url"]
+            }
+          }
+        },
+        "required": ["name", "role", "links"]
+      }
+    },
+
+    "priority": {
+      "type": "integer",
+      "description": "Numeric priority or ID of the mod."
+    },
+
+    "enabled": {
+      "type": "boolean",
+      "description": "Whether the mod is enabled by default."
+    },
+
+    "links": {
+      "type": "array",
+      "description": "General-purpose links related to the mod.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Title of the link."
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL for the link."
+          }
+        },
+        "required": ["title", "url"]
+      }
+    },
+
+    "license": {
+      "type": "string",
+      "description": "The license name of the mod."
+    }
+  },
+
+  "required": [
+    "name",
+    "api",
+    "priority",
+    "enabled",
+    "license"
+  ],
+
+  "additionalProperties": true
+}

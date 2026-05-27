@@ -1,49 +1,36 @@
 package flixel.system.hscript;
 
-import flixel.util.FlxScriptUtil;
-import flixel.util.FlxScriptUtil.FlxModuleImport;
-import hscript.Interp;
-import hscript.Expr;
+import flixel.util.FlxDestroyUtil;
+import flixel.system.hscript._internal.*;
+import flixel.system.hscript._internal.Expr;
 
-// Unfinished Class hehe haha
-@:access(flixel.util.FlxScriptUtil)
-class FlxScript extends FlxBasic
-{   
-    public var expr:Expr;
+class FlxScript implements IFlxDestroyable
+{
+    var expr:Expr;
+
+    var interp:Interp;
+
+    var parser:Parser;
 
     var origin:String;
 
-    var imports:Array<FlxModuleImport>;
-
-    private var interp:Interp;
-
-    public function new(origin:String, expr:Expr, imports:Array<FlxModuleImport>)
+    public function new(path:String)
     {
-        this.expr = expr;
-        this.origin = origin;
+        origin = path;
+        parser = new Parser();
+        interp = new Interp();
 
-        this.interp = FlxScriptUtil.buildInterp();
-        this.imports = imports;
-
-        super();
-
-        for (imprt in imports)
-        {
-            addImport(imprt);
-        }
+        expr = parser.parseString(FlxFileSystem.getFileContent(path), path);
     }
 
     public function execute():Void
     {
-        interp.execute(expr);    
+        interp.execute(expr);
     }
 
-    public function addImport(imprt:FlxModuleImport):Void
-	{
-		if (imprt.cls != null) 
-			interp.variables.set(imprt.name, imprt.cls);
-
-		if (imprt.enm != null)
-			interp.variables.set(imprt.name, imprt.enm);
-	}
+    public function destroy():Void
+    {
+        expr = null;
+        interp = null;
+    }
 }

@@ -2,7 +2,7 @@ package;
 
 class TestScript
 {
-    public static var helloWorld:String = "Hello World!";
+    public static var helloWorld:String = "Hello, World!";
 
     public static function main():Void
     {

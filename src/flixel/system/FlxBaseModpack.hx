@@ -1,200 +1,212 @@
 package flixel.system;
 
-import flixel.util.FlxModUtil;
-import openfl.utils.Assets;
-import flixel.system.FlxMetadataFormat.FlxLegacyMetadataFormat;
-import flixel.system.polymod.PolymodMetadataFormat;
-import flixel.util.FlxStringUtil;
-import flixel.util.FlxZipUtil;
+import flixel.system.macros.FlxModMacro;
 import flixel.util.helpers.FlxStringHelper;
-import haxe.Ini;
+import flixel.util.FlxStringUtil;
+import openfl.utils.Assets;
 
 /**
- * Defines a single mod package entry used by the modding system.
+ * Base representation of a modpack in the FlxModding system.
  * 
- * Each `FlxModPackage` represents a specific modpack configuration,
- * including its name, the base modpack class it uses, and the metadata
- * format class associated with it.
- */
-typedef FlxModPackage =
-{
-	var name:String; // The unique name identifier for the mod package
-	var cls:Class<FlxBaseModpack<Dynamic>>; // Reference to the core modpack class used to handle loading and functionality
-	var meta:Class<FlxBaseMetadataFormat>; // Reference to the metadata format class that defines how mod info is structured
-}
-
-/**
- * Base representation of a modpack within FlxModding.
- * Holds all core metadata, file paths, and other properties
- * used to manage and identify a mod at runtime.
+ * Provides the core structure and runtime behavior shared by all modpack types,
+ * including metadata handling, directory resolution, and activation state.
  * 
- * This class serves as the foundation for all modpack types,
- * providing shared variables and basic setup behavior that specialized modpack
- * classes can build upon.
+ * Specialized modpack implementations (modern, Polymod, legacy) extend this
+ * class to implement format-specific parsing and serialization.
+ * 
+ * The `@:autoBuild` macro links compile-time metadata and icon references,
+ * enabling automatic setup of modpack resources.
  */
 @:access(flixel.system.FlxModding)
-@:autoBuild(flixel.util.FlxModUtil.buildModpack())
-class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
+@:autoBuild(flixel.system.macros.FlxModMacro.buildModpack())
+class FlxBaseModpack extends FlxBasic
 {
 	/**
-	 * The metadata information for this modpack.
-	 * Stores details such as name, version, description, and other fields
-	 * defined by the chosen metadata format, This allows the 
-	 * system to interpret and organize mods consistently
-	 * across different formats.
+	 * Default active state for newly created modpacks.
+	 * 
+	 * Subclasses and factory methods use this value when initializing modpacks
+	 * without explicitly setting the active state.
 	 */
-	public var metadata:MetaFormat;
+	public static var defaultActive:Bool = true;
 
 	/**
-	 * Stores a custom INI configuration for this modpack.
-	 * Can be used to store and retrieve custom data/settings specific to this mod.
+	 * The order index of this modpack.
 	 */
-	public var config:Ini;
+	public var order:Int;
 
 	/**
-	 * The file name to the modpack archive or directory.
+	 * The folder name of this modpack.
+	 * 
+	 * Not a full path; resolved against the global mods directory.
 	 */
-	var file:String;
+	var fileName:String;
 
 	/**
-	 * Creates a new modpack instance using the specified folder name.
-	 * Also auto-assigns an internal ID and default priority based on how many modpacks exist at creation time.
-	 * The `file` parameter is expected to be the folder name (not a full path).
+	 * Creates a new modpack instance.
+	 * 
+	 * @param   fileName   Folder name of the modpack (not a full path)
+	 * Initializes the internal order and sets up default runtime properties.
 	 */
-	public function new(file:String, metadata:Class<MetaFormat>)
+	public function new(fileName:String)
 	{
-		this.file = file;
-		this.metadata = Type.createInstance(metadata, []);
-
 		super();
 
-		this.ID = 0;
-		
-		if (Assets.exists(getConfigDirectory()))
-		{
-			this.config = FlxStringHelper.parseIniString(Assets.getText(getConfigDirectory()));
-		}
+		this.fileName = fileName;
+		this.order = 0;
 	}
 
 	/**
 	 * Returns the full directory path of this modpack.
-	 * Combines the global mods directory with this mod’s folder name.
+	 * 
+	 * Combines the global mods directory with this modpack’s folder name.
 	 */
 	public function getDirectory():String
 	{
-		return FlxModding.MODS_DIRECTORY + "/" + file;
+		return FlxModding.MODS_DIRECTORY + "/" + fileName;
 	}
 
 	/**
-	 * Returns the directory path where this modpack's metadata is stored.
+	 * Returns the resolved path to this modpack’s metadata directory or file.
+	 * 
+	 * Resolution order:
+	 * - Macro-defined metadata prefix (compile-time)
+	 * - Default `FlxModpack.metaPrefix` fallback
 	 */
 	public function getMetaDirectory():String
 	{
-		return getDirectory() + "/" + Reflect.field(Type.getClass(metadata), FlxModUtil.DEFAULT_META_MACRO_PREFIX);
+		if (FlxFileSystem.exists(getDirectory() + "/" + Reflect.field(Type.getClass(this), FlxModMacro.DEFAULT_META_MACRO_PREFIX)))
+			return getDirectory() + "/" + Reflect.field(Type.getClass(this), FlxModMacro.DEFAULT_META_MACRO_PREFIX);
+
+		return null;
 	}
 
 	/**
-	 * Returns the directory path where the modpack's icon is located.
+	 * Returns the resolved path to this modpack’s icon directory or file.
+	 * 
+	 * Resolution order:
+	 * - Macro-defined icon prefix (compile-time)
+	 * - Default `FlxModpack.iconPrefix` fallback
 	 */
 	public function getIconDirectory():String
 	{
-		return getDirectory() + "/" + Reflect.field(Type.getClass(metadata), FlxModUtil.DEFAULT_ICON_MACRO_PREFIX);
+		if (FlxFileSystem.exists(getDirectory() + "/" + Reflect.field(Type.getClass(this), FlxModMacro.DEFAULT_ICON_MACRO_PREFIX)))
+			return getDirectory() + "/" + Reflect.field(Type.getClass(this), FlxModMacro.DEFAULT_ICON_MACRO_PREFIX);
+
+		return null;
 	}
 
 	/**
-	 * Returns the directory path where the modpack's config file is located.
-	 * Only returns a valid directory if the config file path is setup via macro.
+	 * Saves the current runtime metadata back to the modpack’s metadata file.
+	 * 
+	 * Delegates serialization to `toJsonString()` and writes to the resolved
+	 * metadata directory if it exists.
 	 */
-	public function getConfigDirectory():String
+	public function saveMetadataFile():Void
 	{
-		if (Reflect.hasField(Type.getClass(metadata), "configPath"))
-		{
-			return getDirectory() + "/" + Reflect.field(Type.getClass(metadata), FlxModUtil.DEFAULT_CONFIG_MACRO_PREFIX);
-		}
-		
-		return getDirectory() + "/_unknown_config_file_name.ini";
-	}
-
-
-	/**
-	 * Saves the modpack’s runtime data back to the metadata file.
-	 */
-	public function updateMetadata():Void
-	{
-		FlxModding.system.fileSystem.setFileContent(getDirectory(), metadata.toJsonString());
+		if (FlxFileSystem.exists(this.getMetaDirectory()))
+			FlxFileSystem.setFileContent(this.getMetaDirectory(), this.toJsonString());
 	}
 
 	/**
-	 * Loads this modpack's values from a loaded metadata format.
+	 * Populates this modpack from a raw dynamic metadata object.
+	 * 
+	 * This base implementation performs no mapping and is intended to be
+	 * overridden by subclasses that define format-specific metadata.
+	 * 
+	 * @param   data   Dynamic object representing parsed metadata
+	 * @return  This modpack instance (for chaining or compatibility)
 	 */
-	public function fromMetadata(metadata:MetaFormat):FlxBaseModpack<MetaFormat>
+	public function fromDynamic(data:Dynamic):FlxBaseModpack
 	{
 		return this;
 	}
 
 	/**
-     * Converts this modpack runtime data into a JSON string.
-     * The base implementation simply returns an empty string — override to customize output.
-     */
-	public function toJsonString():String
-    {
-        return "";
-    }
+	 * Populates this modpack from a JSON string.
+	 * 
+	 * Parses the JSON into a dynamic object and delegates to `fromDynamic()`.
+	 * If parsing fails, logs a warning and uses a null fallback.
+	 * 
+	 * @param   text   JSON string representing mod metadata
+	 * @return  This modpack instance
+	 */
+	public function fromJsonString(text:String):FlxBaseModpack
+	{
+		try 
+		{
+			return this.fromDynamic(FlxStringHelper.parseJsonString(text));
+		}
+		catch (e:Dynamic)
+		{
+			FlxG.log.warn("Failed to make Modpack '" + fileName + "' from Json, string is invalid.");
+			return this.fromDynamic(null);
+		}
+	}
 
 	/**
-	 * Returns the total size of the modpack in bytes.
-	 * Includes all files and subfolders contained within.
+	 * Serializes this modpack into a JSON string.
+	 * 
+	 * This base implementation returns an empty string and is expected
+	 * to be overridden by subclasses with format-specific serialization.
+	 */
+	public function toJsonString():String
+	{
+		return "";
+	}
+
+	/**
+	 * Calculates the total size of this modpack in bytes.
+	 * 
+	 * Recursively sums the sizes of all files and subdirectories
+	 * contained within the modpack folder.
+	 * 
+	 * @return  Total size of the modpack in bytes
 	 */
 	public function getModpackSize():Int
 	{
-		#if sys
-		function getSysFolderSize(path:String):Int
+		function getFolderSize(path:String):Int
 		{
 			var total:Int = 0;
 
-			if (!sys.FileSystem.exists(path) || !sys.FileSystem.isDirectory(path)) return 0;
-
-			for (entry in sys.FileSystem.readDirectory(path))
+			for (entry in FlxFileSystem.readFolder(path))
         	{
-				var fullPath = sys.FileSystem.fullPath(path + "/" + entry);
+				var fullPath = FlxFileSystem.fullPath(path + "/" + entry);
 
-				if (sys.FileSystem.isDirectory(fullPath))
+				if (FlxFileSystem.isFolder(fullPath))
             	{
-					total += getSysFolderSize(fullPath);
+					total += getFolderSize(fullPath);
 				}
             	else
             	{
-					total += sys.FileSystem.stat(fullPath).size;
+					total += FlxFileSystem.stat(fullPath).size;
 				}
 			}
 
 			return total;
 		}
 
-		return getSysFolderSize(getDirectory());
-		#else
-		return 0;
-		#end
+		return getFolderSize(getDirectory());
 	}
 
 	/**
-	 * Clears memory
+	 * Cleans up this modpack instance.
+	 * 
+	 * Clears internal references before delegating to `super.destroy()`.
 	 */
 	override public function destroy():Void
     {
-		file = null;
-		metadata = null;
-
-		config = null;
-
+		fileName = null;
         super.destroy();   
     }
 
     /**
-     * Turns a `FlxBaseModpack` to a debug string
+	 * Returns a formatted debug string for this modpack.
 	 * 
-     * @return Converted debug string
-     */
+	 * Includes class type, directory path, active state, and total size.
+	 * Useful for logging or console inspection.
+	 * 
+	 * @return  Human-readable debug string
+	 */
     override public function toString():String
     {
         return FlxStringUtil.getDebugString([
@@ -205,15 +217,49 @@ class FlxBaseModpack<MetaFormat:FlxBaseMetadataFormat> extends FlxBasic
 		]);
     }
 
+	/**
+	 * Updates the active state of this modpack.
+	 * 
+	 * Dispatches activation or deactivation signals when the state changes,
+	 * allowing the system to react accordingly.
+	 * 
+	 * @param   Value   The new active state
+	 * @return  The assigned value
+	 */
 	override function set_active(Value:Bool):Bool
 	{
 		active = Value;
 
 		if (Value != false)
-			FlxModding.signals.onModActived.dispatch(cast this);
+			FlxModding.signals.onModActived.dispatch(this);
 		else
-			FlxModding.signals.onModDeactived.dispatch(cast this);
+			FlxModding.signals.onModDeactived.dispatch(this);
 
 		return Value;
+	}
+
+	/**
+	 * Factory method to create and initialize a modpack instance.
+	 * 
+	 * If a specific subclass is provided, an instance is created and
+	 * populated from its metadata. Otherwise, a base modpack is returned
+	 * with default active state.
+	 * 
+	 * @param   fileName   The modpack folder name
+	 * @param   cls        Optional modpack class to instantiate
+	 * @return  Fully initialized modpack instance
+	 */
+	public static function fromModpackClass(fileName:String, ?cls:Class<FlxBaseModpack>):FlxBaseModpack
+	{
+		if (cls != null)
+		{
+			var modpack:FlxBaseModpack = Type.createInstance(cls, [fileName]);
+			modpack.fromJsonString(FlxFileSystem.getFileContent(modpack.getMetaDirectory()));
+			return modpack;
+		}
+
+		var modpack:FlxBaseModpack = new FlxBaseModpack(fileName);
+		modpack.active = FlxBaseModpack.defaultActive;
+		return modpack;
 	}
 }

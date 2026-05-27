@@ -86,7 +86,7 @@ abstract Version(VersionData)
     /**
      * Returns true if this version has a prerelease
      */
-    public inline function hasPrerelease():Bool
+    private inline function hasPrerelease():Bool
     { 
         return this.prerelease.length > 0;
     }
@@ -94,7 +94,7 @@ abstract Version(VersionData)
     /**
      * Returns true if this version has build metadata
      */
-    public inline function hasBuild():Bool
+    private inline function hasBuild():Bool
     { 
         return this.build.length > 0;
     }
@@ -102,7 +102,7 @@ abstract Version(VersionData)
     /**
      * Returns a new Version with major incremented
      */
-    public function nextMajor():Version
+    private function nextMajor():Version
     { 
         return new Version(major + 1, 0, 0, [], []);
     }
@@ -110,7 +110,7 @@ abstract Version(VersionData)
     /**
      * Returns a new Version with minor incremented
      */
-    public function nextMinor():Version
+    private function nextMinor():Version
     { 
         return new Version(major, minor + 1, 0, [], []);
     }
@@ -118,7 +118,7 @@ abstract Version(VersionData)
     /**
      * Returns a new Version with patch incremented
      */
-    public function nextPatch():Version
+    private function nextPatch():Version
     { 
         return new Version(major, minor, patch + 1, [], []);
     }
@@ -126,7 +126,7 @@ abstract Version(VersionData)
     /**
      * Returns a new Version with next prerelease numeric identifier
      */
-    public function nextPre():Version
+    private function nextPre():Version
     { 
         return new Version(major, minor, patch, incrementIdentifiers(prerelease), []);
     }
@@ -134,7 +134,7 @@ abstract Version(VersionData)
     /**
      * Returns a new Version with next build numeric identifier
      */
-    public function nextBuild():Version
+    private function nextBuild():Version
     { 
         return new Version(major, minor, patch, prerelease, incrementIdentifiers(build));
     }
@@ -142,7 +142,7 @@ abstract Version(VersionData)
     /**
      * Returns a new Version with a specific prerelease string
      */
-    public function withPre(pre:String, ?build:String):Version
+    private function withPre(pre:String, ?build:String):Version
     { 
         return new Version(major, minor, patch, parseIdentifiers(pre), parseIdentifiers(build));
     }
@@ -150,7 +150,7 @@ abstract Version(VersionData)
     /**
      * Returns a new Version with a specific build string
      */
-    public function withBuild(build:String):Version
+    private function withBuild(build:String):Version
     { 
         return new Version(major, minor, patch, prerelease, parseIdentifiers(build));
     }
@@ -204,7 +204,7 @@ abstract Version(VersionData)
     /**
      * Returns true if versions are equal
      */
-    public inline function equals(other:Version):Bool
+    private inline function equals(other:Version):Bool
     { 
         return compare(other) == 0;
     }
@@ -212,7 +212,7 @@ abstract Version(VersionData)
     /**
      * Returns true if versions are different
      */
-    public inline function different(other:Version):Bool
+    private inline function different(other:Version):Bool
     { 
         return !equals(other);
     }
@@ -220,7 +220,7 @@ abstract Version(VersionData)
     /**
      * Returns true if this > other
      */
-    public inline function greaterThan(other:Version):Bool
+    private inline function greaterThan(other:Version):Bool
     { 
         return compare(other) > 0;
     }
@@ -228,7 +228,7 @@ abstract Version(VersionData)
     /**
      * Returns true if this >= other
      */
-    public inline function greaterThanOrEqual(other:Version):Bool
+    private inline function greaterThanOrEqual(other:Version):Bool
     { 
         return compare(other) >= 0;
     }
@@ -236,7 +236,7 @@ abstract Version(VersionData)
     /**
      * Returns true if this < other
      */
-    public inline function lessThan(other:Version):Bool
+    private inline function lessThan(other:Version):Bool
     { 
         return compare(other) < 0;
     }
@@ -244,7 +244,7 @@ abstract Version(VersionData)
     /**
      * Returns true if this <= other
      */
-    public inline function lessThanOrEqual(other:Version):Bool
+    private inline function lessThanOrEqual(other:Version):Bool
     { 
         return compare(other) <= 0;
     }
@@ -285,7 +285,7 @@ abstract Version(VersionData)
     /**
      * Sanitizes an identifier according to SemVer
      */
-    public static function sanitize(s:String):String
+    private static function sanitize(s:String):String
     { 
         return ~/[^0-9A-Za-z-]/g.replace(s,"");
     }
@@ -311,7 +311,7 @@ abstract Version(VersionData)
     /**
      * Placeholder for version range parsing (`^1.2.3`, `~2.0.0`)
      */
-    public function satisfies(rule:String):Bool
+    private function satisfies(rule:String):Bool
     { 
         return false;
     }

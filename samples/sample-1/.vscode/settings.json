@@ -3,7 +3,7 @@
 		"export/**/*.*": true
 	},
 	"[haxe]": {
-		"editor.formatOnSave": true,
+		"editor.formatOnSave": false,
 		"editor.formatOnSaveMode":"modifications",
 		"editor.formatOnPaste": false,
 		"editor.codeActionsOnSave": {

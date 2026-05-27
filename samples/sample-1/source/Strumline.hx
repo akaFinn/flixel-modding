@@ -6,27 +6,6 @@ import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.group.FlxSpriteGroup;
 import haxe.Json;
 
-class NoteSprite extends FlxSprite
-{
-    public var timecode:Float;
-    
-    public function new(id:Int)
-    {
-        super();
-
-        ID = id;
-        var direction = Strumline.order[id];
-
-        frames = FlxAtlasFrames.fromSparrow("assets/images/notes.png", "assets/images/notes.xml");
-        animation.addByPrefix("note", "note" + direction, 24, false);
-        animation.play("note", true);
-        scale.set(0.7, 0.7);
-
-        updateHitbox();
-        centerOffsets();
-    }
-}
-
 class Strumline extends FlxSpriteGroup
 {
     var arrows:Map<String, FlxSprite>;
@@ -72,26 +51,47 @@ class Strumline extends FlxSpriteGroup
             if (FlxG.sound.music != null)
             {
                 note.y = (this.y + (arrows[order[note.ID]].height / 2) - (note.height / 2)) - ((FlxG.sound.music.time - note.timecode) * (0.45 * chart.scrollSpeed.hard));
+
+                if (note.alive != false)
+                {
+                    if ((note.y + note.height) < 0)
+                    {
+                        note.kill();
+                    }
+                    else if (note.active != false && note.getGraphicMidpoint().y - arrows[order[note.ID]].getGraphicMidpoint().y <= -160)
+                    {
+                        note.active = false;
+
+                        PlayState.health -= 0.023;
+                        PlayState.bfVocals.volume = 0;
+                        PlayState.score -= 35;
+
+                        FlxG.sound.play('assets/sounds/missnote${FlxG.random.int(1, 3)}.ogg', 0.2);
+                    }
+                }
             }
         }
 
-        if (FlxG.keys.anyJustPressed([LEFT, A]))
-            justPressed(arrows["Left"]);
-        if (FlxG.keys.anyJustPressed([DOWN, S]))
-            justPressed(arrows["Down"]);
-        if (FlxG.keys.anyJustPressed([UP, W]))
-            justPressed(arrows["Up"]);
-        if (FlxG.keys.anyJustPressed([RIGHT, D]))
-            justPressed(arrows["Right"]);
+        if (!FlxG.keys.pressed.SHIFT)
+        {
+            if (FlxG.keys.anyJustPressed([LEFT, A]))
+                justPressed(arrows["Left"]);
+            if (FlxG.keys.anyJustPressed([DOWN, S]))
+                justPressed(arrows["Down"]);
+            if (FlxG.keys.anyJustPressed([UP, W]))
+                justPressed(arrows["Up"]);
+            if (FlxG.keys.anyJustPressed([RIGHT, D]))
+                justPressed(arrows["Right"]);
 
-        if (FlxG.keys.anyJustReleased([LEFT, A]))
-            justReleased(arrows["Left"]);
-        if (FlxG.keys.anyJustReleased([DOWN, S]))
-            justReleased(arrows["Down"]);
-        if (FlxG.keys.anyJustReleased([UP, W]))
-            justReleased(arrows["Up"]);
-        if (FlxG.keys.anyJustReleased([RIGHT, D]))
-            justReleased(arrows["Right"]);
+            if (FlxG.keys.anyJustReleased([LEFT, A]))
+                justReleased(arrows["Left"]);
+            if (FlxG.keys.anyJustReleased([DOWN, S]))
+                justReleased(arrows["Down"]);
+            if (FlxG.keys.anyJustReleased([UP, W]))
+                justReleased(arrows["Up"]);
+            if (FlxG.keys.anyJustReleased([RIGHT, D]))
+                justReleased(arrows["Right"]);
+        }
     }
 
     public function loadChart(chartData:String):Void
@@ -121,7 +121,7 @@ class Strumline extends FlxSpriteGroup
     {
         var note:NoteSprite = getNearestNote(getNotes(arrow.ID), arrow);
 
-        if (note != null && Math.abs(note.getGraphicMidpoint().y - arrow.getGraphicMidpoint().y) <= 160)
+        if (note != null && note.alive != false && Math.abs(note.getGraphicMidpoint().y - arrow.getGraphicMidpoint().y) <= 160)
         {
             note.kill();
             arrow.animation.play("confirm", true);
@@ -139,8 +139,10 @@ class Strumline extends FlxSpriteGroup
             PlayState.updateBoyfriendOffsets();
 
             PlayState.health += 0.023;
+            PlayState.bfVocals.volume = 1;
+            PlayState.score += 100 - Math.abs(note.getGraphicMidpoint().y - arrow.getGraphicMidpoint().y);
 
-            if (Math.abs(note.getGraphicMidpoint().y - arrow.getGraphicMidpoint().y) <= 45)
+            /*if (Math.abs(note.getGraphicMidpoint().y - arrow.getGraphicMidpoint().y) <= 45)
             {
                 var splash:FlxSprite = new FlxSprite();
                 splash.frames = FlxAtlasFrames.fromSparrow("assets/images/noteSplashes.png", "assets/images/noteSplashes.xml");
@@ -161,13 +163,17 @@ class Strumline extends FlxSpriteGroup
                 splash.offset.set(splash.width * 0.3, splash.height * 0.3);
 
                 add(splash);
-            }
+            }*/
         }
         else
         {
             arrow.animation.play("press", true);
 
-            PlayState.health -= (0.023 * 2);
+            PlayState.health -= 0.023;
+            PlayState.bfVocals.volume = 0;
+            PlayState.score -= 35;
+
+            FlxG.sound.play('assets/sounds/missnote${FlxG.random.int(1, 3)}.ogg', 0.2);
         }
 
         arrow.centerOffsets();
@@ -177,7 +183,6 @@ class Strumline extends FlxSpriteGroup
     function justReleased(arrow:FlxSprite):Void
     {
         arrow.animation.play("static", true);
-
         arrow.centerOffsets();
         arrow.centerOrigin();
     }

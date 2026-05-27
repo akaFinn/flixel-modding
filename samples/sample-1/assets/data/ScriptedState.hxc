@@ -1,0 +1,39 @@
+package assets.data;
+
+import flixel.FlxSprite;
+import flixel.FlxState;
+import flixel.graphics.frames.FlxAtlasFrames;
+
+class ScriptedState extends FlxState
+{
+    public static var defaultMessage:String = "Suck my cock bro";
+
+    public var sex:String = 'Die';
+
+    override public function create():Void
+    {
+        trace('Creating scripted state...');
+
+        super.create();
+
+        var boyfriend = new FlxSprite();
+		boyfriend.frames = FlxAtlasFrames.fromSparrow("assets/images/boyfriend.png", "assets/images/boyfriend.xml");
+		boyfriend.animation.addByPrefix("idle", "BF idle dance", 24, true);
+		boyfriend.animation.play("idle");
+        boyfriend.screenCenter();
+		add(boyfriend);
+    }
+
+    public function printThing():Void
+    {
+        trace('Hi, ${ScriptedState.defaultMessage}');
+    }
+
+    public static function printMessage(?message:String):Void
+    {
+        if (message != null)
+            trace(message);
+        else
+            trace(ScriptedState.defaultMessage);
+    }
+}

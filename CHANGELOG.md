@@ -1,78 +1,69 @@
 ![](images/misc/changelog.png?raw=true)
 
-# [1.6.0] *BETA* - (December 8, 2025)
+---
 
-Modding support for HTML5 build targets, modpack unzipping, appending/merging strings, & reworked scripting
+# [1.6.0] *BETA* - (May 27, 2026)
+# **CHANGELOG NOT FINAL**
+
+Full HTML5 support, modpack unzipping, powerful new scripting system, string/file format helpers, massive internal cleanup, and improved architecture.
 
 ### Added
-- Created `flixel.group.FlxModpackContainer` a container designed for modpacks only
-- Created `haxe.semver.Version` an abstract module make for the semantic versioning syntax
-- Created `haxe.Srt`, `haxe.Ini`, & `haxe.Csv` all classes for their respective file types
-- Created `flixel.system.FlxFileSystem` a file system built and made for all native build targets
-- Created `flixel.utils.FlxZipUtil` as a way to manage and handle zip files of any kind in terms of unzipping
-- Created `flixel.utils.helpers.FlxStringHelper` as a string manager for appending, merging, ect.
-- Added some new classes designed for scripting:
-  - `flixel.system.hscript.FlxScript` a class designed for easy access to executing hscript's fast
-  - `flixel.system.hscript.FlxScriptClass` a class made for scripted classes found in scripted modules
-  - `flixel.system.hscript.FlxScriptModule` a master class made for storing imports, classes, typedefs, and package path's
-  - `flixel.system.hscript.FlxScriptTypeDef` a class designed for scripted typedefs found in scripted modules
-- Made `cachedScripts` & `cachedScriptModules` in `FlxScriptUtil` as a way to cache/store built scripts & script modules
-- Made `FlxScriptUtil.buildInterp()` & `FlxScriptUtil.buildParser()` as a quick and easy way to create hscript parsers & interps
-- Created `defaultImports` to `FlxScriptUtil` an array of `FlxModuleImport`'s that get used when building an interpreter using `buildInterp`
-- Created `buildScript` & `buildScriptModule` as a way to create scripts and script modules using just the contents of a script or module
-- Moved all signals from `FlxModding` to `FlxModding.signals` to make the class more clean
-- Added a comment to the `file` variable in `FlxBaseModpack`
-- Added `filePathToPackagePath` to `FlxScriptUtil` as a way to turn a file path into a package path
-- Added `packagePathToFilePath` to `FlxScriptUtil` as a way to turn a package path into a file path
-- Added `grabEveryFileExtension` to `FlxScriptUtil` a function that returns an array of every single file extension for scripts/modules
-- Added `interp` & `parser` to `FlxScriptUtil` as static methods to hscript's `Interp` & `Parser` classes
-- Added `getModpackSize` to `FlxBaseModpack` the function grabs the file size of the modpack
-- Added `modPackages` to `FlxModding` a variable that stores each registered modding package
-- Added `registerModPackage`, `unregisterModPackage`, & `getModPackage` to `FlxModding`
-- Added the `autoLoadMods` parameter to `FlxModding.init`
-- Added `FlxModding.unzip` which takes the bytes of a .zip file and converts it to a modpack
-- Added `buildAssetSystem` and `buildFileSystem` to `FlxModding`
-- Added the `blacklist` parameter to the `FlxModding.init` function
-- Added `BLACKLISTED_DIRECTORYS` to `FlxModding` as a method of storing all blacklisted directorys that wont be affected by modpacks
-- Added `hasBlacklistedDirectory` that acts as a method to check if an id/path to an asset has a blacklisted directory
-- Added support for appended & merged text content in for asset systems
-- Added a `TODO.md` file to the github repo to showcase what I have planned for updates
-- Added a samples folder along with some samples that I use when testing FlxModding
+- **Full HTML5 / JavaScript target support**, Mods now work properly on web builds (including asset overriding and loading)
+- `flixel.group.FlxModpackContainer` A specialized `FlxTypedContainer` designed specifically for holding and managing modpacks
+- `haxe.semver.Version` A robust semantic versioning abstract with parsing, comparison, and increment helpers
+- New high-level file format parsers:
+  - `haxe.Srt` Full SubRip subtitle (.srt) parsing, creation, and timecode handling
+  - `haxe.Ini` INI configuration file support (sections + key/value pairs)
+  - `haxe.Csv` CSV parsing with row/column access
+- `flixel.system.FlxFileSystem` Clean static API for native file operations across targets
+- `flixel.utils.FlxZipUtil` Full zip decompression support, including `FlxModding.unzip(bytes)` to convert zip files into usable modpacks
+- `flixel.utils.helpers.FlxStringHelper` Advanced utilities for appending, merging, diffing, and parsing plain text, JSON, XML, and SRT content
+- **Complete hscript scripting overhaul**:
+  - `flixel.system.hscript.FlxScript` Simple script execution
+  - `flixel.system.hscript.FlxScriptClass` Support for full scripted classes that can extend native classes
+  - `flixel.system.hscript.FlxScriptModule` Package-level modules containing multiple classes + typedefs
+  - `flixel.system.hscript.FlxScriptTypedef` Scripted typedef support
+  - Built-in caching (`cachedScripts` + `cachedScriptModules`)
+  - `FlxScriptUtil.buildScript()` and `FlxScriptUtil.buildScriptModule()` for creating scripts from raw strings
+  - Default import system so common classes are automatically available in scripts
+- `FlxModding.signals` namespace All signals moved here for a cleaner, more organized API
+- Modpack class registration system (`registerModpackClass`, `unregisterModpackClass`, `getModpackClass`)
+- **Appended** (`_append`) and **Merged** (`_merge`) text asset support for JSON, XML, plain text, etc.
+- Directory blacklist system (`BLACKLISTED_DIRECTORYS`, `addBlacklistedDirectory`, `hasBlacklistedDirectory`, etc.)
+- `CREDITS.json` file, `TODO.md`, multiple sample projects, and better repository organization
+- Full **Polymod migration guide** (`docs/doc_migrate.md`)
 
 ### Changed
-- Reworked how modpacks reload in `FlxModding.reload` to now also load zipped modpacks when found
-- Reworked `FlxModding.create` from creating modpacks via a massive and stupid switch statement to now looking thru the mod packages
-- Completely reworked `FlxScriptUtil` so now you can execute both scripts and scripted classes without the need of other librarys
-- Moved all signals in `FlxModding` to `FlxModding.signals` as a way to make the class cleaner and easier to manage
-- Moved `AssetModLibrary` from `FlxModding` to `lime.utils.ModdedAssetLibrary` and made it public
-- Fixed `FlxModding.init` to not let `FlxModding.reload` get called twice
-- Changed the `fromDynamicData` function from the `FlxBaseModpack` class to `fromDynamic`
-- Changed the `toString` function from `FlxBaseModpack` to also give out the file size of the modpack
-- Changed the `fileSystem` folder to `fileSystems` I know amazing
-- Changed the `assetSystem` variable's name to `assets` in `FlxModding.system`
-- Changed the `iconBitmap` parameter for `FlxModding.create` to only work if it doesnt equal `null`
-- Changed the `sanitize` function to have support for Lime/OpenFl librarys
-- Changed the `redirect` function to have support for appended or merged assets
-- Changed the `assetDirectory` variable to `ASSETS_DIRECTORY`
-- Changed the `modsDirectory` variable to `MODS_DIRECTORY`
-- Changed the `flixelDirectory` variable to `FLIXEL_DIRECTORY`
-- Organized Github images
-- Updated the docs
+- `FlxModding.reload()` now fully supports both folder-based and zipped modpacks
+- `FlxScriptUtil` was completely rewritten from the ground up now natively supports scripted classes without external dependencies
+- Massive internal refactoring:
+  - `fileSystem` folder → `fileSystems`
+  - `assetSystem` variable → `assets`
+  - Many constants converted to UPPER_CASE
+  - Cleaner class structure and naming
+- `FlxModding.create()` no longer uses a massive switch statement now uses the new modpack class registration system
+- Improved asset redirect logic to properly handle appended and merged content
+- Custom fonts now load and render correctly on both Desktop and HTML5
+- `FlxModding.init()` no longer calls `reload()` twice internally
+- Updated README, all documentation files, and GitHub banner/assets
 
 ### Removed
-- Removed the `FlxAssetSystem` class
-- Removed `FlxModding.system.assets` just use FlxG.assets, OpenFL's `Assets` class or Lime's `Assets` class 
-- Removed the `type` variable from `FlxBaseModpack`
-- Removed `IAssetSystem` & `assetSystems` folder
-- Removed the fileSystems folder
-- Removed `IFileSystem`
-- Removed `JsFileSystem`
-- Removed `RamFileSystem`
-- Removed `SysFileSystem`
+- Old asset system architecture (`FlxAssetSystem`, `IAssetSystem`, `AssetModLibrary`, etc.)
+- Old file system layer (`IFileSystem`, `JsFileSystem`, `RamFileSystem`, `SysFileSystem`, etc.)
+- Legacy metadata system (`FlxMetadataFormat`, `FlxBaseMetadataFormat`, `FlxLegacyMetadataFormat`, `PolymodMetadataFormat`, `buildMetadata` macro, etc.)
+- `FlxModding.update()` function and many obsolete internal variables and helper classes
+
+### Fixed
+- Double `reload()` issue during initialization
+- Various memory leaks and stability problems from the previous architecture
+- Font loading issues on HTML5 and Desktop
+- Many small bugs uncovered during the large refactor
+
+---
 
 # [1.5.0] - (Augest 30, 2025)
 
-Better scripting, Metadata Macros, and more
+Better scripting, Metadata Macros, and more.
 
 ### Added
 - Created `flixel.util.FlxModUtil` to better store functions and macros designed for modding
@@ -97,9 +88,11 @@ Better scripting, Metadata Macros, and more
 ### Removed
 - Deleted the `metaPath` & `iconPath` variables from both `FlxMetadataFormat`, and `PolymodMetadataFormat`
 
+---
+
 # [1.4.0] - (Augest 23, 2025)
 
-Custom Modpack & Metadata formatting, File & Asset System changeability, and Asset compatibility for OpenFL/Lime Assets
+Custom Modpack & Metadata formatting, File & Asset System changeability, and Asset compatibility for OpenFL/Lime Assets.
 
 ### Added
 - Support for custom Modpack Classes
@@ -139,6 +132,8 @@ Custom Modpack & Metadata formatting, File & Asset System changeability, and Ass
 - The `allowCaching` parameter for the `init` function in `flixel.system.FlxModding`
 - Removed `FlxCache` due to it being pointless and fucking dumb
 
+---
+
 # [1.3.0] - (July 26, 2025)
 
 Even more hotfixes, and Polymod support, and HScript support.
@@ -159,6 +154,8 @@ Even more hotfixes, and Polymod support, and HScript support.
 - Changed `caching` to `cache` in `flixel.system.FlxModding` and changed the class to the newly added `flixel.system.FlxCache`
 - Changed the initializing process to not crash your project when targeting JavaScript or HTML5
 - Changed the error system to where intead of it just flashing the error on screen and closing the window it brings up a whole popup explaining what happened
+
+---
 
 # [1.2.0] - (July 24, 2025)
 
@@ -186,6 +183,8 @@ First major update for flixel-modding.
 ### Removed
 - Removed any scraps from when I was trying to make `FlxModding` work with OpenFL, I'm sorry but some things just aren't meant to be
 
+---
+
 # [1.1.0] - (April 23, 2025)
 
 First hotfix for flixel-modding.
@@ -198,6 +197,8 @@ First hotfix for flixel-modding.
 - Changed getting Metadata has been reworked from a simple text file to an actual Json file instead
 - Changed some code that when `FlxG.resetGame` is called it also reloads mods
 
+---
+
 # [1.0.0] - (April 21, 2025)
 
 First ever version of flixel-modding.
@@ -205,3 +206,8 @@ First ever version of flixel-modding.
 ### Added
 - Added `init` and `reload` to `flixel.system.FlxModding` with the purpose of reloading mods and initilizing FlxModding
 - Added `name`, `author`, and `active` to `flixel.system.FlxModpack` to make Modpack's more discriptive
+
+---
+
+**Made with ❤️ by [akaFinn_](https://x.com/akaFinn_) and contributors.**  
+See [CREDITS.json](CREDITS.json) for full credits.

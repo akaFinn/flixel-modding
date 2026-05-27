@@ -1,0 +1,8 @@
+var mathNumber:Float = 10;
+
+function doMath():Float
+{
+    return mathNumber * 3;
+}
+
+trace('Hello World! ${doMath()}');

@@ -1,0 +1,43 @@
+package assets.data;
+
+import flixel.FlxG;
+import flixel.FlxSprite as Sprite;
+import assets.data.TestSprite;
+
+using StringTools;
+
+class TestScript extends Sprite
+{
+    public static var helloWorld:String = "Hello, World!";
+
+    public var name:String;
+
+    public static function main(number:Float):Void
+    {
+        trace('${TestScript.helloWorld} ${number * 3}');
+    }
+
+    public function new(name:String)
+    {
+        trace(this);
+
+        this.name = name;
+
+        super(30, 0);
+
+        super.makeGraphic(256, 256);
+        this.screenCenter();
+
+        TestSprite.scriptStaticCall('test');
+    }
+
+    public function sayHello():Void
+    {
+        trace('${helloWorld} My name is ${this.name}');
+    }
+
+    function toString():String
+    {
+        return 'Howdy Nice Guy!';
+    }
+}

@@ -368,6 +368,7 @@ class FlxStringHelper
 
 	/**
 	 * Merges plain text to the provided base string.
+	 * 
 	 * @param base             The original string
 	 * @param text             The text to merge
 	 *
@@ -381,6 +382,7 @@ class FlxStringHelper
 
 	/**
 	 * Merges JSON text into a base JSON string.
+	 * 
 	 * @param base             The original JSON string
 	 * @param text             The JSON text to merge
 	 * 
@@ -545,6 +547,7 @@ class FlxStringHelper
 
 	/**
 	 * Merges XML text into a base XML string.
+	 * 
 	 * @param base             The original XML string
 	 * @param text             The XML text to merge
 	 *
@@ -558,6 +561,7 @@ class FlxStringHelper
 
 	/**
 	 * Merges SRT text into a base SRT string.
+	 * 
 	 * @param base             The original SRT string
 	 * @param text             The SRT text to merge
 	 *
@@ -567,6 +571,36 @@ class FlxStringHelper
 	{
 		FlxG.log.warn("Failed to merge Srt Text, this feature is not yet officially supported");
 		return base;
+	}
+
+	/**
+	 * Generates a random alphanumeric code consisting of letters and numbers.
+	 * 
+	 * The resulting string contains only:
+	 *  - Uppercase letters (A–Z)
+	 *  - Lowercase letters (a–z)
+	 *  - Numbers (0–9)
+	 * 
+	 * No special characters are used. The character casing is naturally
+	 * randomized because both uppercase and lowercase letters exist
+	 * in the available character pool.
+	 * 
+	 * @param length           The desired length of the generated code
+	 *
+	 * @return Returns a randomly generated alphanumeric code.
+	 */
+	public static function generateRandomCode(?length:Int = 6):String
+	{
+		var chars:String = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+		var code:String = "";
+
+		for (i in 0...length)
+		{
+			var index:Int = FlxG.random.int(0, chars.length - 1);
+			code += chars.charAt(index);
+		}
+
+		return code;
 	}
 }
 

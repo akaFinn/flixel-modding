@@ -7,13 +7,14 @@ import flixel.FlxState;
 import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.group.FlxGroup;
 import flixel.math.FlxMath;
-import flixel.math.FlxPoint;
 import flixel.sound.FlxSound;
 import flixel.text.FlxText;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
 import flixel.ui.FlxBar;
 import flixel.util.FlxColor;
+import flixel.util.FlxScriptUtil;
+import flixel.util.FlxStringUtil;
 import flixel.util.FlxTimer;
 import openfl.filters.ShaderFilter;
 import openfl.utils.Assets;
@@ -22,6 +23,7 @@ class PlayState extends FlxState
 {
 	public static var health:Float = 1;
 	public static var boyfriend:FlxSprite;
+	public static var score:Float;
 
 	static var offsets:Map<String, Array<Float>>;
 
@@ -31,14 +33,13 @@ class PlayState extends FlxState
 	var boyfriendIcon:FlxSprite;
 	var boyfriendShader:Shader;
 
-	var stage:FlxGroup;
-	var widgets:FlxTypedGroup<ModWidget>;
-
 	var healthLerp:Float = 1;
 	var healthBar:FlxBar;
+	var scoreText:FlxText;
+	var header:FlxText;
 
-	var bfVocals:FlxSound;
-	var dadVocals:FlxSound;
+	public static var bfVocals:FlxSound;
+	public static var dadVocals:FlxSound;
 
 	var switchingState:Bool = false;
 
@@ -46,10 +47,19 @@ class PlayState extends FlxState
 
 	override public function create()
 	{
-		super.create();
-
 		bfVocals = new FlxSound().loadEmbedded("assets/music/Voices-bf.ogg");
 		dadVocals = new FlxSound().loadEmbedded("assets/music/Voices-dad.ogg");
+
+		// super.create();
+
+		var scriptStateClass = FlxScriptUtil.getScriptClass('ScriptedState');
+		scriptStateClass.scriptStaticCall('printMessage', ['Hello, World']);
+		scriptStateClass.scriptStaticSet('defaultMessage', 'Default Text!');
+		scriptStateClass.scriptStaticGet('defaultMessage');
+
+		var scriptState = scriptStateClass.scriptNew();
+		// Reflect.callMethod(scriptState, Reflect.field(scriptState, 'scriptCall'), []);
+		FlxG.switchState(() -> scriptState);
 
 		offsets = new Map<String, Array<Float>>();
 
@@ -65,18 +75,29 @@ class PlayState extends FlxState
 
 		buildCameras();
 
-		buildStage();
+		// buildStage();
 		buildBoyfriend();
 		buildHud();
+
+		health = 1;
+		score = 0;
 
 		FlxG.camera.target = boyfriend;
 		FlxG.camera.targetOffset.set(-370, -140);
 		FlxG.camera.zoom = 0.85;
 
 		FlxG.sound.playMusic("assets/music/Inst.ogg", 0, false);
-		FlxG.sound.music.pitch = 0;
+		FlxG.sound.music.pitch = Main.lowestPitch;
+
+		dadVocals.play();
+		dadVocals.pitch = Main.lowestPitch;
+
+		bfVocals.play();
+		bfVocals.pitch = Main.lowestPitch;
 
 		FlxTween.tween(FlxG.sound.music, {pitch: 1, volume: 1}, 0.5, {ease: FlxEase.quartIn});
+		FlxTween.tween(dadVocals, {pitch: 1, volume: 1}, 0.5, {ease: FlxEase.quartIn, onComplete: (tween) -> {dadVocals.time = FlxG.sound.music.time;}});
+		FlxTween.tween(bfVocals, {pitch: 1, volume: 1}, 0.5, {ease: FlxEase.quartIn, onComplete: (tween) -> {bfVocals.time = FlxG.sound.music.time;}});
 
 		hudCamera.scroll.subtract(250, 0);
 
@@ -84,8 +105,6 @@ class PlayState extends FlxState
 		FlxTween.tween(FlxG.camera.targetOffset, {x: FlxG.camera.targetOffset.x + 200}, 0.5, {ease: FlxEase.quartOut});
 		FlxTween.tween(hudCamera.scroll, {x: hudCamera.scroll.x + 250}, 0.5, {ease: FlxEase.quartOut});
 
-		dadVocals.play();
-		bfVocals.play();
 		FlxG.signals.focusLost.add(() ->
 		{
 			dadVocals.pause();
@@ -100,24 +119,23 @@ class PlayState extends FlxState
 			dadVocals.resume();
 			bfVocals.resume();
 		});
-	}
 
-	var lastMousePos:FlxPoint = FlxPoint.get();
-	var isDragging:Bool = false;
+		FlxG.sound.onVolumeChange.add((f:Float) -> {
+			bfVocals.volume = FlxG.sound.music.volume;
+			dadVocals.volume = FlxG.sound.music.volume;
+		});
+	}
 
 	override public function update(elapsed:Float)
 	{
 		super.update(elapsed);
+		this.updateVocals(elapsed);
 
 		health = FlxMath.bound(health, 0, 2);
 		healthLerp = FlxMath.lerp(healthLerp, health, 0.15);
 		boyfriendIcon.x = ((healthBar.x + healthBar.width) - (healthBar.width * (healthLerp / 2))) - (boyfriendIcon.width / 2);
 
-		if (FlxG.sound.music != null && switchingState != true)
-		{
-			bfVocals.volume = FlxG.sound.music.volume;
-			dadVocals.volume = FlxG.sound.music.volume;
-		}
+		scoreText.text = "Score:" + FlxStringUtil.formatMoney(score, false);
 
 		if (healthBar.percent < 20)
 			boyfriendIcon.animation.curAnim.curFrame = 1;
@@ -138,35 +156,58 @@ class PlayState extends FlxState
 			FlxG.camera.zoom = Math.max(0.1, Math.min(FlxG.camera.zoom, 3));
 		}
 
-		if (FlxG.keys.anyPressed([A, LEFT]))
-			FlxG.camera.scroll.x -= 10;
-
-		if (FlxG.keys.anyPressed([D, RIGHT]))
-			FlxG.camera.scroll.x += 10;
-
-		if (FlxG.keys.anyPressed([W, UP]))
-			FlxG.camera.scroll.y -= 10;
-
-		if (FlxG.keys.anyPressed([S, DOWN]))
-			FlxG.camera.scroll.y += 10;
-
-		if (FlxG.keys.justPressed.R)
+		if (FlxG.keys.pressed.SHIFT)
 		{
-			dadVocals.stop();
-			bfVocals.stop();
+			if (FlxG.keys.justPressed.R)
+			{
+				dadVocals.stop();
+				bfVocals.stop();
 
-			FlxG.resetState();
+				FlxG.resetState();
+			}
+
+			if (FlxG.keys.justPressed.SPACE)
+			{
+				@:privateAccess
+				if (FlxG.sound.music._paused != true)
+				{
+					FlxG.sound.music.pause();
+					bfVocals.pause();
+					dadVocals.pause();
+				}
+				else
+				{
+					FlxG.sound.music.resume();
+					bfVocals.resume();
+					dadVocals.resume();
+
+					bfVocals.time = FlxG.sound.music.time;
+					dadVocals.time = FlxG.sound.music.time;
+				}
+			}
+
+			if (FlxG.keys.pressed.UP)
+			{
+				FlxG.sound.music.time += 15;
+			}
+
+			if (FlxG.keys.pressed.DOWN)
+			{
+				FlxG.sound.music.time -= 15;
+			}
 		}
 		#end
 
-		if (FlxG.keys.justPressed.ENTER && switchingState != true)
+		if (FlxG.keys.justPressed.TAB && switchingState != true)
 		{
 			switchingState = true;
 			FlxG.sound.play("assets/sounds/confirmMenu.ogg");
 
-			FlxTween.tween(bfVocals, {pitch: 0, volume: 0}, 3, {ease: FlxEase.quartOut});
-			FlxTween.tween(dadVocals, {pitch: 0, volume: 0}, 3, {ease: FlxEase.quartOut});
-			FlxTween.tween(FlxG.sound.music, {pitch: 0, volume: 0}, 3, {ease: FlxEase.quartOut});
+			FlxTween.tween(bfVocals, {pitch: Main.lowestPitch, volume: 0}, 3, {ease: FlxEase.quartOut});
+			FlxTween.tween(dadVocals, {pitch: Main.lowestPitch, volume: 0}, 3, {ease: FlxEase.quartOut});
+			FlxTween.tween(FlxG.sound.music, {pitch: Main.lowestPitch, volume: 0}, 3, {ease: FlxEase.quartOut});
+
+			FlxTween.color(header, 0.4, FlxColor.CYAN, FlxColor.WHITE);
 
 			FlxTimer.wait(0.5, () -> 
 			{
@@ -194,61 +235,9 @@ class PlayState extends FlxState
 
 	function buildStage():Void
 	{
-		stage = new FlxGroup();
-
-		var brightLightSmall = new FlxSprite();
-		brightLightSmall.loadGraphic("assets/images/stage/brightLightSmall.png");
-		brightLightSmall.scrollFactor.set(1.2, 1.2);
-		brightLightSmall.setPosition(967, -103);
-		stage.add(brightLightSmall);
-
-		var crowd = new FlxSprite();
-		crowd.frames = FlxAtlasFrames.fromSparrow("assets/images/stage/crowd.png", "assets/images/stage/crowd.xml");
-		crowd.animation.addByPrefix("idle", "idle0", 12);
-		crowd.scrollFactor.set(0.8, 0.8);
-		crowd.animation.play("idle");
-		crowd.setPosition(682, 290);
-		stage.add(crowd);
-
-		var bg = new FlxSprite();
-		bg.loadGraphic("assets/images/stage/bg.png");
-		bg.setPosition(-765, -247);
-		stage.add(bg);
-
-		var server = new FlxSprite();
-		server.loadGraphic("assets/images/stage/server.png");
-		server.setPosition(-991, 205);
-		stage.add(server);
-
-		var lights = new FlxSprite();
-		lights.loadGraphic("assets/images/stage/lights.png");
-		lights.scrollFactor.set(1.2, 1.2);
-		lights.setPosition(-847, -245);
-		stage.add(lights);
-
-		var orangeLight = new FlxSprite();
-		orangeLight.loadGraphic("assets/images/stage/orangeLight.png");
-		orangeLight.scale.set(1, 1700);
-		orangeLight.updateHitbox();
-		orangeLight.setPosition(189, -500);
-		stage.add(orangeLight);
-
-		var lightgreen = new FlxSprite();
-		lightgreen.loadGraphic("assets/images/stage/lightgreen.png");
-		lightgreen.setPosition(-171, 242);
-		stage.add(lightgreen);
-
-		var lightred = new FlxSprite();
-		lightred.loadGraphic("assets/images/stage/lightred.png");
-		lightred.setPosition(-101, 560);
-		stage.add(lightred);
-
-		var lightAbove = new FlxSprite();
-		lightAbove.loadGraphic("assets/images/stage/lightAbove.png");
-		lightAbove.setPosition(804, -117);
-		stage.add(lightAbove);
-
-		add(stage);
+		/*var mainStage:FlxScriptObject = FlxScriptUtil.getScriptClass('MainStage').scriptNew();
+		mainStage.functions.call('printCrap');
+		add(mainStage.getSuperObj());*/
 	}
 
 	function buildCameras():Void
@@ -288,7 +277,7 @@ class PlayState extends FlxState
 			updateBoyfriendOffsets();
 		});
 
-		stage.add(boyfriend);
+		add(boyfriend);
 	}
 
 	function buildHud():Void
@@ -304,8 +293,8 @@ class PlayState extends FlxState
 		healthBarBg.cameras = [hudCamera];
 		add(healthBarBg);
 
-		var header = new FlxText(4, 4);
-		header.text = "Press 'ENTER' to open Mods";
+		header = new FlxText(4, 4);
+		header.text = "Press 'TAB' to open Mods";
 		header.setFormat("assets/fonts/vcr.ttf", 20);
 		header.setBorderStyle(OUTLINE, FlxColor.BLACK, 2);
 		header.cameras = [hudCamera];
@@ -325,5 +314,22 @@ class PlayState extends FlxState
 		boyfriendIcon.setPosition(((healthBar.x + healthBar.width) - (healthBar.width * (healthLerp / 2))) - (boyfriendIcon.width / 2), (healthBar.y + (healthBar.height / 2)) - (boyfriendIcon.height / 2));
 		boyfriendIcon.cameras = [hudCamera];
 		add(boyfriendIcon);
+
+		scoreText = new FlxText();
+		scoreText.x = healthBarBg.x + healthBarBg.width - 190;
+		scoreText.y = healthBarBg.y + 30;
+		scoreText.setFormat("assets/fonts/vcr.ttf", 15);
+		scoreText.alignment = RIGHT;
+		scoreText.borderStyle = OUTLINE;
+		scoreText.borderColor = FlxColor.BLACK;
+		scoreText.letterSpacing = -1;
+		scoreText.cameras = [hudCamera];
+		add(scoreText);
+	}
+
+	function updateVocals(elapsed:Float):Void
+	{
+		bfVocals.update(elapsed);
+		dadVocals.update(elapsed);
 	}
 }

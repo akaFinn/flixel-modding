@@ -1,0 +1,16 @@
+package assets.data;
+
+import flixel.FlxSprite as FlixelSprite;
+
+class TestSprite
+{
+    public function new()
+    {
+        trace('Hi');
+    }
+
+    public static function test():Void
+    {
+        trace('Test');
+    }
+}

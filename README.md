@@ -4,7 +4,7 @@
 [![Haxelib Downloads](https://badgen.net/haxelib/d/flixel-modding?color=green)](https://lib.haxe.org/p/flixel-modding/versions/)
 [![Haxelib License](https://badgen.net/haxelib/license/flixel-modding?color=red)](LICENSE)
 
-![](images/misc/promo.png?raw=true)
+![](images/misc/banner.png?raw=true)
 
 ## About
 **flixel-modding** is a robust and easy-to-use modding system built specifically for **HaxeFlixel**. It is designed to help developers add straightforward mod support to their games. Whether you're looking to allow asset replacement or loading entirely new assets from mods, flixel-modding has you covered.
@@ -17,28 +17,12 @@
 
 ## Requirements
 - HaxeFlixel
-- HScript
 
 ## Intended Usage
-flixel-modding is intended for developers of HaxeFlixel games who want to:
 - Allow users to replace default game assets with their own
 - Enable community content through custom mods
 - Simplify the process of managing mod files and directories
 
 ## Links
-### [Haxelib](https://lib.haxe.org/p/flixel-modding/)
-### [Github](https://github.com/akaFinn/flixel-modding/tree/master)
-
-## Documents
-### Important
-
-- ### [Changelog](CHANGELOG.md)
-- ### [Todo List](TODO.md)
-- ### [Credits](CREDITS.json)
-
-### Tutorials
-
-- [How to Setup flixel-modding](docs/doc_setup.md)
-- [How to Create modpacks flixel-modding](docs/doc_create.md)
-- [How to Customize flixel-modding](docs/doc_customize.md)
-- [How to Migrate to flixel-modding](docs/doc_migrate.md)
+### **[Haxelib](https://lib.haxe.org/p/flixel-modding/)**
+### **[Github](https://github.com/akaFinn/flixel-modding/tree/master)**
