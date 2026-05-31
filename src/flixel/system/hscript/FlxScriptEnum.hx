@@ -1,3 +1,6 @@
 package flixel.system.hscript;
 
-class FlxScriptEnum {}
+class FlxScriptEnum 
+{
+    public var name:String;
+}

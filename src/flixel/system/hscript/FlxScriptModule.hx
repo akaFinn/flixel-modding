@@ -4,6 +4,7 @@ import flixel.util.FlxScriptUtil;
 import flixel.util.FlxStringUtil;
 import flixel.util.FlxDestroyUtil;
 import flixel.system.hscript._internal.*;
+import flixel.system.hscript._internal.Expr;
 
 class FlxScriptModule implements IFlxDestroyable
 {
@@ -13,7 +14,7 @@ class FlxScriptModule implements IFlxDestroyable
 
     public var interfaces:Map<String, FlxScriptInterface>;
 
-    public var typedefs:Map<String, FlxScriptTypedef>;
+    // public var typedefs:Map<String, FlxScriptTypedef>;
 
     var pkg:Array<String>;
 
@@ -23,18 +24,22 @@ class FlxScriptModule implements IFlxDestroyable
 
     var origin:String;
 
+    var decls:Array<ModuleDecl>;
+
     public function new(path:String)
     {
         classes = [];
         enums = [];
         interfaces = [];
-        typedefs = [];
+        // typedefs = [];
 
         origin = path;
         parser = new Parser();
 		interp = new Interp();
 
-		for (moduleDecl in parser.parseModule(FlxFileSystem.getFileContent(path), path))
+        decls = parser.parseModule(FlxFileSystem.getFileContent(path), path);
+        
+		for (moduleDecl in decls)
 		{
 			switch (moduleDecl)
 			{
@@ -101,7 +106,7 @@ class FlxScriptModule implements IFlxDestroyable
             LabelValuePair.weak('classes', classes),
             LabelValuePair.weak('enums', enums),
             LabelValuePair.weak('interfaces', interfaces),
-            LabelValuePair.weak('typedefs', typedefs),
+            // LabelValuePair.weak('typedefs', typedefs),
         ]);
     }
 }

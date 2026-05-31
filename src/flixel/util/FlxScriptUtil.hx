@@ -1,5 +1,6 @@
 package flixel.util;
 
+import flixel.system.hscript.FlxScriptEnum;
 import haxe.io.Path;
 import openfl.utils.Assets;
 import flixel.system.hscript.FlxScript;
@@ -164,6 +165,32 @@ class FlxScriptUtil
         for (scriptModule in FlxScriptUtil.listScriptModules())
         {
             result = result.concat(Lambda.array(scriptModule.classes));
+        }
+
+        return result;
+    }
+
+    public static function getScriptEnum(name:String):FlxScriptEnum
+    {
+        for (scriptEnum in FlxScriptUtil.listScriptEnums())
+        {
+            if (scriptEnum.name == name)
+            {
+                return scriptEnum;
+            }
+        }
+
+        FlxG.log.warn('Failed to get ScriptEnum, "${name}" does not exist.');
+        return null;
+    }
+
+    public static function listScriptEnums():Array<FlxScriptEnum>
+    {
+        var result:Array<FlxScriptEnum> = [];
+
+        for (scriptModule in FlxScriptUtil.listScriptModules())
+        {
+            result = result.concat(Lambda.array(scriptModule.enums));
         }
 
         return result;

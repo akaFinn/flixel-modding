@@ -1,3 +1,6 @@
 package flixel.system.hscript;
 
-class FlxScriptInterface {}
+class FlxScriptInterface 
+{
+    public var name:String;
+}
