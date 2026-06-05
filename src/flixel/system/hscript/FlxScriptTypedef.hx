@@ -4,7 +4,7 @@ import flixel.system.hscript._internal.*;
 import flixel.system.hscript._internal.Expr;
 
 @:access(flixel.system.hscript.FlxScriptModule)
-class FlxScriptInterface 
+class FlxScriptTypedef
 {
     var pkg(get, never):Array<String>;
 
@@ -19,14 +19,14 @@ class FlxScriptInterface
         pkgClone.push(this.name);
         return pkgClone;
     }
-
+    
     var name(get, never):String;
 
     function get_name():String
     {
         return this.decl.name;
     }
-
+    
     var isPrivate(get, never):Bool;
 
     function get_isPrivate():Bool
@@ -34,20 +34,13 @@ class FlxScriptInterface
         return this.decl.isPrivate;
     }
 
-    var isExtern(get, never):Bool;
-    
-    function get_isExtern():Bool
-    {
-        return this.decl.isExtern;
-    }
-
     var interp:Interp;
 
     var module:FlxScriptModule;
 
-    var decl:InterfaceDecl;
+    var decl:TypeDecl;
 
-    public function new(module:FlxScriptModule, decl:InterfaceDecl)
+    public function new(module:FlxScriptModule, decl:TypeDecl)
     {
         this.module = module;
         this.decl = decl;

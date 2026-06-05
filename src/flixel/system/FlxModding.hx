@@ -1013,8 +1013,7 @@ class FlxModding
     private static function buildFileSystem():Void
     {
         #if !sys
-        @:privateAccess
-        FlxFileSystem.createVirtualFileSystem();
+        @:privateAccess FlxFileSystem.createVirtualFileSystem();
         #end
 
         #if (FLX_BUILD_SCRIPTS || !FLX_NO_BUILD_SCRIPTS)

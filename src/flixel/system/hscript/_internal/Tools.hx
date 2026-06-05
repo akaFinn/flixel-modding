@@ -134,6 +134,20 @@ class Tools {
         };
     }
 
+    public static inline function varDecl(fd:FieldDecl):VarDecl {
+        return switch (fd.kind) {
+            case KVar(v): v;
+            default: null;
+        }
+    }
+
+    public static inline function functionDecl(fd:FieldDecl):FunctionDecl {
+        return switch (fd.kind) {
+            case KFunction(v): v;
+            default: null;
+        }
+    }
+
     public static inline function getKeyIterator<T>(e:Expr, callb:String->String->Expr->T) {
         var key = null, value = null, it = e;
         switch (expr(it)) {

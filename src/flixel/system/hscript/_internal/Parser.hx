@@ -1019,23 +1019,6 @@ class Parser {
     }
 
     function parsePath() {
-        // Piece of shit, lemme tell ya...
-
-        /*var path = [getIdent()];
-            while (true)
-            {
-              var t = token();
-              if (t != TDot)
-              {
-                push(t);
-                break;
-              }
-              path.push(getIdent());
-            }
-
-            trace('${origin}: ${path}');
-            return path; */
-
         var path = [];
         var tk = token();
         switch (tk) {
@@ -1304,13 +1287,17 @@ class Parser {
     function parseModuleDecl():ModuleDecl {
         var meta = parseMetadata();
         var ident = getIdent();
-        var isPrivate = false, isExtern = false;
+        var isPrivate = false, isExtern = false, isFinal = false, isAbstract = false;
         while (true) {
             switch (ident) {
                 case "private":
                     isPrivate = true;
                 case "extern":
                     isExtern = true;
+                case "final":
+                    isFinal = true;
+                case "abstract":
+                    isAbstract = true;
                 default:
                     break;
             }
@@ -1402,7 +1389,9 @@ class Parser {
                     implement: implement,
                     fields: fields,
                     isPrivate: isPrivate,
+                    isAbstract: isAbstract,
                     isExtern: isExtern,
+                    isFinal: isFinal
                 });
             case "typedef":
                 var name = getIdent();
@@ -1470,6 +1459,7 @@ class Parser {
                     extend: extend,
                     fields: fields,
                     isExtern: isExtern,
+                    isFinal: isFinal,
                 });
             default:
                 unexpected(TId(ident));
@@ -1495,6 +1485,8 @@ class Parser {
                     access.push(AStatic);
                 case "macro":
                     access.push(AMacro);
+                case "abstract":
+                    access.push(AAbstract);
                 case "function":
                     var name = getIdent();
                     var inf = parseFunctionDecl();
@@ -1512,9 +1504,9 @@ class Parser {
                     var name = getIdent();
                     var get = null, set = null;
                     if (maybe(TPOpen)) {
-                        get = getIdent();
+                        get = parseVarProperty();
                         ensure(TComma);
-                        set = getIdent();
+                        set = parseVarProperty();
                         ensure(TPClose);
                     }
                     var type = maybe(TDoubleDot) ? parseType() : null;
@@ -1589,9 +1581,9 @@ class Parser {
                     var name = getIdent();
                     var get = null, set = null;
                     if (maybe(TPOpen)) {
-                        get = getIdent();
+                        get = parseVarProperty();
                         ensure(TComma);
-                        set = getIdent();
+                        set = parseVarProperty();
                         ensure(TPClose);
                     }
                     var type = maybe(TDoubleDot) ? parseType() : null;
@@ -1646,6 +1638,25 @@ class Parser {
         return {
             name: name,
             type: type
+        };
+    }
+
+    function parseVarProperty():VarProperty {
+        var id = getIdent();
+        return switch (id) {
+            case "set":
+                PSet;
+            case "get":
+                PGet;
+            case "never":
+                PNever;
+            case "default":
+                PDefault;
+            case "dynamic":
+                PDynamic;
+            default:
+                error(ECustom('Invalid set property'), readPos - 1, readPos - 1);
+                null;
         };
     }
 

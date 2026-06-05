@@ -9,3 +9,6 @@ funkin/
 funkin-legacy/
 
 project.json
+.DS_STORE
+
+test/

@@ -5,7 +5,6 @@ import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxState;
 import flixel.graphics.frames.FlxAtlasFrames;
-import flixel.group.FlxGroup;
 import flixel.math.FlxMath;
 import flixel.sound.FlxSound;
 import flixel.text.FlxText;
@@ -13,7 +12,6 @@ import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
 import flixel.ui.FlxBar;
 import flixel.util.FlxColor;
-import flixel.util.FlxScriptUtil;
 import flixel.util.FlxStringUtil;
 import flixel.util.FlxTimer;
 import openfl.filters.ShaderFilter;
@@ -50,16 +48,7 @@ class PlayState extends FlxState
 		bfVocals = new FlxSound().loadEmbedded("assets/music/Voices-bf.ogg");
 		dadVocals = new FlxSound().loadEmbedded("assets/music/Voices-dad.ogg");
 
-		// super.create();
-
-		var scriptStateClass = FlxScriptUtil.getScriptClass('ScriptedState');
-		scriptStateClass.scriptStaticCall('printMessage', ['Hello, World']);
-		scriptStateClass.scriptStaticSet('defaultMessage', 'Default Text!');
-		scriptStateClass.scriptStaticGet('defaultMessage');
-
-		var scriptState = scriptStateClass.scriptNew();
-		// Reflect.callMethod(scriptState, Reflect.field(scriptState, 'scriptCall'), []);
-		FlxG.switchState(() -> scriptState);
+		super.create();
 
 		offsets = new Map<String, Array<Float>>();
 

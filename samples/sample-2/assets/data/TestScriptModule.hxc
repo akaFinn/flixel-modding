@@ -6,13 +6,34 @@ import assets.data.TestSprite;
 
 using StringTools;
 
-class TestScript extends Sprite
+enum TestEnum
+{
+    STUPID_ONE;
+    STUPID_TWO;
+    RGB(r:Int, g:Int, b:Int);
+}
+
+typedef TestTypedef =
+{
+    var shit:String;
+    var ?poop:Int;
+}
+
+final class TestScript extends Sprite
 {
     public static var helloWorld:String = "Hello, World!";
 
     public var name:String;
 
-    public static function main(number:Float):Void
+    public var stupid(default, set):Int = 5;
+
+    function set_stupid(value:Int):Int
+    {
+        trace(value);
+        return value * 5;
+    }
+
+    public static function main(?number:Float = 5):Void
     {
         trace('${TestScript.helloWorld} ${number * 3}');
     }
@@ -20,6 +41,11 @@ class TestScript extends Sprite
     public function new(name:String)
     {
         trace(this);
+        trace(stupid);
+
+        stupid = 10;
+
+        trace(stupid);
 
         this.name = name;
 
@@ -28,7 +54,10 @@ class TestScript extends Sprite
         super.makeGraphic(256, 256);
         this.screenCenter();
 
-        TestSprite.scriptStaticCall('test');
+        TestSprite.test();
+
+        var testSprite:TestSprite = new TestSprite();
+        trace(testSprite);
     }
 
     public function sayHello():Void

@@ -375,9 +375,10 @@ class Printer {
             case EUnterminatedComment: "Unterminated comment";
             case EInvalidPreprocessor(str): "Invalid preprocessor (" + str + ")";
             case EUnknownVariable(v): "Unknown variable: " + v;
+            case EInvalidProperty(v): "Invalid property: " + v;
             case EInvalidIterator(v): "Invalid iterator: " + v;
             case EInvalidOp(op): "Invalid operator: " + op;
-            case EInvalidAccess(f): "Invalid access to field " + f;
+            case EInvalidAccess(f): "Invalid access to field: " + f;
             case ECustom(msg): msg;
         };
 

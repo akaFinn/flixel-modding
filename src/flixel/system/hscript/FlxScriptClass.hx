@@ -1,24 +1,65 @@
 package flixel.system.hscript;
 
-import flixel.system.macros.FlxScriptMacro;
 import flixel.system.hscript._internal.*;
 import flixel.system.hscript._internal.Expr;
 
+@:access(flixel.system.hscript.FlxScriptModule)
 class FlxScriptClass
 {
-    public var name:String;
+    var pkg(get, never):Array<String>;
 
-    public var isPrivate:Bool;
+    function get_pkg():Array<String>
+    {
+        if (module.pkg[module.pkg.length - 1] == this.name)
+        {
+            return module.pkg;
+        }
 
-    public var isExtern:Bool;
+        var pkgClone:Array<String> = module.pkg.copy();
+        pkgClone.push(this.name);
+        return pkgClone;
+    }
 
-    public var superClass:Class<Dynamic>;
+    var name(get, never):String;
+
+    function get_name():String
+    {
+        return this.decl.name;
+    }
+
+    var isPrivate(get, never):Bool;
+
+    function get_isPrivate():Bool
+    {
+        return this.decl.isPrivate;
+    }
+
+    var isAbstract(get, never):Bool;
+
+    function get_isAbstract():Bool
+    {
+        return this.decl.isAbstract;
+    }
+
+    var isExtern(get, never):Bool;
+    
+    function get_isExtern():Bool
+    {
+        return this.decl.isExtern;
+    }
+
+    var isFinal(get, never):Bool;
+    
+    function get_isFinal():Bool
+    {
+        return this.decl.isFinal;
+    }
+
+    var superClass:Class<Dynamic>;
 
     var staticFields:Map<String, Dynamic> = [];
 
     var staticInterp:Interp;
-
-    var staticClass:Dynamic;
     
     var fieldDecls:Map<String, FieldDecl> = [];
 
@@ -31,18 +72,7 @@ class FlxScriptClass
         this.module = module;
         this.decl = decl;
 
-        staticInterp = new Interp();
-        
-        @:privateAccess
-        for (varName in module.interp.variables.keys())
-        {
-            if (!staticInterp.variables.exists(varName))
-                staticInterp.variables.set(varName, module.interp.variables.get(varName));
-        }
-
-        name = decl.name;
-        isPrivate = decl.isPrivate;
-        isExtern = decl.isExtern;
+        staticInterp = module.interp.copy();
         
         if (decl.extend != null)
         {
@@ -51,8 +81,8 @@ class FlxScriptClass
                 case CTPath(path, _):
                     var fullPath:String = path.join(".");
 
-                    if (staticInterp.variables.exists(fullPath))
-                        superClass = staticInterp.variables.get(fullPath);
+                    if (staticInterp.hasVar(fullPath))
+                        superClass = staticInterp.resolve(fullPath);
                     else 
                         superClass = Type.resolveClass(fullPath);
 
@@ -60,7 +90,7 @@ class FlxScriptClass
             }
         }
 
-        staticClass = {};
+        var staticClass:Dynamic = {};
 
         for (fieldDecl in decl.fields)
         {
@@ -70,26 +100,26 @@ class FlxScriptClass
             {
                 // trace('Adding StaticField: "${fieldDecl.name}"');
 
-                var fieldValue:Dynamic = staticInterp.field(fieldDecl);
+                var fieldInfo:VarInfo = staticInterp.field(fieldDecl);
 
-                staticFields.set(fieldDecl.name, fieldValue);
-                staticInterp.variables.set(fieldDecl.name, fieldValue);
-                Reflect.setField(staticClass, fieldDecl.name, fieldValue);
+                staticFields.set(fieldDecl.name, fieldInfo.v);
+                staticInterp.forceVar(fieldDecl.name, fieldInfo.v, fieldInfo.isFinal, fieldInfo.get, fieldInfo.set);
+                Reflect.setField(staticClass, fieldDecl.name, fieldInfo.v);
             }
         }
 
         if (!fieldDecls.exists('toString'))
         {
             staticFields.set('toString', () -> {return this.name;});
-            staticInterp.variables.set('toString', () -> {return this.name;});
+            staticInterp.forceVar('toString', () -> {return this.name;});
             Reflect.setField(staticClass, 'toString', () -> {return this.name;});
         }
 
-        staticInterp.variables.set(name, staticClass);
-        @:privateAccess module.interp.variables.set(name, staticClass);
+        staticInterp.forceVar(name, staticClass, true);
+        @:privateAccess module.interp.forceVar(name, staticClass, true);
     }
 
-    public function scriptNew(?args:Array<Dynamic>):Dynamic
+    public function s_new(?args:Array<Dynamic>):Dynamic
     {
         var instance:Dynamic = {};
         var fields:Map<String, Dynamic> = [];
@@ -102,12 +132,13 @@ class FlxScriptClass
 
         var interp = new Interp();
         
-        for (varName in staticInterp.variables.keys())
+        for (varName in staticInterp.listVars())
         {
-            if ((!Interp.KEYWORDS.contains(varName) && !Interp.SPECIAL.contains(varName)) && !interp.variables.exists(varName))
+            if ((!Interp.KEYWORDS.contains(varName) && !Interp.SPECIAL.contains(varName)) && !interp.hasVar(varName))
             {
                 // trace('Adding old StaticField: "${varName}"');
-                interp.variables.set(varName, staticInterp.variables.get(varName));
+                var varInfo:Dynamic = staticInterp.varInfo(varName);
+                interp.forceVar(varName, staticInterp.resolve(varName), varInfo.isFinal, varInfo.getter, varInfo.setter);
             }
         }
 
@@ -119,14 +150,14 @@ class FlxScriptClass
             {
                 // trace('Adding SuperField: "${superFieldName}"');
 
-                var superFieldValue:Dynamic = Reflect.field(superInstance, superFieldName);
-                interp.variables.set(superFieldName, superFieldValue);
+                var superFieldValue:Dynamic = Reflect.getProperty(superInstance, superFieldName);
+                interp.forceVar(superFieldName, superFieldValue);
                 superFieldsNames.push(superFieldName);
 
-                Reflect.setField(instance, superFieldName, superFieldValue);
+                Reflect.setProperty(instance, superFieldName, superFieldValue);
             }
 
-            interp.variables.set('super', superInstance);
+            interp.forceVar('super', superInstance, true);
         }
 
         function createScriptFunctions():Void
@@ -144,11 +175,11 @@ class FlxScriptClass
                     {
                         // trace('Adding Field: "${fieldDecl.name}"');
 
-                        var fieldValue:Dynamic = interp.field(fieldDecl);
-                        interp.variables.set(fieldDecl.name, fieldValue);
-                        fields.set(fieldDecl.name, fieldValue);
+                        var fieldInfo:VarInfo = interp.field(fieldDecl);
+                        interp.forceVar(fieldDecl.name, fieldInfo.v, fieldInfo.isFinal, fieldInfo.get, fieldInfo.set);
+                        fields.set(fieldDecl.name, fieldInfo.v);
 
-                        Reflect.setField(instance, fieldDecl.name, fieldValue);
+                        Reflect.setProperty(instance, fieldDecl.name, fieldInfo.v);
                     }
                     else 
                     {
@@ -162,7 +193,7 @@ class FlxScriptClass
         {
             if (superClass != null)
             {
-                interp.variables.set('super', Reflect.makeVarArgs(function(args:Array<Dynamic>) 
+                interp.forceVar('super', Reflect.makeVarArgs(function(args:Array<Dynamic>) 
                 {
                     createSuperInstance(args);
                 }));
@@ -173,12 +204,12 @@ class FlxScriptClass
             if (!fields.exists('toString'))
             {
                 fields.set('toString', () -> {return this.name;});
-                interp.variables.set('toString', () -> {return this.name;});
+                interp.forceVar('toString', () -> {return this.name;});
                 Reflect.setField(instance, 'toString', () -> {return this.name;});
             }
 
-            interp.variables.set('this', instance);
-            Reflect.callMethod(instance, interp.field(fieldDecls.get('new')), args);
+            interp.forceVar('this', instance, true);
+            Reflect.callMethod(instance, interp.field(fieldDecls.get('new')).v, args);
         }
         else
         {
@@ -196,34 +227,40 @@ class FlxScriptClass
         return superInstance;
     }
 
-    public function scriptStaticSet(varName:String, varValue:Dynamic):Void
+    public function s_staticSet(varName:String, varValue:Dynamic):Dynamic
     {
-        if (Reflect.hasField(staticClass, varName))
-            Reflect.setField(staticClass, varName, varValue);
-        else
-            FlxG.log.warn('Failed to Set Variable for ScriptClass, "${this.name}" does not have the Variable "${varName}"');
-    }
-
-    public function scriptStaticGet(varName:String):Dynamic
-    {
-        if (Reflect.hasField(staticClass, varName))
-            return Reflect.field(staticClass, varName);
-        else
+        if (staticFields.exists(varName))
         {
-            FlxG.log.warn('Failed to Get Variable for ScriptClass, "${this.name}" does not have the Variable "${varName}"');
+            if (!Reflect.isFunction(staticFields.get(varName)))
+            {
+                staticFields.set(varName, varValue);
+                return varValue;
+            }
+            
+            FlxG.log.warn('Failed to Set Variable for ScriptClass, "${varName}" exists but it is not a variable.');
             return null;
         }
+
+        FlxG.log.warn('Failed to Set Variable for ScriptClass, "${this.name}" does not have the Variable "${varName}"');
+        return null;
     }
 
-    public function scriptStaticCall(funcName:String, funcArgs:Array<Dynamic>):Dynamic
+    public function s_staticGet(varName:String):Dynamic
     {
-        if (Reflect.hasField(staticClass, funcName))
-            return Reflect.callMethod(staticClass, Reflect.field(staticClass, funcName), funcArgs);
-        else
-        {
-            FlxG.log.warn('Failed to Call Function for ScriptClass, "${this.name}" does not have the Function "${funcName}"');
-            return null;
-        }
+        if (staticFields.exists(varName))
+            return staticFields.get(varName);
+
+        FlxG.log.warn('Failed to Get Variable for ScriptClass, "${this.name}" does not have the Variable "${varName}"');
+        return null;
+    }
+
+    public function s_staticCall(funcName:String, funcArgs:Array<Dynamic>):Dynamic
+    {
+        if (staticFields.exists(funcName))
+            return Reflect.callMethod(null, staticFields.get(funcName), funcArgs);
+        
+        FlxG.log.warn('Failed to Call Function for ScriptClass, "${this.name}" does not have the Function "${funcName}"');
+        return null;
     }
 
     private function toString():String

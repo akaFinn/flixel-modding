@@ -1,5 +1,6 @@
 package flixel.system.hscript;
 
+import haxe.io.Path;
 import flixel.util.FlxScriptUtil;
 import flixel.util.FlxStringUtil;
 import flixel.util.FlxDestroyUtil;
@@ -14,7 +15,7 @@ class FlxScriptModule implements IFlxDestroyable
 
     public var interfaces:Map<String, FlxScriptInterface>;
 
-    // public var typedefs:Map<String, FlxScriptTypedef>;
+    public var typedefs:Map<String, FlxScriptTypedef>;
 
     var pkg:Array<String>;
 
@@ -31,7 +32,7 @@ class FlxScriptModule implements IFlxDestroyable
         classes = [];
         enums = [];
         interfaces = [];
-        // typedefs = [];
+        typedefs = [];
 
         origin = path;
         parser = new Parser();
@@ -44,27 +45,17 @@ class FlxScriptModule implements IFlxDestroyable
 			switch (moduleDecl)
 			{
 				case DPackage(pkg): 
+                    var fileName:String = Path.withoutDirectory(path);
+                    pkg.push(Path.withoutExtension(fileName));
                     this.pkg = pkg;
 
 				case DImport(pkg, _, name):
-                    var pkgPath:String = pkg.join(".");
                     var pkgName:String = pkg[pkg.length - 1];
 
                     if (name == null)
                         name = pkgName;
 
-                    if (FlxScriptUtil.hasScriptClass(pkgName))
-                    {
-                        interp.variables.set(name, FlxScriptUtil.getScriptClass(pkgName));
-                    }
-                    else
-                    {
-                        if (Type.resolveClass(pkgPath) != null)
-                            importClass(Type.resolveClass(pkgPath), name);
-
-                        if (Type.resolveEnum(pkgPath) != null)
-                            importEnum(Type.resolveEnum(pkgPath), name);
-                    }
+                    importPackage(pkg, name);
 
 				case DUsing(pkg): 
 
@@ -72,14 +63,17 @@ class FlxScriptModule implements IFlxDestroyable
 					var scriptClass:FlxScriptClass = new FlxScriptClass(this, classDecl);
 					this.classes.set(classDecl.name, scriptClass);
 
-				case DTypedef(typedefDecl):
-					trace('Typedef: ${typedefDecl}');
-
 				case DEnum(enumDecl):
-					trace('Enum: ${enumDecl}');
+					var scriptEnum:FlxScriptEnum = new FlxScriptEnum(this, enumDecl);
+                    this.enums.set(enumDecl.name, scriptEnum);
 
 				case DInterface(interfaceDecl):
-					trace('Interface: ${interfaceDecl}');
+					var scriptInterface:FlxScriptInterface = new FlxScriptInterface(this, interfaceDecl);
+                    this.interfaces.set(interfaceDecl.name, scriptInterface);
+
+                case DTypedef(typedefDecl):
+                    var scriptTypedef:FlxScriptTypedef = new FlxScriptTypedef(this, typedefDecl);
+                    this.typedefs.set(typedefDecl.name, scriptTypedef);
 			}
 		}
     }
@@ -89,14 +83,40 @@ class FlxScriptModule implements IFlxDestroyable
         // WIP
     }
 
-    private function importClass(cls:Class<Dynamic>, name:String):Void
+    private function importPackage(pkg:Array<String>, name:String):Void
     {
-        interp.variables.set(name, cls);
-    }
+        var pkgPath:String = pkg.join('.');
 
-    private function importEnum(enm:Enum<Dynamic>, name:String):Void
-    {
-        interp.variables.set(name, enm);
+        @:privateAccess
+        if (FlxScriptUtil.isPackagePathScripted(pkg))
+        {
+            if (FlxScriptUtil.hasScriptClass(name))
+            {
+                var scriptClass:FlxScriptClass = FlxScriptUtil.getScriptClass(name);
+                var scriptClassObj:Dynamic = {};
+
+                for (fieldKey in scriptClass.staticFields.keys())
+                {
+                    Reflect.setField(scriptClassObj, fieldKey, scriptClass.staticFields.get(fieldKey));
+                }
+
+                if (!scriptClass.fieldDecls.exists('toString'))
+                    Reflect.setField(scriptClassObj, 'toString', scriptClass.toString);
+
+                if (scriptClass.fieldDecls.exists('new'))
+                    Reflect.setField(scriptClassObj, 'new', scriptClass.s_new);
+
+                interp.forceVar(name, scriptClassObj, true);
+            }
+        }
+        else
+        {
+            if (Type.resolveClass(pkgPath) != null)
+                interp.forceVar(name, Type.resolveClass(pkgPath), true);
+
+            if (Type.resolveEnum(pkgPath) != null)
+                interp.forceVar(name, Type.resolveEnum(pkgPath), true);
+        }
     }
 
     function toString():String
@@ -106,7 +126,7 @@ class FlxScriptModule implements IFlxDestroyable
             LabelValuePair.weak('classes', classes),
             LabelValuePair.weak('enums', enums),
             LabelValuePair.weak('interfaces', interfaces),
-            // LabelValuePair.weak('typedefs', typedefs),
+            LabelValuePair.weak('typedefs', typedefs),
         ]);
     }
 }

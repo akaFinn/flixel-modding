@@ -8,20 +8,30 @@ import haxe.macro.Context;
 
 class FlxScriptMacro
 {
-    public static function createScriptClassObject(superClass:Class<Dynamic>, args:Array<Dynamic>):Dynamic
+    public static macro function getAllClasses():ExprOf<Array<Class<Dynamic>>>
     {
-        #if macro
-        var localClass:ClassType = Context.getLocalClass().get();
-        var fields:Array<ClassField> = localClass.fields.get();
+        var currentPos:Position = Context.currentPos();
+        var moduleTypes:Array<ModuleType> = Context.getAllModuleTypes();
+        var classExprs:Array<Expr> = [];
 
-        for (field in fields)
+        for (moduleType in moduleTypes)
         {
-            trace('${field.name}: ${field.expr()}');
+            switch (moduleType)
+            {
+                case TClassDecl(classTypeRef):
+                    var classType:ClassType = classTypeRef.get();
+
+                    if (!classType.isInterface && !classType.isAbstract)
+                    {
+                        var fullPath = classType.module + "." + classType.name;
+                        var path = fullPath.split(".");
+                        classExprs.push(macro $p{path});
+                    }
+                
+                default:
+            }
         }
 
-        return macro $v{'Hi'}
-        #else
-        return null;
-        #end
+        return macro $v{classExprs};
     }
 }

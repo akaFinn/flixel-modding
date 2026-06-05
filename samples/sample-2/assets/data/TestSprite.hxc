@@ -2,11 +2,12 @@ package assets.data;
 
 import flixel.FlxSprite as FlixelSprite;
 
-class TestSprite
+class TestSprite extends FlixelSprite
 {
     public function new()
     {
         trace('Hi');
+        super();
     }
 
     public static function test():Void

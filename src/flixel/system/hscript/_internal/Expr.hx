@@ -92,6 +92,7 @@ enum ErrorDef {
     EUnterminatedComment;
     EInvalidPreprocessor(msg:String);
     EUnknownVariable(v:String);
+    EInvalidProperty(v:String);
     EInvalidIterator(v:String);
     EInvalidOp(op:String);
     EInvalidAccess(f:String);
@@ -115,64 +116,14 @@ typedef ModuleType = {
     var isPrivate:Bool;
 }
 
-/**
- * A scripted class declaration, with a package declaration, imports, and potentially static fields.
- */
 typedef ClassDecl = {
     > ModuleType,
-
-    /**
-     * The type being extended by the scripted class
-     */
     var extend:Null<CType>;
-
-    /**
-     * The interfaces being implemented by the scripted class
-     */
     var implement:Array<CType>;
-
-    /**
-     * The instance fields of the scripted class
-     */
     var fields:Array<FieldDecl>;
-
-    /**
-     * Whether the class was declared with the `extern` keyword
-     */
+    var isAbstract:Bool;
     var isExtern:Bool;
-}
-
-/**
- * An imported class or enumeration.
- */
-typedef ClassImport = {
-    /**
-     * The name of the imported class
-     */
-    var name:String;
-
-    /**
-     * The package that the imported class belongs to
-     */
-    var pkg:Array<String>;
-
-    /**
-     * The full path of the imported class, including the package
-     */
-    var fullPath:String; // pkg.pkg.pkg.name
-
-    /**
-     * The underlying class that was imported.
-     * Will be `null` if this is an enum instead (see `enm`),
-     * or the class the script tried to import was BLACKLISTED.
-     */
-    var ?cls:Class<Dynamic>;
-
-    /**
-     * The underlying enum that was imported.
-     * Will be `null` if this is an enum instead (see `enm`).
-     */
-    var ?enm:Enum<Dynamic>;
+    var isFinal:Bool;
 }
 
 typedef EnumDecl = {
@@ -201,6 +152,7 @@ typedef InterfaceDecl = {
     var extend:Array<CType>;
     var fields:Array<FieldDecl>;
     var isExtern:Bool;
+    var isFinal:Bool;
 }
 
 typedef FieldDecl = {
@@ -217,11 +169,21 @@ enum FieldAccess {
     AOverride;
     AStatic;
     AMacro;
+    AAbstract;
 }
 
 enum FieldKind {
     KFunction(f:FunctionDecl);
     KVar(v:VarDecl);
+}
+
+enum VarProperty {
+    PSet;
+    PGet;
+    PNull;
+    PNever;
+    PDefault;
+    PDynamic;
 }
 
 typedef FunctionDecl = {
@@ -231,9 +193,17 @@ typedef FunctionDecl = {
 }
 
 typedef VarDecl = {
-    var get:Null<String>;
-    var set:Null<String>;
     var expr:Null<Expr>;
     var type:Null<CType>;
     var isfinal:Null<Bool>;
+    
+    var get:Null<VarProperty>;
+    var set:Null<VarProperty>;
+}
+
+typedef VarInfo = {
+    var v:Dynamic;
+    var isFinal:Null<Bool>;
+    var get:Null<VarProperty>;
+    var set:Null<VarProperty>;
 }
