@@ -196,14 +196,15 @@ typedef VarDecl = {
     var expr:Null<Expr>;
     var type:Null<CType>;
     var isfinal:Null<Bool>;
-    
     var get:Null<VarProperty>;
     var set:Null<VarProperty>;
 }
 
 typedef VarInfo = {
-    var v:Dynamic;
+    var name:Null<String>;
+    var access:Null<Array<FieldAccess>>;
     var isFinal:Null<Bool>;
+    var isFunction:Null<Bool>;   
     var get:Null<VarProperty>;
     var set:Null<VarProperty>;
 }

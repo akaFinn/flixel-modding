@@ -17,7 +17,7 @@ class FlxScriptModule implements IFlxDestroyable
 
     public var typedefs:Map<String, FlxScriptTypedef>;
 
-    var pkg:Array<String>;
+    public var pkg:Array<String>;
 
     var parser:Parser;
 
@@ -106,16 +106,16 @@ class FlxScriptModule implements IFlxDestroyable
                 if (scriptClass.fieldDecls.exists('new'))
                     Reflect.setField(scriptClassObj, 'new', scriptClass.s_new);
 
-                interp.forceVar(name, scriptClassObj, true);
+                interp.variables.set(name, scriptClassObj);
             }
         }
         else
         {
             if (Type.resolveClass(pkgPath) != null)
-                interp.forceVar(name, Type.resolveClass(pkgPath), true);
+                interp.variables.set(name, Type.resolveClass(pkgPath));
 
             if (Type.resolveEnum(pkgPath) != null)
-                interp.forceVar(name, Type.resolveEnum(pkgPath), true);
+                interp.variables.set(name, Type.resolveEnum(pkgPath));
         }
     }
 

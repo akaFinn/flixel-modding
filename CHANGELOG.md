@@ -2,7 +2,7 @@
 
 ---
 
-# [1.6.0] *BETA* - (May 27, 2026)
+# [1.6.0] *BETA* - (June 5, 2026)
 # **CHANGELOG NOT FINAL**
 
 Full HTML5 support, modpack unzipping, powerful new scripting system, string/file format helpers, massive internal cleanup, and improved architecture.

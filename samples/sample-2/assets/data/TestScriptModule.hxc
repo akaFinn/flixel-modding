@@ -33,9 +33,19 @@ final class TestScript extends Sprite
         return value * 5;
     }
 
+    static var mainIndex:Int = 0;
+
     public static function main(?number:Float = 5):Void
     {
-        trace('${TestScript.helloWorld} ${number * 3}');
+        mainIndex++;
+        trace(mainIndex);
+
+        trace('${helloWorld} ${number * 3}');
+
+        if (mainIndex < 2)
+        {
+            main();
+        }
     }
 
     public function new(name:String)
@@ -45,7 +55,7 @@ final class TestScript extends Sprite
 
         stupid = 10;
 
-        trace(stupid);
+        trace(this.stupid);
 
         this.name = name;
 

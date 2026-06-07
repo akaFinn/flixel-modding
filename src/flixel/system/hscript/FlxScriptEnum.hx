@@ -6,7 +6,7 @@ import flixel.system.hscript._internal.Expr;
 @:access(flixel.system.hscript.FlxScriptModule)
 class FlxScriptEnum 
 {
-    var pkg(get, never):Array<String>;
+    public var pkg(get, never):Array<String>;
 
     function get_pkg():Array<String>
     {
@@ -20,7 +20,7 @@ class FlxScriptEnum
         return pkgClone;
     }
 
-    var name(get, never):String;
+    public var name(get, never):String;
 
     function get_name():String
     {
@@ -96,6 +96,11 @@ class FlxScriptEnum
     public function s_getName():String
     {
         return this.name;
+    }
+
+    private function toString():String
+    {
+        return 'FlxScriptEnum<${name}>';
     }
 }
 

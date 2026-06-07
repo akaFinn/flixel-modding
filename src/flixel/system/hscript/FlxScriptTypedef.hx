@@ -6,7 +6,7 @@ import flixel.system.hscript._internal.Expr;
 @:access(flixel.system.hscript.FlxScriptModule)
 class FlxScriptTypedef
 {
-    var pkg(get, never):Array<String>;
+    public var pkg(get, never):Array<String>;
 
     function get_pkg():Array<String>
     {
@@ -20,14 +20,14 @@ class FlxScriptTypedef
         return pkgClone;
     }
     
-    var name(get, never):String;
+    public var name(get, never):String;
 
     function get_name():String
     {
         return this.decl.name;
     }
     
-    var isPrivate(get, never):Bool;
+    public var isPrivate(get, never):Bool;
 
     function get_isPrivate():Bool
     {
@@ -46,5 +46,10 @@ class FlxScriptTypedef
         this.decl = decl;
 
         interp = module.interp.copy();
+    }
+
+    private function toString():String
+    {
+        return 'FlxScriptTypedef<${name}>';
     }
 }

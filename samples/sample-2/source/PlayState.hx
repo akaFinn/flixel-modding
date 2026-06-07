@@ -14,13 +14,13 @@ class PlayState extends FlxState
 		scriptClass.s_staticCall('main', [10]);
 		scriptClass.s_staticSet('helloWorld', 'Hello, World!');
 
-		var object = scriptClass.s_new(['John Doe']);
+		// var object = scriptClass.s_new(['John Doe']);
 		// object.sayHello();
 		// object.name = 'Jane Doe';
 		// object.sayHello();
-		add(object);
+		// add(object);
 
-		trace(object);
+		// trace(object);
 		trace(scriptClass);
 
 		super.create();

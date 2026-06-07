@@ -976,6 +976,11 @@ class FlxModding
         openfl.utils.Assets.cache = FlxAssetCache.openFlCache;
         lime.utils.Assets.cache = FlxAssetCache.limeCache;
 
+        #if (FLX_BUILD_SCRIPTS || !FLX_NO_BUILD_SCRIPTS)
+        FlxScriptUtil.buildAllScripts();
+        FlxScriptUtil.buildAllScriptModules();
+        #end
+
         #if (flixel >= "5.9.0" && FLX_CUSTOM_ASSETS_DIRECTORY)
         FlxG.assets.list = (?type) -> {return openfl.utils.Assets.list(type.toOpenFlType());};
         FlxG.assets.exists = (id, ?type) -> {return openfl.utils.Assets.exists(id, type.toOpenFlType());};
@@ -1014,11 +1019,6 @@ class FlxModding
     {
         #if !sys
         @:privateAccess FlxFileSystem.createVirtualFileSystem();
-        #end
-
-        #if (FLX_BUILD_SCRIPTS || !FLX_NO_BUILD_SCRIPTS)
-        FlxScriptUtil.buildAllScripts();
-        FlxScriptUtil.buildAllScriptModules();
         #end
     }
 }
