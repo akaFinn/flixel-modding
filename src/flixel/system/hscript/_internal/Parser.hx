@@ -1377,17 +1377,23 @@ class Parser {
                 }
 
                 var fields = [];
+                var constructor = null;
                 ensure(TBrOpen);
-                while (!maybe(TBrClose))
-                    fields.push(parseField());
+                while (!maybe(TBrClose)) {
+                    var field = parseField();
+                    fields.push(field);
+                    if (field.name == 'new')
+                        constructor = field;
+                }
 
                 return DClass({
                     name: name,
                     meta: meta,
                     params: params,
+                    fields: fields,
                     extend: extend,
                     implement: implement,
-                    fields: fields,
+                    constructor: constructor,
                     isPrivate: isPrivate,
                     isAbstract: isAbstract,
                     isExtern: isExtern,
