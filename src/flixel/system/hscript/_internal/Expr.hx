@@ -128,7 +128,7 @@ typedef ClassDecl = {
 }
 
 typedef EnumDecl = {
-    var name:String;
+    > ModuleType,
     var fields:Array<EnumFieldDecl>;
 }
 
@@ -205,7 +205,7 @@ typedef VarInfo = {
     var name:Null<String>;
     var access:Null<Array<FieldAccess>>;
     var isFinal:Null<Bool>;
-    var isFunction:Null<Bool>;   
+    var isFunction:Null<Bool>;
     var get:Null<VarProperty>;
     var set:Null<VarProperty>;
 }

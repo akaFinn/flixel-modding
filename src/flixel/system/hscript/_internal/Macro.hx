@@ -99,7 +99,8 @@ class Macro {
 
     function convertType(t:Expr.CType):ComplexType {
         return switch (t) {
-            case CTOpt(t): TOptional(convertType(t));
+            case CTOpt(t): 
+                TOptional(convertType(t));
             case CTPath(pack, args):
                 var params = [];
                 if (args != null) {
@@ -115,7 +116,8 @@ class Macro {
                     params: params,
                     sub: null,
                 });
-            case CTParent(t): TParent(convertType(t));
+            case CTParent(t): 
+                TParent(convertType(t));
             case CTFun(args, ret):
                 TFunction(map(args, convertType), convertType(ret));
             case CTNamed(name, convertType(_) => ct):

@@ -1424,6 +1424,7 @@ class Parser {
                 });
             case "enum":
                 var name = getIdent();
+                var params = parseParams();
 
                 var fields = [];
                 ensure(TBrOpen);
@@ -1434,7 +1435,10 @@ class Parser {
 
                 return DEnum({
                     name: name,
-                    fields: fields
+                    meta: meta,
+                    params: params,
+                    isPrivate: isPrivate,
+                    fields: fields,
                 });
             case "interface":
                 var name = getIdent();
@@ -1461,9 +1465,9 @@ class Parser {
                     name: name,
                     meta: meta,
                     params: params,
-                    isPrivate: isPrivate,
                     extend: extend,
                     fields: fields,
+                    isPrivate: isPrivate,
                     isExtern: isExtern,
                     isFinal: isFinal,
                 });
@@ -1650,16 +1654,11 @@ class Parser {
     function parseVarProperty():VarProperty {
         var id = getIdent();
         return switch (id) {
-            case "set":
-                PSet;
-            case "get":
-                PGet;
-            case "never":
-                PNever;
-            case "default":
-                PDefault;
-            case "dynamic":
-                PDynamic;
+            case "set": PSet;
+            case "get": PGet;
+            case "never": PNever;
+            case "default": PDefault;
+            case "dynamic": PDynamic;
             default:
                 error(ECustom('Invalid set property'), readPos - 1, readPos - 1);
                 null;
