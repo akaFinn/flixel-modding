@@ -184,7 +184,7 @@ class FlxScriptUtil
     /**
      * Checks if a script class with the given name exists
      */
-    public static function hasScriptClass(name):Bool
+    public static function hasScriptClass(name:String):Bool
     {
         for (scriptClass in FlxScriptUtil.listScriptClasses())
         {

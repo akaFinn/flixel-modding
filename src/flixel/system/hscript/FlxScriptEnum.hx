@@ -2,9 +2,10 @@ package flixel.system.hscript;
 
 import flixel.system.hscript._internal.*;
 import flixel.system.hscript._internal.Expr;
+import flixel.system.hscript.IFlxScriptModuleType.IFlxScriptModuleObj;
 
 @:access(flixel.system.hscript.FlxScriptModule)
-class FlxScriptEnum implements IFlxScriptReference
+class FlxScriptEnum implements IFlxScriptModuleType
 {
     public var pkg(get, never):Array<String>;
 
@@ -96,6 +97,11 @@ class FlxScriptEnum implements IFlxScriptReference
     public function s_getName():String
     {
         return this.name;
+    }
+
+    public function getScriptObj():IFlxScriptModuleObj
+    {
+        return null;
     }
 
     private function toString():String

@@ -90,23 +90,9 @@ class FlxScriptModule implements IFlxDestroyable
         @:privateAccess
         if (FlxScriptUtil.isPackagePathScripted(pkg))
         {
-            if (FlxScriptUtil.hasScriptClass(name))
+            if (FlxScriptUtil.hasScriptClass(pkgPath))
             {
-                /*var scriptClass:FlxScriptClass = FlxScriptUtil.getScriptClass(name);
-                var scriptClassObj:Dynamic = {};
-
-                for (fieldKey in scriptClass.staticFields.keys())
-                {
-                    Reflect.setField(scriptClassObj, fieldKey, scriptClass.staticFields.get(fieldKey));
-                }
-
-                if (!scriptClass.fieldDecls.exists('toString'))
-                    Reflect.setField(scriptClassObj, 'toString', scriptClass.toString);
-
-                if (scriptClass.fieldDecls.exists('new'))
-                    Reflect.setField(scriptClassObj, 'new', scriptClass.s_new);
-
-                interp.variables.set(name, scriptClassObj);*/
+                interp.variables.set(name, FlxScriptUtil.getScriptClass(pkgPath).getScriptObj());
             }
         }
         else

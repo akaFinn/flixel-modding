@@ -1,11 +1,13 @@
 package flixel.system.hscript;
 
+import flixel.system.macros.FlxScriptMacro;
 import haxe.Constraints.Function;
 import flixel.system.hscript._internal.*;
 import flixel.system.hscript._internal.Expr;
+import flixel.system.hscript.IFlxScriptModuleType.IFlxScriptModuleObj;
 
 @:access(flixel.system.hscript.FlxScriptModule)
-class FlxScriptClass implements IFlxScriptReference
+class FlxScriptClass implements IFlxScriptModuleType
 {
     public var pkg(get, never):Array<String>;
 
@@ -116,112 +118,8 @@ class FlxScriptClass implements IFlxScriptReference
 
     public function s_new(?args:Array<Dynamic>):Dynamic
     {
+        // Come back to this later. - akaFinn
         return null;
-
-        /*var instance:Dynamic = {};
-        var fields:Map<String, Dynamic> = [];
-        
-        var superInstance:Dynamic = null;
-        var superFieldsNames:Array<String> = [];
-
-        if (args == null)
-            args = [];
-
-        var interp = new Interp();
-        
-        for (varName in staticInterp.listVars())
-        {
-            if ((!Interp.KEYWORDS.contains(varName) && !Interp.SPECIAL.contains(varName)) && !interp.hasVar(varName))
-            {
-                // trace('Adding old StaticField: "${varName}"');
-                var varInfo:Dynamic = staticInterp.varInfo(varName);
-                interp.force(varName, staticInterp.resolve(varName), varInfo.isFinal, varInfo.getter, varInfo.setter);
-            }
-        }
-
-        function createSuperInstance(args:Array<Dynamic>):Void
-        {
-            superInstance = Type.createInstance(superClass, args);
-
-            for (superFieldName in Reflect.fields(superInstance).concat(Type.getInstanceFields(superClass)))
-            {
-                // trace('Adding SuperField: "${superFieldName}"');
-
-                var superFieldValue:Dynamic = Reflect.getProperty(superInstance, superFieldName);
-                interp.force(superFieldName, superFieldValue);
-                superFieldsNames.push(superFieldName);
-
-                Reflect.setProperty(instance, superFieldName, superFieldValue);
-            }
-
-            interp.force('super', superInstance, true);
-        }
-
-        function createScriptFunctions():Void
-        {
-            trace('${name}: Adding script functions');
-        }
-
-        function createFields():Void
-        {
-            for (fieldDecl in fieldDecls)
-            {
-                if ((!Interp.SPECIAL.contains(fieldDecl.name) && !fieldDecl.access.contains(AStatic)) && !Interp.KEYWORDS.contains(fieldDecl.name))
-                {
-                    if (!staticFields.exists(fieldDecl.name))
-                    {
-                        // trace('Adding Field: "${fieldDecl.name}"');
-
-                        var fieldInfo:VarInfo = interp.field(fieldDecl);
-                        interp.force(fieldDecl.name, fieldInfo.v, fieldInfo.isFinal, fieldInfo.get, fieldInfo.set);
-                        fields.set(fieldDecl.name, fieldInfo.v);
-
-                        Reflect.setProperty(instance, fieldDecl.name, fieldInfo.v);
-                    }
-                    else 
-                    {
-                        FlxG.log.warn('Failed to add Field, "${fieldDecl.name}" already exists as a static field in "${this.name}"');
-                    }
-                }
-            }
-        }
-
-        if (fieldDecls.exists('new'))
-        {
-            if (superClass != null)
-            {
-                interp.force('super', Reflect.makeVarArgs(function(args:Array<Dynamic>) 
-                {
-                    createSuperInstance(args);
-                }));
-            }
-
-            createFields();
-
-            if (!fields.exists('toString'))
-            {
-                fields.set('toString', () -> {return this.name;});
-                interp.force('toString', () -> {return this.name;});
-                Reflect.setField(instance, 'toString', () -> {return this.name;});
-            }
-
-            interp.force('this', instance, true);
-            Reflect.callMethod(instance, interp.field(fieldDecls.get('new')).v, args);
-        }
-        else
-        {
-            if (superClass != null)
-            {
-                createSuperInstance(args);
-                createFields();
-            }
-            else
-            {
-                FlxG.log.warn('Failed to call ScriptClass Constructor, "${this.name}" does not have a constructor.');
-            }
-        }
-
-        return superInstance;*/
     }
 
     public function s_staticSet(varName:String, varValue:Dynamic):Dynamic
@@ -258,6 +156,11 @@ class FlxScriptClass implements IFlxScriptReference
             return Reflect.callMethod(null, staticFields.get(funcName).value, funcArgs);
         
         FlxG.log.warn('Failed to Call Function for ScriptClass, "${this.name}" does not have the Function "${funcName}"');
+        return null;
+    }
+
+    public function getScriptObj():IFlxScriptModuleObj
+    {
         return null;
     }
 
@@ -427,7 +330,6 @@ private abstract FlxScriptClassField(FlxScriptClassFieldParams) from Dynamic to 
                 };
 
                 var value:Function = Reflect.makeVarArgs(func);
-
                 interp.setVar(name, value, decl);
         }
     }
