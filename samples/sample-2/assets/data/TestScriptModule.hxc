@@ -23,6 +23,13 @@ final class TestScript extends Sprite
 {
     public static var helloWorld:String = "Hello, World!";
 
+    static var testicle(default, set):Float = 1;
+
+    static function set_testicle(value:Float):Float
+    {
+        return value * 10;
+    }
+
     public var name:String;
 
     public var stupid(default, set):Int = 5;
@@ -38,13 +45,18 @@ final class TestScript extends Sprite
     public static function main(?number:Float = 5):Void
     {
         mainIndex++;
-        trace(mainIndex);
-
         trace('${helloWorld} ${number * 3}');
 
-        if (mainIndex < 2)
+        if (mainIndex < 3)
         {
+            trace(mainIndex);
             main();
+        }
+        else
+        {
+            trace('Hip Hip Hooray! ${testicle}');
+            testicle = 1 * number;
+            trace('${testicle}');
         }
     }
 

@@ -14,12 +14,10 @@ private enum Stop {
 class Interp {
     public var variables:Map<String, Dynamic>;
 
-    var varInfos:Map<String, VarInfo>;
-
-    public static final KEYWORDS:Array<String> = ['for','if','else','switch','case','var','final','while','do','function','return','break','continue','inline','new','throw','try','catch','default','cast','in','true','false','null','this','super'];
-
     var locals:Map<String, {r:Dynamic, ?isfinal:Bool}>;
     var binops:Map<String, Expr->Expr->Dynamic>;
+    
+    var varInfos:Map<String, FieldDecl>;
 
     var depth:Int;
     var inTry:Bool;
@@ -123,14 +121,14 @@ class Interp {
         assignOp("??" + "=", function(v1, v2) return v1 ?? v2);
     }
 
-    public function varInfo(name):Null<VarInfo> {
+    public function varInfo(name):Null<FieldDecl> {
         if (varInfos.exists(name))
             return varInfos.get(name);
 
         return null;
     }
 
-    public function setVar(name:String, value:Dynamic, ?vInfo:VarInfo):Dynamic {
+    public function setVar(name:String, value:Dynamic, ?vInfo:FieldDecl):Dynamic {
         if (vInfo != null) {
             variables.set(name, value);
             varInfos.set(name, vInfo);
@@ -139,22 +137,27 @@ class Interp {
 
         if (varInfos.exists(name)) {
             vInfo = varInfo(name);
-            if (vInfo.isFinal || vInfo.isFunction)
+            if (vInfo.access.contains(AFinal) || vInfo.access.contains(AInline))
                 return error(EInvalidAccess(name));
     
-            if (vInfo.set != null) {
-                switch (vInfo.set) {
-                    case PSet:
-                        value = resolve('set_${name}')(value);
-                    case PGet:
-                        return error(EInvalidProperty("get"));
-                    case PNever:
-                        return error(EInvalidAccess(name));
-                    case PDynamic:
-                        if (hasVar('set_${name}'))
-                            value = resolve('set_${name}')(value);
-                    default:
-                } 
+            switch (vInfo.kind) {
+                case KVar(v):
+                    if (v.set != null) {
+                        switch (v.set) {
+                            case PSet:
+                                value = resolve('set_${name}')(value);
+                            case PGet:
+                                return error(EInvalidProperty("get"));
+                            case PNever:
+                                return error(EInvalidAccess(name));
+                            case PDynamic:
+                                if (hasVar('set_${name}'))
+                                    value = resolve('set_${name}')(value);
+                            default:
+                        } 
+                    }
+                default:
+                    return error(EInvalidAccess(name));
             }
         }
 
@@ -172,21 +175,25 @@ class Interp {
 
         if (varInfos.exists(id)) {
             var vInfo = varInfo(id);
-            if (vInfo.get != null) {
-                switch (vInfo.get) {
-                    case PSet:
-                        return error(EInvalidProperty("set"));
-                    case PGet:
-                        return resolve('get_${id}')();
-                    case PNever:
-                        return error(EInvalidAccess(id));
-                    case PDynamic:
-                        if (hasVar('get_${id}'))
-                            return resolve('get_${id}')();
-                        return variables.get(id);
-                    default:
-                        return variables.get(id);
-                }
+            switch (vInfo.kind) {
+                case KVar(v):
+                    if (v.get != null) {
+                        switch (v.get) {
+                            case PSet:
+                                return error(EInvalidProperty("set"));
+                            case PGet:
+                                return resolve('get_${id}')();
+                            case PNever:
+                                return error(EInvalidAccess(id));
+                            case PDynamic:
+                                if (hasVar('get_${id}'))
+                                    return resolve('get_${id}')();
+                                return variables.get(id);
+                            default:
+                                return variables.get(id);
+                        }
+                    }
+                default:
             }
         }
 
@@ -337,75 +344,6 @@ class Interp {
             }
         }
         return null;
-    }
-
-    public function field(fd:FieldDecl):{v:Dynamic, i:VarInfo} {
-        var value:Dynamic = null;
-        var vInfo:VarInfo = {
-            name: fd.name,
-            access: fd.access.copy(),
-            isFinal: null,
-            isFunction: null,
-            get: null,
-            set: null,
-        }
-        
-        switch (fd.kind) {
-            case KVar(v):
-                vInfo.isFinal = v.isfinal;
-                vInfo.isFunction = false;
-                vInfo.get = v.get;
-                vInfo.set = v.set;
-
-                if (v.expr != null)
-                    value = expr(v.expr);
-
-            case KFunction(f):
-                vInfo.isFinal = false;
-                vInfo.isFunction = true;
-
-                var minArgLength:Int = 0;
-                var argNames:Array<String> = [];
-                var me:Interp = this;
-
-                for (arg in f.args) {
-                    argNames.push(arg.name);
-                    if (!arg.opt && arg.value == null)
-                        minArgLength++;
-                }
-
-                value = Reflect.makeVarArgs(function(args:Array<Dynamic>) {
-                    var funcReturn:Dynamic = null;
-
-                    if (args.length < minArgLength)
-                        return error(ECustom('Invalid number of parameters. Got ${args.length}, required ${minArgLength} for function "${fd.name}"'));
-
-                    var argIndex:Int = 0;
-                    var prevValues:Map<String, Dynamic> = [];
-                    var prevVarInfos:Map<String, VarInfo> = [];
-
-                    for (arg in f.args) {
-                        var argName:String = arg.name;
-                        var argValue:Dynamic = null;
-
-                        if ((args != null || args.length != 0) && argIndex < args.length)
-                            argValue = args[argIndex];
-                        else if (arg.value != null)
-                            argValue = me.expr(arg.value);
-
-                        if (argValue != null || arg.opt) {
-                            // trace('"${arg.name}": ${argValue}');
-                            locals.set(argName, {r: argValue, isfinal: false});
-                        }
-                        argIndex++;
-                    }
-
-                    funcReturn = exprReturn(f.expr);
-                    return funcReturn;
-                });
-        }
-
-        return {v: value, i: vInfo};
     }
 
     function duplicate<T>(h:Map<String, T>) {

@@ -121,6 +121,7 @@ typedef ClassDecl = {
     var extend:Null<CType>;
     var implement:Array<CType>;
     var fields:Array<FieldDecl>;
+    var staticFields:Array<FieldDecl>;
     var constructor:Null<FieldDecl>;
     var isAbstract:Bool;
     var isExtern:Bool;
@@ -167,10 +168,12 @@ enum FieldAccess {
     APublic;
     APrivate;
     AInline;
+    AFinal;
     AOverride;
+    AOverload;
+    AAbstract;
     AStatic;
     AMacro;
-    AAbstract;
 }
 
 enum FieldKind {
@@ -196,16 +199,6 @@ typedef FunctionDecl = {
 typedef VarDecl = {
     var expr:Null<Expr>;
     var type:Null<CType>;
-    var isfinal:Null<Bool>;
-    var get:Null<VarProperty>;
-    var set:Null<VarProperty>;
-}
-
-typedef VarInfo = {
-    var name:Null<String>;
-    var access:Null<Array<FieldAccess>>;
-    var isFinal:Null<Bool>;
-    var isFunction:Null<Bool>;
     var get:Null<VarProperty>;
     var set:Null<VarProperty>;
 }

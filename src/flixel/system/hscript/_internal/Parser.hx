@@ -32,6 +32,8 @@ private enum InterpState {
 }
 
 class Parser {
+    public static final KEYWORDS:Array<String> = ['for','if','else','switch','case','var','final','while','do','function','return','break','continue','inline','new','throw','try','catch','default','cast','in','true','false','null','this','super'];
+
     // config / variables
     public var line:Int;
     public var opChars:String;
@@ -1377,23 +1379,31 @@ class Parser {
                 }
 
                 var fields = [];
+                var staticFields = [];
                 var constructor = null;
                 ensure(TBrOpen);
                 while (!maybe(TBrClose)) {
                     var field = parseField();
-                    fields.push(field);
                     if (field.name == 'new')
                         constructor = field;
+
+                    if (!KEYWORDS.contains(field.name)) {
+                        if (field.access.contains(AStatic))
+                            staticFields.push(field);
+                        else
+                            fields.push(field);
+                    }
                 }
 
                 return DClass({
                     name: name,
                     meta: meta,
                     params: params,
-                    fields: fields,
                     extend: extend,
-                    implement: implement,
+                    fields: fields,
+                    staticFields: staticFields,
                     constructor: constructor,
+                    implement: implement,
                     isPrivate: isPrivate,
                     isAbstract: isAbstract,
                     isExtern: isExtern,
@@ -1485,6 +1495,8 @@ class Parser {
             switch (id) {
                 case "override":
                     access.push(AOverride);
+                case "overload":
+                    access.push(AOverload);
                 case "public":
                     access.push(APublic);
                 case "private":
@@ -1522,6 +1534,9 @@ class Parser {
                     var type = maybe(TDoubleDot) ? parseType() : null;
                     var expr = maybe(TOp("=")) ? parseExpr() : null;
 
+                    if (id == "final")
+                        access.push(AFinal);
+
                     if (expr != null) {
                         if (isBlock(expr))
                             maybe(TSemicolon);
@@ -1541,7 +1556,6 @@ class Parser {
                             set: set,
                             type: type,
                             expr: expr,
-                            isfinal: (id == "final")
                         }),
                     };
                 default:
@@ -1598,6 +1612,9 @@ class Parser {
                     }
                     var type = maybe(TDoubleDot) ? parseType() : null;
 
+                    if (id == "final")
+                        access.push(AFinal);
+
                     if (type != null && type.match(CTAnon(_))) {
                         maybe(TSemicolon);
                     } else
@@ -1612,7 +1629,6 @@ class Parser {
                             set: set,
                             type: type,
                             expr: null,
-                            isfinal: (id == "final")
                         }),
                     };
                 default:

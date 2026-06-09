@@ -4,7 +4,7 @@ import flixel.system.hscript._internal.*;
 import flixel.system.hscript._internal.Expr;
 
 @:access(flixel.system.hscript.FlxScriptModule)
-class FlxScriptTypedef
+class FlxScriptTypedef implements IFlxScriptReference
 {
     public var pkg(get, never):Array<String>;
 

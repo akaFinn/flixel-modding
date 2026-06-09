@@ -92,7 +92,7 @@ class FlxScriptModule implements IFlxDestroyable
         {
             if (FlxScriptUtil.hasScriptClass(name))
             {
-                var scriptClass:FlxScriptClass = FlxScriptUtil.getScriptClass(name);
+                /*var scriptClass:FlxScriptClass = FlxScriptUtil.getScriptClass(name);
                 var scriptClassObj:Dynamic = {};
 
                 for (fieldKey in scriptClass.staticFields.keys())
@@ -106,7 +106,7 @@ class FlxScriptModule implements IFlxDestroyable
                 if (scriptClass.fieldDecls.exists('new'))
                     Reflect.setField(scriptClassObj, 'new', scriptClass.s_new);
 
-                interp.variables.set(name, scriptClassObj);
+                interp.variables.set(name, scriptClassObj);*/
             }
         }
         else

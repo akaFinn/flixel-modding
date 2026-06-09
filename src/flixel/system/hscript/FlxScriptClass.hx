@@ -5,7 +5,7 @@ import flixel.system.hscript._internal.*;
 import flixel.system.hscript._internal.Expr;
 
 @:access(flixel.system.hscript.FlxScriptModule)
-class FlxScriptClass
+class FlxScriptClass implements IFlxScriptReference
 {
     public var pkg(get, never):Array<String>;
 
@@ -61,8 +61,6 @@ class FlxScriptClass
     var staticFields:Map<String, FlxScriptClassField> = [];
 
     var staticInterp:Interp;
-    
-    var fieldDecls:Map<String, FieldDecl> = [];
 
     var module:FlxScriptModule;
 
@@ -101,17 +99,12 @@ class FlxScriptClass
 
         var staticClass:Dynamic = {};
 
-        for (fieldDecl in decl.fields)
+        for (fieldDecl in decl.staticFields)
         {
-            fieldDecls.set(fieldDecl.name, fieldDecl);
+            var scriptField:FlxScriptClassField = new FlxScriptClassField(this, fieldDecl);
+            staticFields.set(fieldDecl.name, scriptField);
 
-            if (fieldDecl.access.contains(AStatic) && !Interp.KEYWORDS.contains(fieldDecl.name))
-            {
-                var scriptField:FlxScriptClassField = new FlxScriptClassField(this, fieldDecl);
-                staticFields.set(fieldDecl.name, scriptField);
-
-                // trace('Adding StaticField: "${scriptField.name}" (${scriptField})');
-            }
+            // trace('Adding StaticField: "${scriptField.name}"');
         }
 
         // if (!fieldDecls.exists('toString'))
@@ -310,11 +303,14 @@ private abstract FlxScriptClassField(FlxScriptClassFieldParams) from Dynamic to 
 
     function get_isFinal():Bool
     {
-        switch (this.decl.kind) 
-        {
-            case KVar(varDecl): return varDecl.isfinal;
-            case KFunction(functionDecl): return false;
-        }
+        return this.decl.access.contains(AFinal);
+    }
+
+    public var isStatic(get, never):Bool;
+
+    function get_isStatic():Bool
+    {
+        return this.decl.access.contains(AStatic);
     }
 
     public var isFunction(get, never):Bool;
@@ -382,14 +378,7 @@ private abstract FlxScriptClassField(FlxScriptClassFieldParams) from Dynamic to 
                 if (varDecl.expr != null)
                     value = interp.expr(varDecl.expr);
 
-                interp.setVar(name, value, {
-                    name: name,
-                    access: decl.access.copy(),
-                    isFunction: false,
-                    isFinal: varDecl.isfinal,
-                    get: varDecl.get,
-                    set: varDecl.set,
-                });
+                interp.setVar(name, value, decl);
 
             case KFunction(functionDecl):
                 var minArgLength:Int = 0;
@@ -407,7 +396,10 @@ private abstract FlxScriptClassField(FlxScriptClassFieldParams) from Dynamic to 
                 var func:Array<Dynamic>->Dynamic = function(args:Array<Dynamic>) 
                 {
                     if (args.length < minArgLength)
+                    {
                         FlxG.log.warn('Invalid number of parameters. Got ${args.length}, required ${minArgLength} for function "${decl.name}"');
+                        return null;
+                    }
 
                     var funcReturn:Dynamic = null;
                     var argIndex:Int = 0;
@@ -436,14 +428,7 @@ private abstract FlxScriptClassField(FlxScriptClassFieldParams) from Dynamic to 
 
                 var value:Function = Reflect.makeVarArgs(func);
 
-                interp.setVar(name, value, {
-                    name: name,
-                    access: decl.access.copy(),
-                    isFunction: true,
-                    isFinal: false,
-                    get: null,
-                    set: null,
-                });
+                interp.setVar(name, value, decl);
         }
     }
 

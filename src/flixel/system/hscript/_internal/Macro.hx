@@ -97,7 +97,7 @@ class Macro {
         return b;
     }
 
-    function convertType(t:Expr.CType):ComplexType {
+    public function convertType(t:Expr.CType):ComplexType {
         return switch (t) {
             case CTOpt(t): 
                 TOptional(convertType(t));
@@ -106,7 +106,7 @@ class Macro {
                 if (args != null) {
                     for (t in args)
                         params.push(switch (t) {
-                            case CTExpr(e): TPExpr(convert(e));
+                            case CTExpr(e): TPExpr(convertExpr(e));
                             default: TPType(convertType(t));
                         });
                 }
@@ -131,7 +131,7 @@ class Macro {
                 for (f in fields) {
                     var meta = f.meta == null ? [] : [
                         for (m in f.meta)
-                            {name: m.name, params: m.params == null ? [] : [for (e in m.params) convert(e)], pos: p}
+                            {name: m.name, params: m.params == null ? [] : [for (e in m.params) convertExpr(e)], pos: p}
                     ];
                     tf.push({
                         name: f.name,
@@ -148,7 +148,7 @@ class Macro {
         };
     }
 
-    public function convert(e:flixel.system.hscript._internal.Expr):Expr {
+    public function convertExpr(e:flixel.system.hscript._internal.Expr):Expr {
         return {
             expr: switch (e.e) {
                 case EConst(c):
@@ -161,37 +161,37 @@ class Macro {
                     EConst(CIdent(v));
                 case EVar(n, t, e) | EFinal(n, t, e):
                     EVars([
-                        {name: n, expr: if (e == null) null else convert(e), type: if (t == null) null else convertType(t)}
+                        {name: n, expr: if (e == null) null else convertExpr(e), type: if (t == null) null else convertType(t)}
                     ]);
                 case EParent(e):
-                    EParenthesis(convert(e));
+                    EParenthesis(convertExpr(e));
                 case EBlock(el):
-                    EBlock(map(el, convert));
+                    EBlock(map(el, convertExpr));
                 case EField(e, f):
-                    EField(convert(e), f);
+                    EField(convertExpr(e), f);
                 case EBinop(op, e1, e2):
                     var b = binops.get(op);
                     if (b == null)
                         throw EInvalidOp(op);
-                    EBinop(b, convert(e1), convert(e2));
+                    EBinop(b, convertExpr(e1), convertExpr(e2));
                 case EUnop(op, prefix, e):
                     var u = unops.get(op);
                     if (u == null)
                         throw EInvalidOp(op);
-                    EUnop(u, !prefix, convert(e));
+                    EUnop(u, !prefix, convertExpr(e));
                 case ECall(e, params):
-                    ECall(convert(e), map(params, convert));
+                    ECall(convertExpr(e), map(params, convertExpr));
                 case EIf(c, e1, e2):
-                    EIf(convert(c), convert(e1), e2 == null ? null : convert(e2));
+                    EIf(convertExpr(c), convertExpr(e1), e2 == null ? null : convertExpr(e2));
                 case EWhile(c, e):
-                    EWhile(convert(c), convert(e), true);
+                    EWhile(convertExpr(c), convertExpr(e), true);
                 case EDoWhile(c, e):
-                    EWhile(convert(c), convert(e), false);
+                    EWhile(convertExpr(c), convertExpr(e), false);
                 case EFor(v, it, efor):
                     var p = #if (!macro) {file: p.file, min: e.pmin, max: e.pmax} #else p #end;
-                    EFor({expr: EBinop(OpIn, {expr: EConst(CIdent(v)), pos: p}, convert(it)), pos: p}, convert(efor));
+                    EFor({expr: EBinop(OpIn, {expr: EConst(CIdent(v)), pos: p}, convertExpr(it)), pos: p}, convertExpr(efor));
                 case EForGen(it, efor):
-                    EFor(convert(it), convert(efor));
+                    EFor(convertExpr(it), convertExpr(efor));
                 case EBreak:
                     EBreak;
                 case EContinue:
@@ -208,15 +208,15 @@ class Macro {
                     EFunction(#if haxe4 name != null ? FNamed(name, false) : FAnonymous #else name #end, {
                         params: [],
                         args: targs,
-                        expr: convert(e),
+                        expr: convertExpr(e),
                         ret: ret == null ? null : convertType(ret),
                     });
                 case EReturn(e):
-                    EReturn(e == null ? null : convert(e));
+                    EReturn(e == null ? null : convertExpr(e));
                 case EArray(e, index):
-                    EArray(convert(e), convert(index));
+                    EArray(convertExpr(e), convertExpr(index));
                 case EArrayDecl(el):
-                    EArrayDecl(map(el, convert));
+                    EArrayDecl(map(el, convertExpr));
                 case ENew(cl, params):
                     var pack = cl.split(".");
                     ENew({
@@ -224,28 +224,28 @@ class Macro {
                         name: pack.pop(),
                         params: [],
                         sub: null
-                    }, map(params, convert));
+                    }, map(params, convertExpr));
                 case EThrow(e):
-                    EThrow(convert(e));
+                    EThrow(convertExpr(e));
                 case ETry(e, v, t, ec):
-                    ETry(convert(e), [{type: convertType(t), name: v, expr: convert(ec)}]);
+                    ETry(convertExpr(e), [{type: convertType(t), name: v, expr: convertExpr(ec)}]);
                 case EObject(fields):
                     var tf = [];
                     for (f in fields)
-                        tf.push({field: f.name, expr: convert(f.e)});
+                        tf.push({field: f.name, expr: convertExpr(f.e)});
                     EObjectDecl(tf);
                 case ETernary(cond, e1, e2):
-                    ETernary(convert(cond), convert(e1), convert(e2));
+                    ETernary(convertExpr(cond), convertExpr(e1), convertExpr(e2));
                 case ESwitch(e, cases, edef):
-                    ESwitch(convert(e), [
+                    ESwitch(convertExpr(e), [
                         for (c in cases)
-                            {values: [for (v in c.values) convert(v)], expr: convert(c.expr)}
-                    ], edef == null ? null : convert(edef));
+                            {values: [for (v in c.values) convertExpr(v)], expr: convertExpr(c.expr)}
+                    ], edef == null ? null : convertExpr(edef));
                 case EMeta(m, params, esub):
                     var mpos = #if (!macro) {file: p.file, min: e.pmin, max: e.pmax} #else p #end;
-                    EMeta({name: m, params: params == null ? [] : [for (p in params) convert(p)], pos: mpos}, convert(esub));
+                    EMeta({name: m, params: params == null ? [] : [for (p in params) convertExpr(p)], pos: mpos}, convertExpr(esub));
                 case ECheckType(e, t):
-                    ECheckType(convert(e), convertType(t));
+                    ECheckType(convertExpr(e), convertType(t));
             },
             pos: #if (!macro) {file: p.file, min: e.pmin, max: e.pmax} #else p #end
         }
