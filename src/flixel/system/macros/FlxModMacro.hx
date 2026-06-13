@@ -2,9 +2,8 @@ package flixel.system.macros;
 
 #if macro
 import haxe.macro.Context;
-import haxe.macro.Expr.Access;
-import haxe.macro.Expr.Field;
 import haxe.macro.Expr;
+import haxe.macro.Type;
 #end
 
 /**
@@ -36,9 +35,8 @@ class FlxModMacro
      */
     public static macro function buildModpack():Array<Field>
     {
-        #if macro
-        var fields = Context.getBuildFields();
-        var cls = Context.getLocalClass().get();
+        var fields:Array<Field> = Context.getBuildFields();
+        var cls:ClassType = Context.getLocalClass().get();
 
         for (meta in cls.meta.get()) 
         {
@@ -46,8 +44,8 @@ class FlxModMacro
             {
                 if (meta.params.length >= 2) 
                 {
-                    var metaPrefixExpr = meta.params[0];
-                    var iconPrefixExpr = meta.params[1];
+                    var metaPrefixExpr:Null<Expr> = meta.params[0];
+                    var iconPrefixExpr:Null<Expr> = meta.params[1];
 
                     fields.push(
                     {
@@ -77,8 +75,5 @@ class FlxModMacro
         }
 
         return fields;
-        #else
-        return [];
-        #end
     }
 }

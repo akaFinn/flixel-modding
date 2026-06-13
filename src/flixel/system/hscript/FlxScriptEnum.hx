@@ -2,7 +2,6 @@ package flixel.system.hscript;
 
 import flixel.system.hscript._internal.*;
 import flixel.system.hscript._internal.Expr;
-import flixel.system.hscript.IFlxScriptModuleType.IFlxScriptModuleObj;
 
 @:access(flixel.system.hscript.FlxScriptModule)
 class FlxScriptEnum implements IFlxScriptModuleType
@@ -99,7 +98,7 @@ class FlxScriptEnum implements IFlxScriptModuleType
         return this.name;
     }
 
-    public function getScriptObj():IFlxScriptModuleObj
+    public function getScriptObj():Dynamic
     {
         return null;
     }

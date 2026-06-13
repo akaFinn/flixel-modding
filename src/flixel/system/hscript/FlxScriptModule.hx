@@ -92,16 +92,16 @@ class FlxScriptModule implements IFlxDestroyable
         {
             if (FlxScriptUtil.hasScriptClass(pkgPath))
             {
-                interp.variables.set(name, FlxScriptUtil.getScriptClass(pkgPath).getScriptObj());
+                interp.setVar(name, FlxScriptUtil.getScriptClass(pkgPath).getScriptObj());
             }
         }
         else
         {
             if (Type.resolveClass(pkgPath) != null)
-                interp.variables.set(name, Type.resolveClass(pkgPath));
+                interp.setVar(name, Type.resolveClass(pkgPath));
 
             if (Type.resolveEnum(pkgPath) != null)
-                interp.variables.set(name, Type.resolveEnum(pkgPath));
+                interp.setVar(name, Type.resolveEnum(pkgPath));
         }
     }
 

@@ -2,7 +2,6 @@ package flixel.system.hscript;
 
 import flixel.system.hscript._internal.*;
 import flixel.system.hscript._internal.Expr;
-import flixel.system.hscript.IFlxScriptModuleType.IFlxScriptModuleObj;
 
 @:access(flixel.system.hscript.FlxScriptModule)
 class FlxScriptInterface implements IFlxScriptModuleType
@@ -56,7 +55,7 @@ class FlxScriptInterface implements IFlxScriptModuleType
         interp = module.interp.copy();
     }
 
-    public function getScriptObj():IFlxScriptModuleObj
+    public function getScriptObj():Dynamic
     {
         return null;
     }
