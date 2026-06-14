@@ -9,6 +9,15 @@ import flixel.system.hscript._internal.Expr;
 
 class FlxScriptModule implements IFlxDestroyable
 {
+    public var pkg:Array<String>;
+
+    public var name(get, never):String;
+
+    function get_name():String
+    {
+        return Path.withoutExtension(Path.withoutDirectory(path));
+    }
+
     public var classes:Map<String, FlxScriptClass>;
 
     public var enums:Map<String, FlxScriptEnum>;
@@ -16,8 +25,6 @@ class FlxScriptModule implements IFlxDestroyable
     public var interfaces:Map<String, FlxScriptInterface>;
 
     public var typedefs:Map<String, FlxScriptTypedef>;
-
-    public var pkg:Array<String>;
 
     var parser:Parser;
 
@@ -45,8 +52,6 @@ class FlxScriptModule implements IFlxDestroyable
 			switch (moduleDecl)
 			{
 				case DPackage(pkg): 
-                    var fileName:String = Path.withoutDirectory(path);
-                    pkg.push(Path.withoutExtension(fileName));
                     this.pkg = pkg;
 
 				case DImport(pkg, _, name):
@@ -92,7 +97,7 @@ class FlxScriptModule implements IFlxDestroyable
         {
             if (FlxScriptUtil.hasScriptClass(pkgPath))
             {
-                interp.setVar(name, FlxScriptUtil.getScriptClass(pkgPath).getScriptObj());
+                // interp.setVar(name, FlxScriptUtil.getScriptClass(pkgPath).get());
             }
         }
         else

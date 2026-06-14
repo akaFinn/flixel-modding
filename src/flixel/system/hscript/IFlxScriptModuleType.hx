@@ -1,5 +1,6 @@
 package flixel.system.hscript;
 
+@:autoBuild(flixel.system.macros.FlxScriptMacro.build())
 interface IFlxScriptModuleType
 {
     public var name(get, never):String;

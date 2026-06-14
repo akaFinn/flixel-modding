@@ -1526,9 +1526,9 @@ class Parser {
                     var name = getIdent();
                     var get = null, set = null;
                     if (maybe(TPOpen)) {
-                        get = parseVarProperty();
+                        get = getIdent();
                         ensure(TComma);
-                        set = parseVarProperty();
+                        set = getIdent();
                         ensure(TPClose);
                     }
                     var type = maybe(TDoubleDot) ? parseType() : null;
@@ -1547,13 +1547,25 @@ class Parser {
                     } else
                         ensure(TSemicolon);
 
+                    if (get != null && set != null) {
+                        return {
+                            name: name,
+                            meta: meta,
+                            access: access,
+                            kind: KProp({
+                                get: get,
+                                set: set,
+                                type: type,
+                                expr: expr,
+                            }),
+                        };
+                    }
+
                     return {
                         name: name,
                         meta: meta,
                         access: access,
                         kind: KVar({
-                            get: get,
-                            set: set,
                             type: type,
                             expr: expr,
                         }),
@@ -1605,9 +1617,9 @@ class Parser {
                     var name = getIdent();
                     var get = null, set = null;
                     if (maybe(TPOpen)) {
-                        get = parseVarProperty();
+                        get = getIdent();
                         ensure(TComma);
-                        set = parseVarProperty();
+                        set = getIdent();
                         ensure(TPClose);
                     }
                     var type = maybe(TDoubleDot) ? parseType() : null;
@@ -1620,13 +1632,25 @@ class Parser {
                     } else
                         ensure(TSemicolon);
 
+                    if (get != null && set != null) {
+                        return {
+                            name: name,
+                            meta: meta,
+                            access: access,
+                            kind: KProp({
+                                get: get,
+                                set: set,
+                                type: type,
+                                expr: null,
+                            }),
+                        };
+                    }
+
                     return {
                         name: name,
                         meta: meta,
                         access: access,
                         kind: KVar({
-                            get: get,
-                            set: set,
                             type: type,
                             expr: null,
                         }),
@@ -1664,20 +1688,6 @@ class Parser {
         return {
             name: name,
             type: type
-        };
-    }
-
-    function parseVarProperty():VarProperty {
-        var id = getIdent();
-        return switch (id) {
-            case "set": PSet;
-            case "get": PGet;
-            case "never": PNever;
-            case "default": PDefault;
-            case "dynamic": PDynamic;
-            default:
-                error(ECustom('Invalid set property'), readPos - 1, readPos - 1);
-                null;
         };
     }
 

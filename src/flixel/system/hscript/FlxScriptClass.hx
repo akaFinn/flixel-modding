@@ -1,14 +1,15 @@
 package flixel.system.hscript;
 
+import haxe.Constraints.Function;
+import flixel.system.hscript._internal.*;
+import flixel.system.hscript._internal.Expr;
+
 #if macro
 import haxe.macro.Expr;
 import haxe.macro.Context;
 #end
 
-import haxe.Constraints.Function;
-import flixel.system.hscript._internal.*;
-import flixel.system.hscript._internal.Expr;
-
+@:buildScriptClass
 @:access(flixel.system.hscript.FlxScriptModule)
 class FlxScriptClass implements IFlxScriptModuleType
 {
@@ -16,13 +17,11 @@ class FlxScriptClass implements IFlxScriptModuleType
 
     function get_pkg():Array<String>
     {
-        if (module.pkg[module.pkg.length - 1] == this.name)
-        {
+        if (module.name == this.name)
             return module.pkg;
-        }
 
         var pkgClone:Array<String> = module.pkg.copy();
-        pkgClone.push(this.name);
+        pkgClone.push(module.name);
         return pkgClone;
     }
 
@@ -107,7 +106,10 @@ class FlxScriptClass implements IFlxScriptModuleType
         }
 
         if (decl.constructor != null)
+        {
             constructor = new FlxScriptClassField(this, decl.constructor);
+            classFields.set(decl.constructor.name, constructor);
+        }
 
         for (fieldDecl in decl.staticFields.concat(decl.fields))
         {
@@ -166,12 +168,6 @@ class FlxScriptClass implements IFlxScriptModuleType
         return null;
     }
 
-    public /*macro*/ function getScriptObj():Class<Dynamic>
-    {
-        var scriptClassObj:Class<Dynamic> = null;
-        return scriptClassObj;
-    }
-
     private function toString():String
     {
         if (staticFields.exists('toString'))
@@ -187,7 +183,7 @@ private typedef FlxScriptClassFieldParams =
     var decl:FieldDecl;
 }
 
-@:callable private abstract FlxScriptClassField(FlxScriptClassFieldParams) from Dynamic to Dynamic
+private abstract FlxScriptClassField(FlxScriptClassFieldParams) from Dynamic to Dynamic
 {
     public var name(get, never):String;
 
@@ -230,30 +226,33 @@ private typedef FlxScriptClassFieldParams =
     {
         switch (this.decl.kind) 
         {
-            case KVar(varDecl): return false;
-            case KFunction(functionDecl): return true;
+            case KVar(_): return false;
+            case KProp(_): return false;
+            case KFunction(_): return true;
         }
     }
 
-    public var getAccess(get, never):VarProperty;
+    public var getAccess(get, never):String;
 
-    function get_getAccess():VarProperty
+    function get_getAccess():String
     {
         switch (this.decl.kind) 
         {
-            case KVar(varDecl): return varDecl.get;
-            case KFunction(functionDecl): return null;
+            case KVar(_): return null;
+            case KProp(propDecl): return propDecl.get;
+            case KFunction(_): return null;
         }
     }
 
-    public var setAccess(get, never):VarProperty;
+    public var setAccess(get, never):String;
 
-    function get_setAccess():VarProperty
+    function get_setAccess():String
     {
         switch (this.decl.kind) 
         {
-            case KVar(varDecl): return varDecl.set;
-            case KFunction(functionDecl): return null;
+            case KVar(_): return null;
+            case KProp(propDecl): return propDecl.set;
+            case KFunction(_): return null;
         }
     }
 
@@ -287,6 +286,14 @@ private typedef FlxScriptClassFieldParams =
 
                 if (varDecl.expr != null)
                     value = interp.expr(varDecl.expr);
+
+                interp.setVar(name, value, decl);
+            
+            case KProp(propDecl):
+                var value:Dynamic = null;
+
+                if (propDecl.expr != null)
+                    value = interp.expr(propDecl.expr);
 
                 interp.setVar(name, value, decl);
 

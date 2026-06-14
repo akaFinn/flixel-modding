@@ -179,15 +179,7 @@ enum FieldAccess {
 enum FieldKind {
     KFunction(f:FunctionDecl);
     KVar(v:VarDecl);
-}
-
-enum VarProperty {
-    PSet;
-    PGet;
-    PNull;
-    PNever;
-    PDefault;
-    PDynamic;
+    KProp(p:PropDecl);
 }
 
 typedef FunctionDecl = {
@@ -199,6 +191,10 @@ typedef FunctionDecl = {
 typedef VarDecl = {
     var expr:Null<Expr>;
     var type:Null<CType>;
-    var get:Null<VarProperty>;
-    var set:Null<VarProperty>;
+}
+
+typedef PropDecl = {
+    > VarDecl,
+    var get:String;
+    var set:String;
 }

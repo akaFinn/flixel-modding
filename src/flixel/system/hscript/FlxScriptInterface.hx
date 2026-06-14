@@ -10,13 +10,11 @@ class FlxScriptInterface implements IFlxScriptModuleType
 
     function get_pkg():Array<String>
     {
-        if (module.pkg[module.pkg.length - 1] == this.name)
-        {
+        if (module.name == this.name)
             return module.pkg;
-        }
 
         var pkgClone:Array<String> = module.pkg.copy();
-        pkgClone.push(this.name);
+        pkgClone.push(module.name);
         return pkgClone;
     }
 

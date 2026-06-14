@@ -141,23 +141,26 @@ class Interp {
                 return error(EInvalidAccess(name));
     
             switch (vInfo.kind) {
-                case KVar(v):
-                    if (v.set != null) {
-                        switch (v.set) {
-                            case PSet:
+                case KVar(_):
+                case KProp(p):
+                    if (p.set != null) {
+                        switch (p.set) {
+                            case 'set':
                                 value = resolve('set_${name}')(value);
-                            case PGet:
+                            case 'get':
                                 return error(EInvalidProperty("get"));
-                            case PNever:
+                            case 'never':
                                 return error(EInvalidAccess(name));
-                            case PDynamic:
+                            case 'dynamic':
                                 if (hasVar('set_${name}'))
                                     value = resolve('set_${name}')(value);
+                            case 'default' | 'null':
+                                
                             default:
+                                return error(EInvalidProperty(p.set));
                         } 
                     }
-                default:
-                    return error(EInvalidAccess(name));
+                case KFunction(_): return error(EInvalidAccess(name));
             }
         }
 
@@ -176,24 +179,27 @@ class Interp {
         if (varInfos.exists(id)) {
             var vInfo = varInfo(id);
             switch (vInfo.kind) {
-                case KVar(v):
+                case KProp(v):
                     if (v.get != null) {
                         switch (v.get) {
-                            case PSet:
+                            case 'set':
                                 return error(EInvalidProperty("set"));
-                            case PGet:
+                            case 'get':
                                 return resolve('get_${id}')();
-                            case PNever:
+                            case 'never':
                                 return error(EInvalidAccess(id));
-                            case PDynamic:
+                            case 'dynamic':
                                 if (hasVar('get_${id}'))
                                     return resolve('get_${id}')();
                                 return variables.get(id);
-                            default:
+                            case 'default' | 'null':
                                 return variables.get(id);
+                            default:
+                                return error(EInvalidProperty(v.get));
                         }
                     }
                 default:
+                    return variables.get(id);
             }
         }
 
