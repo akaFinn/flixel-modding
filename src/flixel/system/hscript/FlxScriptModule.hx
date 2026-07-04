@@ -1,11 +1,11 @@
 package flixel.system.hscript;
 
-import haxe.io.Path;
-import flixel.util.FlxScriptUtil;
-import flixel.util.FlxStringUtil;
-import flixel.util.FlxDestroyUtil;
 import flixel.system.hscript._internal.*;
 import flixel.system.hscript._internal.Expr;
+import flixel.util.FlxDestroyUtil;
+import flixel.util.FlxScriptUtil;
+import flixel.util.FlxStringUtil;
+import haxe.io.Path;
 
 class FlxScriptModule implements IFlxDestroyable
 {
@@ -15,7 +15,7 @@ class FlxScriptModule implements IFlxDestroyable
 
     function get_name():String
     {
-        return Path.withoutExtension(Path.withoutDirectory(path));
+		return Path.withoutExtension(Path.withoutDirectory(origin));
     }
 
     public var classes:Map<String, FlxScriptClass>;
