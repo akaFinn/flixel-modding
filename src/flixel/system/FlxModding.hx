@@ -1,6 +1,5 @@
 package flixel.system;
 
-import flixel.system.hscript.FlxScriptModule;
 import flixel.FlxG;
 import flixel.system.FlxModpack;
 import flixel.system.FlxFileSystem;
@@ -8,6 +7,7 @@ import flixel.system.FlxBaseModpack;
 import flixel.system.FlxLegacyModpack;
 import flixel.group.FlxModpackContainer;
 import flixel.system.polymod.PolymodModpack;
+import flixel.system.hscript.FlxScriptModule;
 import flixel.system.macros.FlxModMacro;
 import flixel.util.helpers.FlxStringHelper;
 import flixel.util.FlxScriptUtil;
@@ -820,10 +820,21 @@ class FlxModding
     private function rebuildAssetLibrarys():Void
     {   
         @:privateAccess
-        for (libraryName in Assets.libraries.keys())
+        if (Lambda.array(Assets.libraries).length != 0)
         {
-            Assets.registerLibrary(libraryName, FlxAssetLibrary.fromAssetLibrary(Assets.getLibrary(libraryName)));
-            FlxModding.log('Registering Asset Library: "${libraryName}"');
+            for (libraryName in Assets.libraries.keys())
+            {
+                Assets.registerLibrary(libraryName, FlxAssetLibrary.fromAssetLibrary(Assets.getLibrary(libraryName)));
+                FlxModding.log('Registering Asset Library: "${libraryName}"');
+            }
+        }
+        else
+        {
+            // This is here because `lime.utils.Assets` cannot find assets without any libraries,
+            // even on build targets that don't need to preload assets. Stupid.
+            #if (sys && disable_preloader_assets)
+            Assets.registerLibrary('default', new FlxAssetLibrary());
+            #end
         }
     }
 
