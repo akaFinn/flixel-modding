@@ -1,12 +1,12 @@
 package flixel.system.hscript;
 
-import haxe.Constraints.Function;
 import flixel.system.hscript._internal.*;
 import flixel.system.hscript._internal.Expr;
+import haxe.Constraints.Function;
 
 #if macro
-import haxe.macro.Expr;
 import haxe.macro.Context;
+import haxe.macro.Expr;
 #end
 
 @:buildScriptClass
@@ -62,7 +62,7 @@ class FlxScriptClass implements IFlxScriptModuleType
 
     public var superClass:Class<Dynamic>;
 
-    var constructor:FlxScriptClassField;
+	var newField:FlxScriptClassField;
 
     var classFields:Map<String, FlxScriptClassField> = [];
 
@@ -107,8 +107,8 @@ class FlxScriptClass implements IFlxScriptModuleType
 
         if (decl.constructor != null)
         {
-            constructor = new FlxScriptClassField(this, decl.constructor);
-            classFields.set(decl.constructor.name, constructor);
+			newField = new FlxScriptClassField(this, decl.constructor);
+			classFields.set(decl.constructor.name, newField);
         }
 
         for (fieldDecl in decl.staticFields.concat(decl.fields))
