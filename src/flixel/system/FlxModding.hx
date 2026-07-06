@@ -1,22 +1,22 @@
 package flixel.system;
 
 import flixel.FlxG;
-import flixel.system.FlxModpack;
-import flixel.system.FlxFileSystem;
-import flixel.system.FlxBaseModpack;
-import flixel.system.FlxLegacyModpack;
 import flixel.group.FlxModpackContainer;
-import flixel.system.polymod.PolymodModpack;
+import flixel.system.FlxBaseModpack;
+import flixel.system.FlxFileSystem;
+import flixel.system.FlxLegacyModpack;
+import flixel.system.FlxModpack;
 import flixel.system.hscript.FlxScriptModule;
 import flixel.system.macros.FlxModMacro;
-import flixel.util.helpers.FlxStringHelper;
+import flixel.system.polymod.PolymodModpack;
 import flixel.util.FlxScriptUtil;
 import flixel.util.FlxSignal;
 import flixel.util.FlxSort;
 import flixel.util.FlxZipUtil;
-import haxe.semver.Version;
+import flixel.util.helpers.FlxStringHelper;
 import haxe.io.Bytes;
 import haxe.io.Path;
+import haxe.semver.Version;
 import lime.utils.Assets;
 import openfl.display.BitmapData;
 import openfl.display.JPEGEncoderOptions;
@@ -833,7 +833,7 @@ class FlxModding
             // This is here because `lime.utils.Assets` cannot find assets without any libraries,
             // even on build targets that don't need to preload assets. Stupid.
             #if (sys && disable_preloader_assets)
-            Assets.registerLibrary('default', new FlxAssetLibrary());
+			Assets.registerLibrary('default', FlxAssetLibrary.fromFile('manifest/default.json'));
             #end
         }
     }
