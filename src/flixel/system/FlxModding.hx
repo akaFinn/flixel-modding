@@ -183,11 +183,7 @@ class FlxModding
 
         buildFileSystem();
         buildAssetSystem();
-
-        #if polymod
-        configureWithPolymod();
-        #end
- 
+        
         if (!FlxFileSystem.exists(FlxModding.MODS_DIRECTORY + "/"))
         {
             FlxModding.warn("Failed to detect Mod Directory: '" + FlxModding.MODS_DIRECTORY + "', creating new directory.");
@@ -474,7 +470,7 @@ class FlxModding
      */
     public static function get(fileName:String):FlxBaseModpack
     {
-        for (modpack in modpacks.getModpacks())
+        for (modpack in modpacks.members)
         {
             if (modpack.fileName == fileName && FlxModding.exists(fileName))
             {
@@ -494,7 +490,7 @@ class FlxModding
      */
     public static function exists(fileName:String):Bool
     {
-        for (modpack in modpacks.getModpacks())
+        for (modpack in modpacks.members)
         {
             if (modpack.fileName == fileName)
             {
@@ -512,7 +508,7 @@ class FlxModding
     {
         if (FlxModding.modpacks.length != 0)
         {
-            for (modpack in FlxModding.modpacks.getModpacks())
+            for (modpack in FlxModding.modpacks.members)
             {
                 modpack.saveMetadataFile();
             }
@@ -634,21 +630,23 @@ class FlxModding
 
         if (FlxModding.enabled != false && !isBlacklisted)
         {
-            for (modpack in FlxModding.modpacks.getModpacks(ACTIVE))
+            for (modpack in FlxModding.modpacks.members)
             {
                 var modpackDirectory:String = modpack.getDirectory();
 
                 if (FlxFileSystem.exists(modpackDirectory + "/" + id))
                 {
                     var appendDirectory:String = modpackDirectory + "/" + FlxStringHelper.DEFAULT_APPEND_PREFIX;
-                    var mergeDirectory:String = modpackDirectory + "/" + FlxStringHelper.DEFAULT_MERGE_PREFIX;
-                    var sourceDirectory:String = modpackDirectory + "/" + FlxScriptUtil.DEFAULT_SOURCE_PREFIX;
 
                     if (FlxFileSystem.exists(appendDirectory + "/" + id)) 
                         return appendDirectory + "/" + id;
 
+                    var mergeDirectory:String = modpackDirectory + "/" + FlxStringHelper.DEFAULT_MERGE_PREFIX;
+
                     if (FlxFileSystem.exists(mergeDirectory + "/" + id)) 
                         return mergeDirectory + "/" + id;
+
+                    var sourceDirectory:String = modpackDirectory + "/" + FlxScriptUtil.DEFAULT_SOURCE_PREFIX;
 
                     if (FlxFileSystem.exists(sourceDirectory + "/" + id)) 
                         return sourceDirectory + "/" + id;
@@ -820,21 +818,10 @@ class FlxModding
     private function rebuildAssetLibrarys():Void
     {   
         @:privateAccess
-        if (Lambda.array(Assets.libraries).length != 0)
+        for (libraryName in Assets.libraries.keys())
         {
-            for (libraryName in Assets.libraries.keys())
-            {
-                Assets.registerLibrary(libraryName, FlxAssetLibrary.fromAssetLibrary(Assets.getLibrary(libraryName)));
-                FlxModding.log('Registering Asset Library: "${libraryName}"');
-            }
-        }
-        else
-        {
-            // This is here because `lime.utils.Assets` cannot find assets without any libraries,
-            // even on build targets that don't need to preload assets. Stupid.
-            #if (sys && disable_preloader_assets)
-			Assets.registerLibrary('default', FlxAssetLibrary.fromFile('manifest/default.json'));
-            #end
+            Assets.registerLibrary(libraryName, FlxAssetLibrary.fromAssetLibrary(Assets.getLibrary(libraryName)));
+            FlxModding.log('Registering Asset Library: "${libraryName}"');
         }
     }
 
@@ -933,40 +920,6 @@ class FlxModding
     {
         #if FLX_DEBUG
         FlxG.log.error(data);
-        #end
-    }
-
-    /**
-     * Configures the FlxModding system to integrate with Polymod.
-     *
-     * This function synchronizes several configuration values between
-     * the FlxModding runtime and the active Polymod configuration.
-     * It ensures that directories ignored by Polymod are also ignored
-     * by the FlxModding discovery system, and that Polymod’s script
-     * file extensions are recognized by the scripting utilities.
-     *
-     * The following adjustments are applied:
-     * - Adds Polymod's ignored files/directories to the FlxModding blacklist.
-     * - Registers the Polymod script file extension if it is not already supported.
-     * - Registers the Polymod script class extension for module loading.
-     *
-     * This function is only compiled when the `polymod` flag is enabled.
-     */
-    private static function configureWithPolymod()
-    {
-        #if polymod
-        FlxModding.log("Attempting to Configure with Polymod...");
-        FlxModding.system.blacklistedDirectorys = FlxModding.system.blacklistedDirectorys.concat(polymod.PolymodConfig.modIgnoreFiles);
-
-        if (!FlxScriptUtil.SCRIPT_FILE_EXTS.contains(polymod.PolymodConfig.scriptExt)) 
-            FlxScriptUtil.SCRIPT_FILE_EXTS.push(polymod.PolymodConfig.scriptExt);
-
-        if (!FlxScriptUtil.MODULE_FILE_EXTS.contains(polymod.PolymodConfig.scriptClassExt)) 
-            FlxScriptUtil.SCRIPT_FILE_EXTS.push(polymod.PolymodConfig.scriptClassExt);
-
-        FlxModding.log("Polymod Configured!");
-        #else
-        FlxModding.warn("Failed to Configure with Polymod, Polymod is not installed.");
         #end
     }
 

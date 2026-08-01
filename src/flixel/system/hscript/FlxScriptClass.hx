@@ -4,12 +4,6 @@ import flixel.system.hscript._internal.*;
 import flixel.system.hscript._internal.Expr;
 import haxe.Constraints.Function;
 
-#if macro
-import haxe.macro.Context;
-import haxe.macro.Expr;
-#end
-
-@:buildScriptClass
 @:access(flixel.system.hscript.FlxScriptModule)
 class FlxScriptClass implements IFlxScriptModuleType
 {
@@ -62,9 +56,7 @@ class FlxScriptClass implements IFlxScriptModuleType
 
     public var superClass:Class<Dynamic>;
 
-	var newField:FlxScriptClassField;
-
-    var classFields:Map<String, FlxScriptClassField> = [];
+    var fields:Map<String, FlxScriptClassField> = [];
 
     var staticFields:Map<String, FlxScriptClassField> = [];
 
@@ -105,30 +97,15 @@ class FlxScriptClass implements IFlxScriptModuleType
             }
         }
 
-        if (decl.constructor != null)
-        {
-			newField = new FlxScriptClassField(this, decl.constructor);
-			classFields.set(decl.constructor.name, newField);
-        }
+        for (fieldDecl in decl.staticFields)
+            staticFields.set(fieldDecl.name, new FlxScriptClassField(this, fieldDecl));
 
-        for (fieldDecl in decl.staticFields.concat(decl.fields))
-        {
-            var scriptField:FlxScriptClassField = new FlxScriptClassField(this, fieldDecl);
-            classFields.set(fieldDecl.name, scriptField);
+        for (fieldDecl in decl.fields)
+            fields.set(fieldDecl.name, new FlxScriptClassField(this, fieldDecl));
 
-            if (fieldDecl.access.contains(AStatic))
-                staticFields.set(fieldDecl.name, scriptField);
-        }
-
-        /*var scriptClassObj:Class<Dynamic> = getScriptObj();
+        /*var scriptClassObj:Dynamic = getStatic();
         staticInterp.setVar(name, scriptClassObj);
         module.interp.setVar(name, scriptClassObj);*/
-    }
-
-    public function s_new(?args:Array<Dynamic>):Dynamic
-    {
-        // Come back to this later. - akaFinn
-        return null;
     }
 
     public function s_staticSet(varName:String, varValue:Dynamic):Dynamic
@@ -153,7 +130,7 @@ class FlxScriptClass implements IFlxScriptModuleType
     public function s_staticGet(varName:String):Dynamic
     {
         if (staticFields.exists(varName))
-            return staticFields.get(varName);
+            return staticFields.get(varName).value;
 
         FlxG.log.warn('Failed to Get Variable for ScriptClass, "${this.name}" does not have the Variable "${varName}"');
         return null;
@@ -177,13 +154,7 @@ class FlxScriptClass implements IFlxScriptModuleType
     }
 }
 
-private typedef FlxScriptClassFieldParams = 
-{
-    var script:FlxScriptClass;
-    var decl:FieldDecl;
-}
-
-private abstract FlxScriptClassField(FlxScriptClassFieldParams) from Dynamic to Dynamic
+private abstract FlxScriptClassField({script:FlxScriptClass, decl:FieldDecl}) from Dynamic to Dynamic
 {
     public var name(get, never):String;
 
@@ -265,7 +236,7 @@ private abstract FlxScriptClassField(FlxScriptClassFieldParams) from Dynamic to 
 
     public var value(get, set):Dynamic;
 
-    function get_value():Dynamic
+    @:to function get_value():Dynamic
     {
         return interp.resolve(name);
     }
@@ -351,10 +322,5 @@ private abstract FlxScriptClassField(FlxScriptClassFieldParams) from Dynamic to 
     private function toString():String
     {
         return Std.string(get_value());
-    }
-
-    @:to private function toDynamic():Dynamic
-    {
-        return get_value();
     }
 }

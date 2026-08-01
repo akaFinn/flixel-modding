@@ -1380,12 +1380,9 @@ class Parser {
 
                 var fields = [];
                 var staticFields = [];
-                var constructor = null;
                 ensure(TBrOpen);
                 while (!maybe(TBrClose)) {
                     var field = parseField();
-                    if (field.name == 'new')
-                        constructor = field;
 
                     if (!KEYWORDS.contains(field.name)) {
                         if (field.access.contains(AStatic))
@@ -1402,7 +1399,6 @@ class Parser {
                     extend: extend,
                     fields: fields,
                     staticFields: staticFields,
-                    constructor: constructor,
                     implement: implement,
                     isPrivate: isPrivate,
                     isAbstract: isAbstract,

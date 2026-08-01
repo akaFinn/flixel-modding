@@ -1,9 +1,9 @@
 package flixel.system.macros;
 
 #if macro
+import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.Type;
-import haxe.macro.Context;
 #end
 
 class FlxScriptMacro 
@@ -18,7 +18,17 @@ class FlxScriptMacro
             switch (meta.name)
             {
                 case ':buildScriptClass':
-                    
+                    var getStaticField:Field = {
+                        name: 'getStatic',
+                        access: [APublic],
+                        kind: FieldType.FFun({
+                            args: [],
+                            ret: macro:Dynamic
+                        }),
+                        pos: Context.currentPos()
+                    };
+
+                    fields.push(getStaticField);
                 default:
                     continue;
             }

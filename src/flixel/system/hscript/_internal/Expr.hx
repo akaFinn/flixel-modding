@@ -122,7 +122,6 @@ typedef ClassDecl = {
     var implement:Array<CType>;
     var fields:Array<FieldDecl>;
     var staticFields:Array<FieldDecl>;
-    var constructor:Null<FieldDecl>;
     var isAbstract:Bool;
     var isExtern:Bool;
     var isFinal:Bool;
